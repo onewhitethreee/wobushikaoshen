@@ -72,6 +72,20 @@ describe('发信', () => {
     expect(s.primary?.password).toBe('secret-pass-123')
   })
 
+  it('后台输入框 newPassword 写进密码，本身不回显', async () => {
+    await payload.updateGlobal({
+      slug: 'mail-settings',
+      overrideAccess: false,
+      user: { ...admin, collection: 'users' },
+      data: { primary: { ...box(1025), password: undefined, newPassword: 'from-admin-456' } },
+    })
+    const raw = (await payload.findGlobal({ slug: 'mail-settings', overrideAccess: true, showHiddenFields: true })) as MailSetting
+    expect(raw.primary?.password).toBe('from-admin-456')
+    const seen = await payload.findGlobal({ slug: 'mail-settings', overrideAccess: false, user: { ...admin, collection: 'users' } })
+    expect(JSON.stringify(seen)).not.toContain('from-admin-456')
+    await set({ primary: { ...box(1025), password: 'secret-pass-123' } })
+  })
+
   it('每次发信都留一条记录', async () => {
     const logs = await payload.find({ collection: 'email-sends', where: { email: { equals: TO } } })
     expect(logs.docs.some((d) => d.via === 'backup' && d.ok)).toBe(true)

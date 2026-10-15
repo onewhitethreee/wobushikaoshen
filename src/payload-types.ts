@@ -2238,6 +2238,7 @@ export interface MailSetting {
     port?: number | null;
     secure?: ('ssl' | 'starttls' | 'none') | null;
     user?: string | null;
+    newPassword?: string | null;
     password?: string | null;
     passwordSet?: boolean | null;
     fromAddress?: string | null;
@@ -2251,6 +2252,7 @@ export interface MailSetting {
     port?: number | null;
     secure?: ('ssl' | 'starttls' | 'none') | null;
     user?: string | null;
+    newPassword?: string | null;
     password?: string | null;
     passwordSet?: boolean | null;
     fromAddress?: string | null;
@@ -2357,6 +2359,7 @@ export interface MailSettingsSelect<T extends boolean = true> {
         port?: T;
         secure?: T;
         user?: T;
+        newPassword?: T;
         password?: T;
         passwordSet?: T;
         fromAddress?: T;
@@ -2372,6 +2375,7 @@ export interface MailSettingsSelect<T extends boolean = true> {
         port?: T;
         secure?: T;
         user?: T;
+        newPassword?: T;
         password?: T;
         passwordSet?: T;
         fromAddress?: T;

@@ -33,13 +33,20 @@ const smtp = (name: 'primary' | 'backup', label: string): Field => ({
       type: 'row',
       fields: [
         { name: 'user', label: '用户名', type: 'text', admin: { width: '50%' } },
+        // 后台不渲染不可读的字段，所以输入框是这个不入库的 newPassword，保存时转存进 password
         {
-          name: 'password',
+          name: 'newPassword',
           label: '密码 / 授权码',
           type: 'text',
+          virtual: true,
+          admin: { width: '50%', placeholder: '留空 = 不修改', autoComplete: 'off' },
+        },
+        {
+          name: 'password',
+          type: 'text',
           access: { read: () => false },
-          admin: { width: '50%', placeholder: '已设置时留空 = 不修改', autoComplete: 'off' },
-          hooks: { beforeChange: [({ value, previousValue }) => value || previousValue] },
+          admin: { hidden: true },
+          hooks: { beforeChange: [({ value, previousValue, siblingData }) => siblingData?.newPassword || value || previousValue] },
         },
       ],
     },
