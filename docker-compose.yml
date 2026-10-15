@@ -1,0 +1,46 @@
+# 生产部署（首次）：
+#   docker compose up -d db
+#   docker compose run --rm migrate          # 空库建表
+#   （导入数据、拷媒体到 ./public/media 并 chown -R 1001:1001 public/media）
+#   docker compose build app && docker compose up -d app
+# 之后更新代码：有新迁移先 run migrate，再 build app && up -d app
+#
+# .env 里的 DATABASE_URL 写 127.0.0.1（构建走宿主网络连库），容器运行时下面改成连 db
+services:
+  db:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?在 .env 设置 DB_PASSWORD}
+      POSTGRES_DB: ielts
+    ports: ['127.0.0.1:5432:5432']
+    volumes: [pgdata:/var/lib/postgresql/data]
+
+  migrate:
+    build: { context: ., target: source }
+    profiles: [tools]
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/ielts
+    command: pnpm payload migrate
+    depends_on: [db]
+
+  app:
+    build:
+      context: .
+      network: host
+      # ponytail: 构建参数会留在镜像历史里；镜像只在本机、不推仓库就没事，要推镜像仓库再改 BuildKit secret
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+        PAYLOAD_SECRET: ${PAYLOAD_SECRET}
+        NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL}
+    restart: always
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/ielts
+    ports: ['127.0.0.1:3000:3000']
+    volumes: ['./public/media:/app/public/media']
+    depends_on: [db]
+
+volumes:
+  pgdata:

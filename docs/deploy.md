@@ -1,0 +1,147 @@
+# 生产部署（Docker）
+
+整站跑在一台服务器上：`db`（Postgres 17）和 `app`（Next.js + Payload）两个容器，外面一层 nginx 负责 HTTPS。
+媒体（题目配图、听力音频，约 3.3GB）存在服务器磁盘 `public/media`，挂进 app 容器。
+
+配置文件：`Dockerfile`、`docker-compose.yml`、`.env.example`。
+
+## 1. 准备
+
+- 服务器：2 核 4GB 起，磁盘至少 40GB。
+- 装好 Docker（带 compose 插件）、nginx、certbot。
+- 域名 A 记录指向服务器 IP。
+- 防火墙只开 22、80、443。compose 里数据库（5432）和 app（3000）都只绑 127.0.0.1，外网访问不到。
+
+## 2. 代码与 `.env`
+
+把 `site/` 放到服务器上（git clone 或 rsync，排除 `node_modules`、`.next`），复制 `.env.example` 为 `.env`，填：
+
+```bash
+DB_PASSWORD=<强密码>
+# 构建时走宿主网络连库，所以这里写 127.0.0.1；容器运行时 compose 会自动改成连 db
+DATABASE_URL=postgresql://postgres:<同一个强密码>@127.0.0.1:5432/ielts
+PAYLOAD_SECRET=<openssl rand -hex 32>
+CRON_SECRET=<openssl rand -hex 32>
+PREVIEW_SECRET=<openssl rand -hex 32>
+NEXT_PUBLIC_SERVER_URL=https://wobushikaoshen.com
+```
+
+- 三个 SECRET 必须是 32 位以上的随机串，否则 app 拒绝启动。
+- `NEXT_PUBLIC_SERVER_URL` 必须是用户实际访问的地址：https，不带尾斜杠。它同时是 CSRF 白名单，填错了，所有登录后的写操作都会被当成未登录。这个值在构建时写进镜像，改了要重新构建。
+- S3 那几项留空，媒体就存本地磁盘。
+
+## 3. 首次部署
+
+顺序不能乱：`next build` 构建时要查数据库，所以必须**先建库、导入数据，再构建 app**。
+
+```bash
+# ① 启动数据库并建表
+docker compose up -d db
+docker compose run --rm migrate          # 按顺序执行 src/migrations 里的全部迁移
+```
+
+### ② 导入题库（从本机搬过去；全新空站跳过这一步）
+
+本机：
+
+```bash
+# 只导数据，不导表结构和迁移记录
+MSYS_NO_PATHCONV=1 docker exec ielts-pg pg_dump -U ielts -d ielts --data-only \
+  --exclude-table=payload_migrations -Fc -f /tmp/ielts-data.dump
+docker cp ielts-pg:/tmp/ielts-data.dump .
+scp ielts-data.dump <服务器>:~/site/
+rsync -avP public/media/ <服务器>:~/site/public/media/
+```
+
+服务器：
+
+```bash
+docker compose cp ielts-data.dump db:/tmp/
+docker compose exec db pg_restore -U postgres -d ielts --data-only --disable-triggers /tmp/ielts-data.dump
+docker compose exec db psql -U postgres -d ielts -c "delete from users_sessions"   # 清掉本机带来的登录会话
+```
+
+- 导出时 pg_dump 会提示 `circular foreign-key constraints`，这是正常的，`--disable-triggers` 就是用来处理它的。
+- 本机库是 `pnpm dev` 自动同步出来的表结构，和迁移建的只差列顺序。pg_restore 按列名导入，不受影响。
+- 测试数据（`e2e-`、`fixture-` 开头）测完会自动删除，导出前可以确认一下没有残留。
+
+### ③ 媒体目录权限、构建、启动
+
+```bash
+mkdir -p public/media && sudo chown -R 1001:1001 public/media   # 容器以 uid 1001 运行，不改的话后台上传会失败
+docker compose build app
+docker compose up -d app
+docker compose logs -f app       # 看到 Ready 即可
+```
+
+## 4. nginx 与 HTTPS
+
+`/etc/nginx/sites-available/ielts`：
+
+```nginx
+server {
+  listen 80;
+  server_name wobushikaoshen.com;
+  client_max_body_size 50m;
+
+  location / {
+    proxy_pass http://127.0.0.1:3000;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;   # 按 IP 限频靠它
+    proxy_set_header X-Forwarded-Proto $scheme;
+  }
+}
+```
+
+```bash
+sudo ln -s /etc/nginx/sites-available/ielts /etc/nginx/sites-enabled/
+sudo nginx -t && sudo systemctl reload nginx
+sudo certbot --nginx -d wobushikaoshen.com      # 自动改成 443 并续期
+```
+
+必须走 HTTPS：生产环境的登录 cookie 带 `Secure`，用 http 访问会出现"登录成功但仍未登录"。
+如果前面再套一层 CDN，真实 IP 的取法要改 `src/account/codes.ts` 的 `clientIp`。
+
+## 5. 上线后马上做
+
+1. 打开 `/admin`：
+   - 库里还没有管理员时，页面会开放"创建第一个用户"，立刻把管理员建好。
+   - 管理员是从本机带过来的，先登录，把密码改成强密码。
+2. 后台「邮件设置」：
+   - 主用填阿里云或腾讯云邮件推送的 SMTP，备用填 QQ 邮箱授权码。
+   - 点"发送测试邮件"确认能收到。
+   - 本机带过来的配置指向 Mailpit，生产上不能用，必须改掉。
+3. 后台「AI 设置」：确认 DeepSeek key 已填好。
+4. 用一个新邮箱走一遍完整流程：注册登录、做写作 / 阅读 / 听力各一套、收藏、错题本、退出。
+
+## 6. 更新代码
+
+```bash
+git pull                                  # 或 rsync 新代码
+docker compose run --rm migrate           # 有新迁移时才需要；没有新迁移，跑了也无害
+docker compose build app && docker compose up -d app
+```
+
+- 构建期间旧容器继续提供服务，`up -d` 换新容器时会断几秒。
+- 安全修复要**先部署上线，再同步公开仓库**（`sync-public.sh`）。
+
+## 7. 备份
+
+```bash
+# 数据库，每天一份（加到 crontab）
+docker compose exec -T db pg_dump -U postgres -d ielts -Fc > backup/ielts-$(date +%F).dump
+# 媒体：增量同步到别的机器或对象存储
+rsync -a public/media/ <备份位置>/media/
+```
+
+恢复整库：在空库上执行 `pg_restore -U postgres -d ielts --clean --if-exists <文件>`。这是整库备份，带表结构，不需要先跑 migrate。
+
+## 常见问题
+
+| 现象                            | 原因                                                                                        |
+| ------------------------------- | ------------------------------------------------------------------------------------------- |
+| 构建报连不上数据库 / 表不存在   | 没先 `up -d db` 和 `run --rm migrate`；或者 `.env` 的 `DATABASE_URL` 没写 127.0.0.1 |
+| app 启动即退出，日志提示 SECRET | 三个 SECRET 不足 32 位，或者还是示例值                                                      |
+| 登录成功但刷新后仍未登录        | 没走 HTTPS，或者 `NEXT_PUBLIC_SERVER_URL` 和实际访问地址不一致                            |
+| 后台上传图片 / 音频失败         | `public/media` 没有 `chown 1001:1001`                                                   |
+| 验证码限频把所有人当成同一个 IP | nginx 没设 `X-Forwarded-For`                                                              |
