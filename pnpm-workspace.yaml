@@ -9,3 +9,6 @@ overrides:
   undici: ^7.29.1
   dompurify: ^3.4.16
   sharp: ^0.35.5
+  # Dependabot（docs/reports/2026-10-16-dependabot.md）
+  '@esbuild-kit/core-utils>esbuild': ^0.25.0
+  '@tailwindcss/typography>postcss-selector-parser': ^7.1.6

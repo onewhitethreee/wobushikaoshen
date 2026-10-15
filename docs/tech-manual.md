@@ -30,7 +30,7 @@ docker run -d --name ielts-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
 
 cd site
 cp .env.example .env      # DATABASE_URL 指向 ielts-pg；三个 SECRET 填 32 位以上随机串
-pnpm ii                   # 安装依赖（忽略上层 workspace）
+pnpm install              # 安装依赖（不要用 pnpm ii：它忽略 pnpm-workspace.yaml 里的安全 overrides）
 pnpm dev                  # http://localhost:3000，后台 /admin
 ```
 

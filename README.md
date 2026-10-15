@@ -7,3 +7,4 @@
 - [部署](docs/deploy.md)：生产部署（Docker）
 - [题库导入格式](docs/import-format.md)
 - [提交 PR 的要求](CONTRIBUTING.md)
+- [报告](docs/reports/)：依赖漏洞修复等
