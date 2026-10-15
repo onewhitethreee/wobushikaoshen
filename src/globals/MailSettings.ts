@@ -39,7 +39,8 @@ const smtp = (name: 'primary' | 'backup', label: string): Field => ({
           label: '密码 / 授权码',
           type: 'text',
           virtual: true,
-          admin: { width: '50%', placeholder: '留空 = 不修改', autoComplete: 'off' },
+          // virtual 字段 Payload 默认只读，要显式打开
+          admin: { width: '50%', placeholder: '留空 = 不修改', autoComplete: 'off', readOnly: false },
         },
         {
           name: 'password',

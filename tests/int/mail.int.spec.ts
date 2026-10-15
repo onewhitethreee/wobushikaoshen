@@ -84,6 +84,11 @@ describe('发信', () => {
     const seen = await payload.findGlobal({ slug: 'mail-settings', overrideAccess: false, user: { ...admin, collection: 'users' } })
     expect(JSON.stringify(seen)).not.toContain('from-admin-456')
     await set({ primary: { ...box(1025), password: 'secret-pass-123' } })
+    // virtual 字段默认只读，输入框必须能填
+    type F = { name?: string; fields?: F[]; admin?: { readOnly?: boolean } }
+    const flat = (fs: F[]): F[] => fs.flatMap((f) => [f, ...flat(f.fields ?? [])])
+    const fields = payload.config.globals.find((g) => g.slug === 'mail-settings')!.fields as F[]
+    expect(flat(fields).filter((f) => f.name === 'newPassword').map((f) => f.admin?.readOnly)).toEqual([false, false])
   })
 
   it('每次发信都留一条记录', async () => {
