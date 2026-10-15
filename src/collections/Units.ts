@@ -1,0 +1,138 @@
+import type { CollectionConfig } from 'payload'
+import { APIError } from 'payload'
+
+import { authenticated } from '../access/authenticated'
+import { authenticatedOrPublished } from '../access/authenticatedOrPublished'
+import { unitSummary } from '../exam/groupStats'
+import { countPending, validateUnit, type UnitData } from '../exam/validate'
+import { sourceType } from '../fields/sourceType'
+import { questionGroupsField } from './Tests/questionGroup'
+
+// 前台显示的中性题集标签（007 FR-032）：不出现来源平台名
+export const SOURCE_TAGS = [
+  '9月高频',
+  '9月中频',
+  '10月高频',
+  '10月中频',
+  '全年高频',
+  '增补',
+] as const
+
+const isListening = (data: Partial<UnitData> | undefined) => data?.module === 'listening'
+
+// 练习单元：一篇阅读或一个听力 Part，不要求成套（specs/007-question-bank-import/data-model.md）
+export const Units: CollectionConfig = {
+  slug: 'units',
+  labels: { singular: '练习单元', plural: '练习单元' },
+  access: {
+    create: authenticated,
+    delete: authenticated,
+    read: authenticatedOrPublished,
+    update: authenticated,
+  },
+  versions: { drafts: true },
+  admin: {
+    useAsTitle: 'title',
+    defaultColumns: ['title', 'module', 'part', 'sourceTag', '_status'],
+    listSearchableFields: ['title', 'sourceId', 'sourceSets'],
+    components: { beforeListTable: ['@/components/ImportButton#ImportButton'] },
+  },
+  hooks: {
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        // 批量发布 / 取消发布只带改动的字段（如 { _status }），校验要看合并后的完整文档
+        const full = { ...originalDoc, ...data } as UnitData
+        data.pendingCount = countPending(full)
+        data.summary = unitSummary(full.groups)
+        if (data._status === 'published') {
+          const errors = validateUnit(full)
+          if (errors.length) throw new APIError(errors.join('\n'), 400, null, true)
+        }
+        return data
+      },
+    ],
+  },
+  fields: [
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'module',
+          label: '科目',
+          type: 'select',
+          required: true,
+          options: [
+            { label: '听力', value: 'listening' },
+            { label: '阅读', value: 'reading' },
+          ],
+        },
+        { name: 'part', label: 'Part / Passage', type: 'number', required: true, min: 1, max: 4 },
+      ],
+    },
+    { name: 'title', label: '标题', type: 'text', required: true },
+    {
+      name: 'audio',
+      label: '音频',
+      type: 'upload',
+      relationTo: 'media',
+      admin: { condition: isListening },
+    },
+    {
+      name: 'transcript',
+      label: '原文（逐句）',
+      type: 'json',
+      admin: {
+        condition: isListening,
+        description:
+          '[{ n, speaker, start, end, text, announce }]，导入时生成；start / end 为秒，供字幕使用',
+      },
+    },
+    {
+      name: 'passage',
+      label: '文章（段 → 句）',
+      type: 'json',
+      admin: {
+        condition: (data) => data?.module === 'reading',
+        description: '[{ label, sentences: [{ n, text }] }]，导入时生成；label 为段落字母',
+      },
+    },
+    questionGroupsField('groups'),
+    sourceType,
+    {
+      name: 'sourceId',
+      label: '来源编号',
+      type: 'text',
+      required: true,
+      unique: true,
+      index: true,
+      admin: { position: 'sidebar', description: '原始数据编号，再次导入时按它更新' },
+    },
+    {
+      name: 'sourceSets',
+      label: '来源题集',
+      type: 'text',
+      index: true,
+      admin: { position: 'sidebar', description: '完整题集名，多个用逗号分隔；只在后台可见' },
+    },
+    {
+      name: 'sourceTag',
+      label: '前台题集标签',
+      type: 'select',
+      options: SOURCE_TAGS.map((t) => ({ label: t, value: t })),
+      admin: { position: 'sidebar' },
+    },
+    {
+      // 栏目页用的题组摘要 [{ type, count, range }]，保存时由 groups 算出；栏目只读它，不读每道小题
+      name: 'summary',
+      type: 'json',
+      admin: { hidden: true },
+    },
+    {
+      name: 'pendingCount',
+      label: '待确认题数',
+      type: 'number',
+      defaultValue: 0,
+      admin: { position: 'sidebar', readOnly: true },
+    },
+  ],
+}

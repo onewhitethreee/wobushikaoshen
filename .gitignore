@@ -1,0 +1,28 @@
+build
+dist / media
+node_modules
+.DS_Store
+.env
+.next
+next-env.d.ts
+.vercel
+
+# Payload default media upload directory
+public/media/
+
+public/robots.txt
+public/sitemap*.xml
+
+
+# Playwright
+node_modules/
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# 本地评审截图、临时脚本、TS 增量编译缓存
+/.impeccable/review/
+/scripts/*.tmp.ts
+*.tsbuildinfo
+/tests/e2e/*.tmp.spec.ts

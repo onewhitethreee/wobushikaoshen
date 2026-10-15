@@ -1,0 +1,48 @@
+{
+  "kind": "speaking",
+  "data": [
+    {
+      "part": "1",
+      "topic": "Hometown",
+      "questions": [
+        { "text": "Where is your hometown?" },
+        { "text": "What do you like most about it?" },
+        { "text": "Has it changed much since you were a child?" }
+      ],
+      "season": "2026年9-12月",
+      "sourceType": "original"
+    },
+    {
+      "part": "2",
+      "topic": "A conversation that changed your mind",
+      "cueCard": "Describe a conversation that changed your mind about something.",
+      "cuePoints": [
+        { "text": "who you talked with" },
+        { "text": "what you talked about" },
+        { "text": "why it changed your mind" },
+        { "text": "and explain how you felt afterwards" }
+      ],
+      "followUps": [{ "ref": 2 }, { "ref": 3 }],
+      "season": "2026年9-12月",
+      "sourceType": "original"
+    },
+    {
+      "part": "3",
+      "topic": "Changing opinions",
+      "questions": [
+        { "text": "Why do some people find it hard to change their opinions?" },
+        { "text": "Are young people more open-minded than older people?" }
+      ],
+      "sourceType": "original"
+    },
+    {
+      "part": "3",
+      "topic": "Discussion and technology",
+      "questions": [
+        { "text": "Has the internet made it easier or harder to have a real discussion?" },
+        { "text": "Should schools teach students how to disagree politely?" }
+      ],
+      "sourceType": "original"
+    }
+  ]
+}

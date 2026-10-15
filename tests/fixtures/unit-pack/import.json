@@ -1,0 +1,49 @@
+{
+  "kind": "unit",
+  "data": [
+    {
+      "module": "reading",
+      "part": 1,
+      "title": "Fixture Bees",
+      "sourceType": "original",
+      "sourceId": "fixture-r-1",
+      "sourceTag": "增补",
+      "passage": [
+        { "label": "A", "sentences": [{ "n": 0, "text": "Honey bees tell each other where flowers are by dancing." }, { "n": 1, "text": "The dance shows both direction and distance." }] },
+        { "label": "B", "sentences": [{ "n": 2, "text": "A single hive can visit millions of flowers in a day." }] }
+      ],
+      "groups": [
+        {
+          "type": "tfng",
+          "instructions": "Do the following statements agree with the information given in the passage?",
+          "questions": [
+            { "number": 1, "prompt": "Bees dance to share the location of flowers.", "answers": "TRUE", "explanation": "A 段第一句。", "tip": "dancing 对应 dance。", "quote": "Honey bees tell each other where flowers are by dancing.", "evidence": "0", "answerStatus": "auto" },
+            { "number": 2, "prompt": "Bees dance only at night.", "answers": "NOT GIVEN", "evidence": "0-1", "answerStatus": "auto" }
+          ]
+        },
+        {
+          "type": "completion",
+          "instructions": "Complete the sentence. Choose ONE WORD ONLY from the passage.",
+          "maxWords": 1,
+          "content": "The dance shows direction and {{3}}.",
+          "questions": [{ "number": 3, "answers": "distance", "evidence": "1", "answerStatus": "confirmed" }]
+        }
+      ]
+    },
+    {
+      "module": "reading",
+      "part": 2,
+      "title": "Fixture Ants",
+      "sourceType": "original",
+      "sourceId": "fixture-r-2",
+      "passage": [{ "label": "A", "sentences": [{ "n": 0, "text": "Ants leave scent trails for others to follow." }] }],
+      "groups": [
+        {
+          "type": "matching_information",
+          "instructions": "Which paragraph contains the following information?",
+          "questions": [{ "number": 14, "prompt": "how ants mark a path", "answers": "A", "evidence": "0" }]
+        }
+      ]
+    }
+  ]
+}

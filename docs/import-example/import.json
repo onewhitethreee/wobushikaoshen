@@ -1,0 +1,946 @@
+{
+  "kind": "test",
+  "data": {
+    "code": "EX-001",
+    "title": "示例套题 1",
+    "sourceType": "original",
+    "listening": {
+      "parts": [
+        {
+          "audio": "audio/part1.mp3",
+          "transcript": "WOMAN: Good morning, Lakeside Bike Tours. MAN: Hi, I'd like to book the Saturday ride for my family...",
+          "groups": [
+            {
+              "type": "completion",
+              "instructions": "Complete the form below. Write ONE WORD AND/OR A NUMBER for each answer.",
+              "maxWords": 1,
+              "numberAllowed": true,
+              "content": "Bike Tour Booking\nName: Daniel {{1}}\nTour date: Saturday {{2}} May\nNumber of riders: {{3}}\nBike size for child: {{4}}\nMeeting point: the {{5}} near the station\nTotal cost: £{{6}}",
+              "questions": [
+                {
+                  "number": 1,
+                  "answers": "Harper"
+                },
+                {
+                  "number": 2,
+                  "answers": "14\nfourteenth"
+                },
+                {
+                  "number": 3,
+                  "answers": "4\nfour"
+                },
+                {
+                  "number": 4,
+                  "answers": "small"
+                },
+                {
+                  "number": 5,
+                  "answers": "bridge"
+                },
+                {
+                  "number": 6,
+                  "answers": "96"
+                }
+              ]
+            },
+            {
+              "type": "single_choice",
+              "instructions": "Choose the correct letter, A, B or C.",
+              "questions": [
+                {
+                  "number": 7,
+                  "answers": "B",
+                  "prompt": "What should riders bring?",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "a packed lunch"
+                    },
+                    {
+                      "key": "B",
+                      "text": "a water bottle"
+                    },
+                    {
+                      "key": "C",
+                      "text": "a rain jacket"
+                    }
+                  ]
+                },
+                {
+                  "number": 8,
+                  "answers": "C",
+                  "prompt": "The tour will finish at",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "the lake"
+                    },
+                    {
+                      "key": "B",
+                      "text": "the castle"
+                    },
+                    {
+                      "key": "C",
+                      "text": "the farm shop"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "short_answer",
+              "instructions": "Answer the questions below. Write NO MORE THAN TWO WORDS for each answer.",
+              "maxWords": 2,
+              "questions": [
+                {
+                  "number": 9,
+                  "answers": "(a) helmet",
+                  "prompt": "What does every rider receive free of charge?"
+                },
+                {
+                  "number": 10,
+                  "answers": "phone number",
+                  "prompt": "What must the man send by email?"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "audio": "audio/part2.mp3",
+          "transcript": "Welcome to the new Riverside Community Centre. Let me show you around the ground floor...",
+          "groups": [
+            {
+              "type": "labelling",
+              "instructions": "Label the plan below. Write the correct letter, A-H, next to Questions 11-15.",
+              "image": "img/plan.png",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "area A"
+                },
+                {
+                  "key": "B",
+                  "text": "area B"
+                },
+                {
+                  "key": "C",
+                  "text": "area C"
+                },
+                {
+                  "key": "D",
+                  "text": "area D"
+                },
+                {
+                  "key": "E",
+                  "text": "area E"
+                },
+                {
+                  "key": "F",
+                  "text": "area F"
+                },
+                {
+                  "key": "G",
+                  "text": "area G"
+                },
+                {
+                  "key": "H",
+                  "text": "area H"
+                }
+              ],
+              "questions": [
+                {
+                  "number": 11,
+                  "answers": "C",
+                  "prompt": "Reception"
+                },
+                {
+                  "number": 12,
+                  "answers": "F",
+                  "prompt": "Cafe"
+                },
+                {
+                  "number": 13,
+                  "answers": "A",
+                  "prompt": "Library"
+                },
+                {
+                  "number": 14,
+                  "answers": "H",
+                  "prompt": "Art room"
+                },
+                {
+                  "number": 15,
+                  "answers": "D",
+                  "prompt": "Changing rooms"
+                }
+              ]
+            },
+            {
+              "type": "multi_choice",
+              "instructions": "Choose TWO letters, A-E.",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "free parking"
+                },
+                {
+                  "key": "B",
+                  "text": "a creche"
+                },
+                {
+                  "key": "C",
+                  "text": "evening classes"
+                },
+                {
+                  "key": "D",
+                  "text": "a roof garden"
+                },
+                {
+                  "key": "E",
+                  "text": "a lending library for tools"
+                }
+              ],
+              "questions": [
+                {
+                  "number": 16,
+                  "answers": "B\nE",
+                  "prompt": "Which TWO services are new this year?",
+                  "span": 2
+                }
+              ]
+            },
+            {
+              "type": "multi_choice",
+              "instructions": "Choose TWO letters, A-E.",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "arrive early"
+                },
+                {
+                  "key": "B",
+                  "text": "bring ID"
+                },
+                {
+                  "key": "C",
+                  "text": "pay in cash"
+                },
+                {
+                  "key": "D",
+                  "text": "book online"
+                },
+                {
+                  "key": "E",
+                  "text": "wear trainers"
+                }
+              ],
+              "questions": [
+                {
+                  "number": 18,
+                  "answers": "B\nD",
+                  "prompt": "Which TWO things must new members do?",
+                  "span": 2
+                }
+              ]
+            },
+            {
+              "type": "single_choice",
+              "instructions": "Choose the correct letter, A, B or C.",
+              "questions": [
+                {
+                  "number": 20,
+                  "answers": "A",
+                  "prompt": "The centre is closed on",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "Mondays"
+                    },
+                    {
+                      "key": "B",
+                      "text": "Wednesdays"
+                    },
+                    {
+                      "key": "C",
+                      "text": "Sundays"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "audio": "audio/part3.mp3",
+          "transcript": "TUTOR: So, Mia and Ken, how is the market research project going? MIA: We've finished the survey...",
+          "groups": [
+            {
+              "type": "single_choice",
+              "instructions": "Choose the correct letter, A, B or C.",
+              "questions": [
+                {
+                  "number": 21,
+                  "answers": "A",
+                  "prompt": "Why did the students choose this topic?",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "it was relevant to their town"
+                    },
+                    {
+                      "key": "B",
+                      "text": "the tutor suggested it"
+                    },
+                    {
+                      "key": "C",
+                      "text": "data was easy to find"
+                    }
+                  ]
+                },
+                {
+                  "number": 22,
+                  "answers": "C",
+                  "prompt": "What problem did they have with the survey?",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "too few questions"
+                    },
+                    {
+                      "key": "B",
+                      "text": "unclear wording"
+                    },
+                    {
+                      "key": "C",
+                      "text": "a low response rate"
+                    }
+                  ]
+                },
+                {
+                  "number": 23,
+                  "answers": "B",
+                  "prompt": "The tutor thinks their graphs are",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "too detailed"
+                    },
+                    {
+                      "key": "B",
+                      "text": "hard to compare"
+                    },
+                    {
+                      "key": "C",
+                      "text": "well labelled"
+                    }
+                  ]
+                },
+                {
+                  "number": 24,
+                  "answers": "A",
+                  "prompt": "What will Ken do next?",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "interview shop owners"
+                    },
+                    {
+                      "key": "B",
+                      "text": "rewrite the introduction"
+                    },
+                    {
+                      "key": "C",
+                      "text": "contact the council"
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "matching_features",
+              "instructions": "Who will do each task? Write the correct letter, A, B or C.",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "Mia"
+                },
+                {
+                  "key": "B",
+                  "text": "Ken"
+                },
+                {
+                  "key": "C",
+                  "text": "both students"
+                }
+              ],
+              "questions": [
+                {
+                  "number": 25,
+                  "answers": "A",
+                  "prompt": "design the poster"
+                },
+                {
+                  "number": 26,
+                  "answers": "B",
+                  "prompt": "check the figures"
+                },
+                {
+                  "number": 27,
+                  "answers": "C",
+                  "prompt": "write the conclusion"
+                },
+                {
+                  "number": 28,
+                  "answers": "A",
+                  "prompt": "book a room"
+                },
+                {
+                  "number": 29,
+                  "answers": "B",
+                  "prompt": "send the draft"
+                },
+                {
+                  "number": 30,
+                  "answers": "C",
+                  "prompt": "practise the talk"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "audio": "audio/part4.mp3",
+          "transcript": "Today's lecture is about rooftop farming in large cities and why it has grown so quickly...",
+          "groups": [
+            {
+              "type": "completion",
+              "instructions": "Complete the notes below. Write ONE WORD ONLY for each answer.",
+              "maxWords": 1,
+              "content": "Rooftop farming\n- Early projects used {{31}} beds\n- Main crop in the first year: {{32}}\n- Roofs must support extra {{33}}\n- Rainwater is stored in {{34}}\n- Bees improve the {{35}} of nearby gardens\n- Local {{36}} buy most of the produce\n- Workers need training in {{37}}\n- Biggest cost: {{38}}\n- Projects reduce summer {{39}} in buildings\n- Future plans include rooftop {{40}}",
+              "questions": [
+                {
+                  "number": 31,
+                  "answers": "wooden"
+                },
+                {
+                  "number": 32,
+                  "answers": "lettuce"
+                },
+                {
+                  "number": 33,
+                  "answers": "weight"
+                },
+                {
+                  "number": 34,
+                  "answers": "tanks"
+                },
+                {
+                  "number": 35,
+                  "answers": "harvest"
+                },
+                {
+                  "number": 36,
+                  "answers": "restaurants"
+                },
+                {
+                  "number": 37,
+                  "answers": "safety"
+                },
+                {
+                  "number": 38,
+                  "answers": "insurance"
+                },
+                {
+                  "number": 39,
+                  "answers": "temperatures"
+                },
+                {
+                  "number": 40,
+                  "answers": "schools"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "reading": {
+      "passages": [
+        {
+          "title": "How coral reefs repair themselves",
+          "paragraphs": [
+            {
+              "label": "A",
+              "text": "Coral reefs cover less than one percent of the ocean floor, yet they support around a quarter of all marine species."
+            },
+            {
+              "label": "B",
+              "text": "When water temperatures rise, corals expel the algae that live in their tissues and turn white, a process known as bleaching."
+            },
+            {
+              "label": "C",
+              "text": "Bleached corals are not dead. If temperatures return to normal within a few weeks, the algae can return."
+            },
+            {
+              "label": "D",
+              "text": "Some reefs recover faster than others. Researchers found that reefs with many fish recover more quickly."
+            },
+            {
+              "label": "E",
+              "text": "Fish that graze on seaweed keep the surface clear, giving young corals space to settle."
+            },
+            {
+              "label": "F",
+              "text": "Scientists are now testing whether heat-tolerant corals can be grown in nurseries and replanted."
+            }
+          ],
+          "groups": [
+            {
+              "type": "tfng",
+              "instructions": "Do the following statements agree with the information given in the passage? Write TRUE, FALSE or NOT GIVEN.",
+              "questions": [
+                {
+                  "number": 1,
+                  "answers": "TRUE",
+                  "prompt": "Coral reefs support many marine species."
+                },
+                {
+                  "number": 2,
+                  "answers": "FALSE",
+                  "prompt": "Bleached corals are always dead."
+                },
+                {
+                  "number": 3,
+                  "answers": "NOT GIVEN",
+                  "prompt": "Bleaching happens most often in winter."
+                },
+                {
+                  "number": 4,
+                  "answers": "TRUE",
+                  "prompt": "Grazing fish help young corals."
+                },
+                {
+                  "number": 5,
+                  "answers": "NOT GIVEN",
+                  "prompt": "Nursery corals are cheaper to grow."
+                },
+                {
+                  "number": 6,
+                  "answers": "TRUE",
+                  "prompt": "Some reefs recover faster than others."
+                }
+              ]
+            },
+            {
+              "type": "completion",
+              "instructions": "Complete the summary below. Choose NO MORE THAN TWO WORDS from the passage for each answer.",
+              "maxWords": 2,
+              "content": "When water becomes too warm, corals lose their {{7}} and turn white. Recovery is possible if {{8}} return to normal within a few {{9}}. Reefs with many {{10}} recover faster, because they keep {{11}} under control. Scientists are testing {{12}} corals grown in {{13}}.",
+              "questions": [
+                {
+                  "number": 7,
+                  "answers": "algae"
+                },
+                {
+                  "number": 8,
+                  "answers": "temperatures"
+                },
+                {
+                  "number": 9,
+                  "answers": "weeks"
+                },
+                {
+                  "number": 10,
+                  "answers": "fish"
+                },
+                {
+                  "number": 11,
+                  "answers": "seaweed"
+                },
+                {
+                  "number": 12,
+                  "answers": "heat-tolerant"
+                },
+                {
+                  "number": 13,
+                  "answers": "nurseries"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "Railways and standard time",
+          "paragraphs": [
+            {
+              "label": "A",
+              "text": "Before the railways, each town in Britain kept its own local time, set by the position of the sun."
+            },
+            {
+              "label": "B",
+              "text": "Fast trains made these differences a practical problem, because timetables could not be printed clearly."
+            },
+            {
+              "label": "C",
+              "text": "In 1840 one railway company adopted London time across its entire network."
+            },
+            {
+              "label": "D",
+              "text": "Other companies soon followed, and public clocks began to show two minute hands."
+            },
+            {
+              "label": "E",
+              "text": "Some towns resisted, arguing that local time was part of their identity."
+            },
+            {
+              "label": "F",
+              "text": "By 1880 a single standard time had become law across the country."
+            }
+          ],
+          "groups": [
+            {
+              "type": "matching_headings",
+              "instructions": "Choose the correct heading for paragraphs A-F from the list of headings below.",
+              "options": [
+                {
+                  "key": "i",
+                  "text": "A problem for timetables"
+                },
+                {
+                  "key": "ii",
+                  "text": "Local resistance"
+                },
+                {
+                  "key": "iii",
+                  "text": "Time set by the sun"
+                },
+                {
+                  "key": "iv",
+                  "text": "One company leads the way"
+                },
+                {
+                  "key": "v",
+                  "text": "A national law"
+                },
+                {
+                  "key": "vi",
+                  "text": "Clocks with two hands"
+                },
+                {
+                  "key": "vii",
+                  "text": "The cost of new clocks"
+                },
+                {
+                  "key": "viii",
+                  "text": "Trains get slower"
+                }
+              ],
+              "questions": [
+                {
+                  "number": 14,
+                  "answers": "iii",
+                  "prompt": "Paragraph A"
+                },
+                {
+                  "number": 15,
+                  "answers": "i",
+                  "prompt": "Paragraph B"
+                },
+                {
+                  "number": 16,
+                  "answers": "iv",
+                  "prompt": "Paragraph C"
+                },
+                {
+                  "number": 17,
+                  "answers": "vi",
+                  "prompt": "Paragraph D"
+                },
+                {
+                  "number": 18,
+                  "answers": "ii",
+                  "prompt": "Paragraph E"
+                },
+                {
+                  "number": 19,
+                  "answers": "v",
+                  "prompt": "Paragraph F"
+                }
+              ]
+            },
+            {
+              "type": "matching_information",
+              "instructions": "Which paragraph contains the following information? Write the correct letter, A-F.",
+              "questions": [
+                {
+                  "number": 20,
+                  "answers": "C",
+                  "prompt": "the first company to use one time"
+                },
+                {
+                  "number": 21,
+                  "answers": "E",
+                  "prompt": "an objection based on identity"
+                },
+                {
+                  "number": 22,
+                  "answers": "F",
+                  "prompt": "the year standard time became law"
+                }
+              ]
+            },
+            {
+              "type": "single_choice",
+              "instructions": "Choose the correct letter, A, B, C or D.",
+              "questions": [
+                {
+                  "number": 23,
+                  "answers": "B",
+                  "prompt": "Local time was originally based on",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "church bells"
+                    },
+                    {
+                      "key": "B",
+                      "text": "the sun"
+                    },
+                    {
+                      "key": "C",
+                      "text": "train timetables"
+                    },
+                    {
+                      "key": "D",
+                      "text": "the government"
+                    }
+                  ]
+                },
+                {
+                  "number": 24,
+                  "answers": "A",
+                  "prompt": "Printed timetables were difficult because",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "towns kept different times"
+                    },
+                    {
+                      "key": "B",
+                      "text": "trains were often late"
+                    },
+                    {
+                      "key": "C",
+                      "text": "paper was expensive"
+                    },
+                    {
+                      "key": "D",
+                      "text": "few people could read"
+                    }
+                  ]
+                },
+                {
+                  "number": 25,
+                  "answers": "D",
+                  "prompt": "Public clocks with two minute hands showed",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "two cities"
+                    },
+                    {
+                      "key": "B",
+                      "text": "day and night"
+                    },
+                    {
+                      "key": "C",
+                      "text": "summer time"
+                    },
+                    {
+                      "key": "D",
+                      "text": "local and London time"
+                    }
+                  ]
+                },
+                {
+                  "number": 26,
+                  "answers": "C",
+                  "prompt": "The writer's main purpose is to",
+                  "options": [
+                    {
+                      "key": "A",
+                      "text": "criticise railways"
+                    },
+                    {
+                      "key": "B",
+                      "text": "praise local time"
+                    },
+                    {
+                      "key": "C",
+                      "text": "explain a historical change"
+                    },
+                    {
+                      "key": "D",
+                      "text": "describe clock making"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "How babies learn grammar",
+          "paragraphs": [
+            {
+              "label": "A",
+              "text": "Children learn grammar long before anyone teaches them rules."
+            },
+            {
+              "label": "B",
+              "text": "Researchers once believed that imitation explained most of this learning."
+            },
+            {
+              "label": "C",
+              "text": "However, young children produce forms they have never heard, such as 'goed' instead of 'went'."
+            },
+            {
+              "label": "D",
+              "text": "These errors suggest that children build general patterns and then apply them too widely."
+            },
+            {
+              "label": "E",
+              "text": "Studies with invented words support this view."
+            },
+            {
+              "label": "F",
+              "text": "Most researchers now agree that both experience and pattern-finding play a role."
+            }
+          ],
+          "groups": [
+            {
+              "type": "ynng",
+              "instructions": "Do the following statements agree with the claims of the writer? Write YES, NO or NOT GIVEN.",
+              "questions": [
+                {
+                  "number": 27,
+                  "answers": "YES",
+                  "prompt": "Children learn grammar before being taught rules."
+                },
+                {
+                  "number": 28,
+                  "answers": "NO",
+                  "prompt": "Imitation explains all grammar learning."
+                },
+                {
+                  "number": 29,
+                  "answers": "NOT GIVEN",
+                  "prompt": "Girls learn grammar faster than boys."
+                },
+                {
+                  "number": 30,
+                  "answers": "YES",
+                  "prompt": "Errors like 'goed' show pattern-finding."
+                },
+                {
+                  "number": 31,
+                  "answers": "NOT GIVEN",
+                  "prompt": "Invented-word studies are expensive."
+                }
+              ]
+            },
+            {
+              "type": "matching_endings",
+              "instructions": "Complete each sentence with the correct ending, A-G.",
+              "options": [
+                {
+                  "key": "A",
+                  "text": "they have never heard."
+                },
+                {
+                  "key": "B",
+                  "text": "was once thought to be the main explanation."
+                },
+                {
+                  "key": "C",
+                  "text": "apply patterns too widely."
+                },
+                {
+                  "key": "D",
+                  "text": "support the pattern-finding view."
+                },
+                {
+                  "key": "E",
+                  "text": "is no longer studied."
+                },
+                {
+                  "key": "F",
+                  "text": "both play a role."
+                },
+                {
+                  "key": "G",
+                  "text": "only adults can learn."
+                }
+              ],
+              "questions": [
+                {
+                  "number": 32,
+                  "answers": "B",
+                  "prompt": "Imitation"
+                },
+                {
+                  "number": 33,
+                  "answers": "A",
+                  "prompt": "Children produce forms"
+                },
+                {
+                  "number": 34,
+                  "answers": "C",
+                  "prompt": "Errors suggest children"
+                },
+                {
+                  "number": 35,
+                  "answers": "D",
+                  "prompt": "Studies with invented words"
+                },
+                {
+                  "number": 36,
+                  "answers": "F",
+                  "prompt": "Experience and pattern-finding"
+                }
+              ]
+            },
+            {
+              "type": "short_answer",
+              "instructions": "Answer the questions below. Choose NO MORE THAN THREE WORDS from the passage for each answer.",
+              "maxWords": 3,
+              "questions": [
+                {
+                  "number": 37,
+                  "answers": "goed",
+                  "prompt": "What incorrect form do children use instead of 'went'?"
+                },
+                {
+                  "number": 38,
+                  "answers": "general patterns",
+                  "prompt": "What do children build from what they hear?"
+                },
+                {
+                  "number": 39,
+                  "answers": "invented words",
+                  "prompt": "What kind of words were used in supporting studies?"
+                },
+                {
+                  "number": 40,
+                  "answers": "imitation",
+                  "prompt": "What did researchers once think explained grammar learning?"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

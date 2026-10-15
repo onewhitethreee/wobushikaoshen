@@ -1,0 +1,11 @@
+allowBuilds:
+  esbuild: true
+  sharp: true
+  unrs-resolver: true
+  workerd: true
+
+# 间接依赖的安全修复（010 security-report S-07）：Payload / 后台代码编辑器带进来的旧版本
+overrides:
+  undici: ^7.29.1
+  dompurify: ^3.4.16
+  sharp: ^0.35.5

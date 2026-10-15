@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="10 8 84 84"><style>:root{--ink:#22201C}@media (prefers-color-scheme:dark){:root{--ink:#FBF7EC}}</style><g transform="rotate(-12 50 50)">
+  <polygon points="50,24 86,38 50,52 14,38" fill="var(--ink)"/>
+  <path d="M32 47 L50 54 L68 47 L68 62 Q50 72 32 62 Z" fill="var(--ink)"/>
+  <path d="M50 38 L82 39 L82 58" fill="none" stroke="#FFBC1A" stroke-width="3" stroke-linejoin="round"/>
+  <rect x="79" y="57" width="6" height="10" fill="#FFBC1A"/>
+</g></svg>

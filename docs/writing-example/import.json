@@ -1,0 +1,18 @@
+{
+  "kind": "writing",
+  "data": [
+    {
+      "taskType": "task1",
+      "title": "三国家庭能源消耗对比",
+      "prompt": "The chart below shows how much energy an average household used for heating, cooking and lighting in three countries in 2025.\n\nSummarise the information by selecting and reporting the main features, and make comparisons where relevant.\n\nWrite at least 150 words.",
+      "image": "img/energy-chart.png",
+      "sourceType": "original"
+    },
+    {
+      "taskType": "task2",
+      "title": "远程办公利大于弊吗",
+      "prompt": "More and more people now work from home for part of the week.\n\nDo the advantages of this development outweigh the disadvantages?\n\nGive reasons for your answer and include any relevant examples from your own knowledge or experience.\n\nWrite at least 250 words.",
+      "sourceType": "original"
+    }
+  ]
+}

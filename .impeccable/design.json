@@ -1,0 +1,461 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-08T00:00:00Z",
+  "title": "Design System: 我不是考神",
+  "extensions": {
+    "colorMeta": {
+      "paper": {
+        "role": "neutral",
+        "displayName": "Warm Paper",
+        "canonical": "#fcf7ec",
+        "canonicalDark": "#13110e",
+        "tonalRamp": [
+          "#fcf7ec",
+          "#f7efe0",
+          "#f0e7d3",
+          "#ebe2cf",
+          "#e7decc",
+          "#e2daca",
+          "#c4bdae",
+          "#928b7f",
+          "#807a6d",
+          "#716b60",
+          "#5d584e",
+          "#22201c"
+        ]
+      },
+      "sand": {
+        "role": "neutral",
+        "displayName": "Sand Paper",
+        "canonical": "#f0e7d3",
+        "canonicalDark": "#211e18",
+        "tonalRamp": [
+          "#fcf7ec",
+          "#f7efe0",
+          "#f0e7d3",
+          "#ebe2cf",
+          "#e7decc",
+          "#e2daca",
+          "#c4bdae",
+          "#928b7f",
+          "#807a6d",
+          "#716b60",
+          "#5d584e",
+          "#22201c"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Ink",
+        "canonical": "#22201c",
+        "canonicalDark": "#f3eee3",
+        "tonalRamp": [
+          "#fcf7ec",
+          "#f7efe0",
+          "#f0e7d3",
+          "#ebe2cf",
+          "#e7decc",
+          "#e2daca",
+          "#c4bdae",
+          "#928b7f",
+          "#807a6d",
+          "#716b60",
+          "#5d584e",
+          "#22201c"
+        ]
+      },
+      "muted-ink": {
+        "role": "neutral",
+        "displayName": "Muted Ink",
+        "canonical": "#5d584e",
+        "canonicalDark": "#bdb7a9",
+        "tonalRamp": [
+          "#fcf7ec",
+          "#f7efe0",
+          "#f0e7d3",
+          "#ebe2cf",
+          "#e7decc",
+          "#e2daca",
+          "#c4bdae",
+          "#928b7f",
+          "#807a6d",
+          "#716b60",
+          "#5d584e",
+          "#22201c"
+        ]
+      },
+      "hairline": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#e2daca",
+        "canonicalDark": "#343028",
+        "tonalRamp": [
+          "#fcf7ec",
+          "#f7efe0",
+          "#f0e7d3",
+          "#ebe2cf",
+          "#e7decc",
+          "#e2daca",
+          "#c4bdae",
+          "#928b7f",
+          "#807a6d",
+          "#716b60",
+          "#5d584e",
+          "#22201c"
+        ]
+      },
+      "input": {
+        "role": "neutral",
+        "displayName": "Input Stroke",
+        "canonical": "#928b7f",
+        "canonicalDark": "#686358",
+        "tonalRamp": [
+          "#fcf7ec",
+          "#f7efe0",
+          "#f0e7d3",
+          "#ebe2cf",
+          "#e7decc",
+          "#e2daca",
+          "#c4bdae",
+          "#928b7f",
+          "#807a6d",
+          "#716b60",
+          "#5d584e",
+          "#22201c"
+        ]
+      },
+      "sun": {
+        "role": "primary",
+        "displayName": "Sun Yellow",
+        "canonical": "#ffbc19",
+        "canonicalDark": "#ffbc19",
+        "tonalRamp": [
+          "#fffcf8",
+          "#fff8ed",
+          "#ffefd4",
+          "#fde7be",
+          "#fbdda8",
+          "#f6d290",
+          "#efc16a",
+          "#e0a831",
+          "#ffbc19",
+          "#ebad0c",
+          "#805c01",
+          "#342300"
+        ]
+      },
+      "mark": {
+        "role": "secondary",
+        "displayName": "Deep Teal",
+        "canonical": "#2f6e73",
+        "canonicalDark": "#539297",
+        "tonalRamp": [
+          "#fafefe",
+          "#f3fbfb",
+          "#e5f5f6",
+          "#d9eef0",
+          "#cce8ea",
+          "#bddfe1",
+          "#a7d2d6",
+          "#89bec2",
+          "#2f6e73",
+          "#1e6065",
+          "#3a6d71",
+          "#142b2d"
+        ]
+      },
+      "success": {
+        "role": "tertiary",
+        "displayName": "Free / Correct Green",
+        "canonical": "#2a7440",
+        "canonicalDark": "#88d298",
+        "tonalRamp": [
+          "#f9fefa",
+          "#f2fcf4",
+          "#e3f8e6",
+          "#d5f3da",
+          "#c7edcd",
+          "#b7e5bf",
+          "#9edaaa",
+          "#7dc78d",
+          "#3b9555",
+          "#298646",
+          "#2a7440",
+          "#0d2e16"
+        ]
+      },
+      "success-solid": {
+        "role": "tertiary",
+        "displayName": "High Score Green (ok-9)",
+        "canonical": "#3b9555",
+        "canonicalDark": "#56ae6c",
+        "tonalRamp": [
+          "#f9fefa",
+          "#f2fcf4",
+          "#e3f8e6",
+          "#d5f3da",
+          "#c7edcd",
+          "#b7e5bf",
+          "#9edaaa",
+          "#7dc78d",
+          "#3b9555",
+          "#298646",
+          "#2a7440",
+          "#0d2e16"
+        ]
+      },
+      "warning": {
+        "role": "tertiary",
+        "displayName": "Quota Amber (sun-11)",
+        "canonical": "#805c01",
+        "canonicalDark": "#ebb440",
+        "tonalRamp": [
+          "#fffcf8",
+          "#fff8ed",
+          "#ffefd4",
+          "#fde7be",
+          "#fbdda8",
+          "#f6d290",
+          "#efc16a",
+          "#e0a831",
+          "#ffbc19",
+          "#ebad0c",
+          "#805c01",
+          "#342300"
+        ]
+      },
+      "error": {
+        "role": "tertiary",
+        "displayName": "Wrong Red",
+        "canonical": "#a63933",
+        "canonicalDark": "#fea196",
+        "tonalRamp": [
+          "#fefcfc",
+          "#fff7f6",
+          "#ffecea",
+          "#fee2de",
+          "#fed7d2",
+          "#ffc8c1",
+          "#ffb2a9",
+          "#ff8e82",
+          "#c13c36",
+          "#b02b27",
+          "#a63933",
+          "#451410"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Home headline, three short lines, entirely ink, weight 500."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Column page h1."
+      },
+      "section": {
+        "displayName": "Section",
+        "purpose": "Home h2s; mock band title (larger clamp)."
+      },
+      "subject": {
+        "displayName": "Subject",
+        "purpose": "Subject names; sidebar mock title."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Row and card titles."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Running text, 15px, tabular numerals."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Metadata, cost marks, filter labels."
+      }
+    },
+    "shadows": [],
+    "motion": [
+      {
+        "name": "ease-out-expo",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "The single easing curve for transforms and all keyframes."
+      },
+      {
+        "name": "state-transition",
+        "value": "color/background/border/opacity 0.18s ease; box-shadow/transform 0.25s out-expo",
+        "purpose": "Global transition on links, buttons, inputs, tabs, radios, checkboxes."
+      },
+      {
+        "name": "press",
+        "value": "transform: scale(0.97)",
+        "purpose": "Every enabled button while pressed."
+      },
+      {
+        "name": "rise",
+        "value": "rise 0.5s out-expo backwards (opacity 0, translateY 10px)",
+        "purpose": "Home hero, not-found panels, and the result bar after submit."
+      },
+      {
+        "name": "pop",
+        "value": "pop 0.28s out-expo (scale 0.94)",
+        "purpose": "Selected option and newly answered question number."
+      },
+      {
+        "name": "reveal",
+        "value": "reveal 0.35s out-expo backwards (opacity 0, translateY -4px)",
+        "purpose": "Feedback blocks, notices, transcript, empty states."
+      },
+      {
+        "name": "grow",
+        "value": "grow 0.8s out-expo backwards (scaleX 0)",
+        "purpose": "Accuracy bars."
+      },
+      {
+        "name": "ring-draw",
+        "value": "stroke-dashoffset 1s out-expo from full circumference",
+        "purpose": "Result score ring."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "animation-duration and transition-duration 0.01ms !important, scroll-behavior auto",
+        "purpose": "Global collapse under prefers-reduced-motion: reduce."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "40rem"
+      },
+      {
+        "name": "md",
+        "value": "48rem"
+      },
+      {
+        "name": "lg",
+        "value": "64rem"
+      },
+      {
+        "name": "xl",
+        "value": "80rem"
+      },
+      {
+        "name": "2xl",
+        "value": "86rem"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary-lg",
+      "description": "The one ink action per view (开始做题, 交卷).",
+      "html": "<button class=\"ds-btn-primary\"><span>开始做题</span><span class=\"ds-btn-meta\">免费 · 约 6 分钟 ↗</span></button>",
+      "css": ".ds-btn-primary { font-family: inherit; border-radius: 0; display: inline-flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 56px; padding: 0 24px; border: none; background: var(--primary, #22201c); color: var(--primary-foreground, #fcf7ec); font-size: 16px; font-weight: 600; cursor: pointer; } .ds-btn-meta { font-size: 14px; font-weight: 400; } .ds-btn-primary:hover { background: color-mix(in srgb, var(--primary, #22201c) 88%, transparent); } .ds-btn-primary:focus-visible { outline: 2px solid var(--ring, #2f6e73); outline-offset: 2px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary actions; inverts to ink on hover (开始练习 ↗, 再做一遍).",
+      "html": "<a class=\"ds-btn-outline\" href=\"#\">开始练习 ↗</a>",
+      "css": ".ds-btn-outline { font-family: inherit; border-radius: 0; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; padding: 0 20px; border: 1.5px solid var(--foreground, #22201c); color: var(--foreground, #22201c); background: transparent; font-size: 14px; font-weight: 600; text-decoration: none; } .ds-btn-outline:hover { background: var(--primary, #22201c); color: var(--primary-foreground, #fcf7ec); }"
+    },
+    {
+      "name": "Cost Mark",
+      "kind": "badge",
+      "refersTo": "cost-mark",
+      "description": "White label with a dot: green = free, sun = quota. Text always present.",
+      "html": "<span class=\"ds-cost\"><i class=\"ds-dot ds-free\"></i>免费</span> <span class=\"ds-cost\"><i class=\"ds-dot ds-quota\"></i>批改 1 额度</span>",
+      "css": ".ds-cost { font-family: inherit; border-radius: 0; display: inline-flex; align-items: center; gap: 6px; padding: 2px 8px; background: var(--chip, #fff); font-size: 13px; } .ds-dot { width: 7px; height: 7px; border-radius: 50%; } .ds-free { background: var(--success, #2a7440); } .ds-quota { background: var(--sun, #ffbc19); }"
+    },
+    {
+      "name": "Numbered Hero Tile",
+      "kind": "card",
+      "refersTo": "tile-sun",
+      "description": "Tall square tile with number, title and a single-line illustration; paper, sun or teal.",
+      "html": "<a class=\"ds-tile\" href=\"#\"><span>02</span><strong>阅读</strong><small>学术类长文，三种题型</small></a>",
+      "css": ".ds-tile { font-family: inherit; border-radius: 0; display: flex; flex-direction: column; gap: 6px; width: 180px; min-height: 280px; padding: 20px; background: var(--sun, #ffbc19); color: var(--sun-foreground, #22201c); text-decoration: none; } .ds-tile strong { margin-top: 20px; font-size: 28px; font-weight: 500; letter-spacing: -0.02em; } .ds-tile small { font-size: 13px; }"
+    },
+    {
+      "name": "Catalogue Row",
+      "kind": "list-item",
+      "refersTo": "number-box",
+      "description": "Hairline-separated row led by a 52px number box (outlined = free / done, solid = quota / undone).",
+      "html": "<div class=\"ds-row\"><span class=\"ds-num\">01</span><div><strong>听力</strong><p>按 Part、按题型练，做完看原文和解析。</p></div></div>",
+      "css": ".ds-row { display: grid; grid-template-columns: 52px 1fr; gap: 20px; padding: 28px 0; border-top: 1px solid var(--border, #e2daca); } .ds-num { font-family: inherit; border-radius: 0; display: flex; align-items: center; justify-content: center; width: 52px; height: 52px; box-shadow: inset 0 0 0 1.5px var(--foreground, #22201c); font-weight: 600; } .ds-row strong { font-size: 24px; font-weight: 500; } .ds-row p { margin: 6px 0 0; font-size: 14px; color: var(--muted-foreground, #5d584e); }"
+    },
+    {
+      "name": "Underline Tabs",
+      "kind": "tabs",
+      "refersTo": null,
+      "description": "Filters, part tabs, playback rates and the mobile passage / questions switch: text over a hairline, current item 600 with a 2px ink underline.",
+      "html": "<div class=\"ds-tabs\"><button class=\"on\">全部</button><button>填空</button><button>单选</button></div>",
+      "css": ".ds-tabs { display: flex; gap: 28px; border-bottom: 1px solid var(--border, #e2daca); } .ds-tabs button { min-height: 48px; border: 0; background: none; font: inherit; font-size: 15px; color: var(--muted-foreground, #5d584e); cursor: pointer; } .ds-tabs .on { font-weight: 600; color: var(--foreground, #22201c); box-shadow: inset 0 -2px 0 var(--foreground, #22201c); }"
+    },
+    {
+      "name": "Mock Band",
+      "kind": "banner",
+      "refersTo": "mock-band",
+      "description": "Full-width sun block with title, facts and a paper call-to-action.",
+      "html": "<section class=\"ds-band\"><h2>全真模考</h2><p>听力 40 题 · 约 30 分钟　阅读 40 题 · 60 分钟</p><a href=\"#\">选一套开始 ↗</a></section>",
+      "css": ".ds-band { font-family: inherit; border-radius: 0; display: flex; flex-wrap: wrap; align-items: center; gap: 24px 48px; padding: 40px; background: var(--sun, #ffbc19); color: var(--sun-foreground, #22201c); } .ds-band h2 { margin: 0; font-size: 44px; font-weight: 500; letter-spacing: -0.02em; } .ds-band a { padding: 14px 20px; background: var(--background, #fcf7ec); color: var(--foreground, #22201c); font-weight: 600; text-decoration: none; }"
+    },
+    {
+      "name": "Header Navigation",
+      "kind": "navigation",
+      "refersTo": "nav-item-current",
+      "description": "Paper header with hairline; current item in ink with an 8px teal square.",
+      "html": "<nav class=\"ds-nav\"><a class=\"on\" href=\"#\"><i></i>首页</a><a href=\"#\">听力</a><a href=\"#\">阅读</a></nav>",
+      "css": ".ds-nav { display: flex; gap: 24px; padding: 12px 0; border-bottom: 1px solid var(--border, #e2daca); } .ds-nav a { display: inline-flex; align-items: center; gap: 8px; min-height: 44px; color: var(--muted-foreground, #5d584e); text-decoration: none; } .ds-nav .on { color: var(--foreground, #22201c); font-weight: 600; } .ds-nav i { width: 8px; height: 8px; background: var(--mark, #2f6e73); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "暖纸练习册",
+    "overview": "A well-made printed workbook on warm paper: sand blocks and 1px hairlines instead of cards and shadows, square corners, one near-black action per view, and colour rationed to sun yellow and deep teal. Adapted from the Filko dashboard (Halo Lab) for a public Chinese site with system fonts and no purple.",
+    "keyCharacteristics": [
+      "Warm paper + sand paper + hairlines; square corners; no shadows.",
+      "One ink solid button per view; outline buttons invert on hover.",
+      "Two accents only: sun and teal; no purple, no subject colours.",
+      "Weight-500 system-sans headlines with -0.02em tracking.",
+      "Hairline rows led by 52px number boxes instead of cards; practice question groups are hairline sections.",
+      "Dark mode is a separate generated warm-black set; each colour lists canonicalDark."
+    ],
+    "rules": [
+      {
+        "name": "The Two Accents Rule",
+        "body": "Only sun and teal carry colour, each in its listed places."
+      },
+      {
+        "name": "The No Purple Rule",
+        "body": "No token in OKLCH hue 270°–330° with chroma above 0.03; enforced by the tokens test."
+      },
+      {
+        "name": "The Ink On Sun Rule",
+        "body": "Text and line art on sun is always sun-foreground."
+      },
+      {
+        "name": "The Whole Sentence Rule",
+        "body": "Never colour one line of a headline."
+      },
+      {
+        "name": "The Mainland Reach Rule",
+        "body": "System fonts only; nothing unreachable from mainland China."
+      }
+    ],
+    "dos": [
+      "Separate content with sand blocks and hairlines.",
+      "Keep exactly one ink solid button per view.",
+      "Label free and quota with the dot chip and text before the action.",
+      "Run the tokens test after any colour change."
+    ],
+    "donts": [
+      "No purple, blue-violet or magenta.",
+      "No shadows, rounded cards, pills or segmented controls.",
+      "No per-subject colours; no coloured headline lines; no coloured primary button.",
+      "No web fonts; no exam English brand name; never style the exam mode with this system."
+    ]
+  }
+}
