@@ -41,7 +41,7 @@ export const LocalAccuracy: React.FC<{ slug: 'listening' | 'reading'; typeNames:
     return (
       <div className="flex items-center gap-4">
         <EmptyChartArt className="w-24 shrink-0" />
-        <p className="text-sm text-muted-foreground">做完第一组题，这里会按题型显示你的正确率，告诉你先补哪一块。</p>
+        <p className="text-sm text-muted-foreground">做完第一组题，这里按题型列出正确率，哪项最低就先练哪项。</p>
       </div>
     )
 

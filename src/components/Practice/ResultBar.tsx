@@ -45,7 +45,7 @@ export const ResultBar: React.FC<{ score: number; total: number; band?: number |
           <p className="text-lg tabular-nums">
             答对 <b className={cn('text-[30px] tracking-tight', good ? 'text-success' : 'text-primary-text')}>{score}</b> / {total}
           </p>
-          <p className="text-[13px] text-muted-foreground">{good ? '做得不错，看看错的那几题' : ratio >= 0.5 ? '过半了，把错题过一遍就能再进一步' : '先别灰心：对照答案和解析过一遍，再做一遍会顺很多'}</p>
+          <p className="text-[13px] text-muted-foreground">{good ? '不错。错的那几题点开看看解析' : ratio >= 0.5 ? '对了一半多。错题点开对一下原文，找出漏掉的那句' : '错得有点多。先把错题对着原文看一遍，再重做这组'}</p>
         </div>
       </div>
       {band != null && (

@@ -123,7 +123,7 @@ docker compose build app && docker compose up -d app
 ```
 
 - 构建期间旧容器继续提供服务，`up -d` 换新容器时会断几秒。
-- 安全修复要**先部署上线，再同步公开仓库**（`sync-public.sh`）。
+- 安全修复要**先部署上线，再同步公开仓库**。
 
 ## 7. 备份
 

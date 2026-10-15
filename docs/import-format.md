@@ -12,7 +12,7 @@
 - 套题编号 `code` 不能和已有套题重复。
 - 文件路径都是相对 `import.json` 所在文件夹的路径，用 `/` 分隔，如 `audio/part1.mp3`。
 - 音频只能是 mp3 / m4a，图片可以是 png / jpg / gif / webp / svg，单个文件不超过 50MB。
-- 每条内容都要写 `sourceType`：`original`（原创）、`ai_rewrite`（AI 重写）、`repost`（转载）、`ai_generated`（AI 生成）；转载必须写 `sourceSets`（来源题集），供后台按题集筛选、整批下架（宪章 III）。
+- 每条内容都要写 `sourceType`：`original`（原创）、`ai_rewrite`（AI 重写）、`repost`（转载）、`ai_generated`（AI 生成）；转载必须写 `sourceSets`（来源题集），供后台按题集筛选、整批下架。
 - 前台文案不得出现考试主办方的英文商标。
 
 完整可导入的示例见 `docs/import-example/`（套题）、`docs/writing-example/`、`docs/speaking-example/`。
@@ -159,7 +159,7 @@
 
 题号在单元内连续、不重复即可，不要求从 1 开始（Part 2 就是 11–20）。示例：`tests/fixtures/unit-pack/`。
 
-第三方题库由离线转换脚本 `pnpm convert <writing|reading|listening>` 生成导入包与复核表，见 `specs/007-question-bank-import/contracts/convert-cli.md`。
+第三方题库由离线转换脚本 `pnpm convert <writing|reading|listening>` 生成导入包与复核表，用法见 `scripts/convert/index.ts` 文件头。
 
 ## 写作题（kind = writing）
 
@@ -197,7 +197,7 @@
 
 套题里的写作 / 口语引用不在导入里写：先导入写作题、口语题，再在后台套题的「写作」「口语」标签页里选择。
 
-## 整批下架某个来源题集（宪章 III、007 FR-040）
+## 整批下架某个来源题集
 
 1. 后台进入「练习单元」（或「写作题」）列表。
 2. 点「筛选」，选字段「来源题集」→「包含」→ 输入题集名（如 `Z家阅读9月高频`）。
