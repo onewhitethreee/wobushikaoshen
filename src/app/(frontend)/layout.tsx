@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import React from 'react'
 
 import { AdminBar } from '@/components/AdminBar'
+import { WordLookup } from '@/components/Vocab/WordLookup'
 import { Footer } from '@/Footer/Component'
 import { Header } from '@/Header/Component'
 import { Providers } from '@/providers'
@@ -45,6 +46,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <Header />
           {children}
           <Footer />
+          <WordLookup />
         </Providers>
       </body>
     </html>

@@ -5,13 +5,14 @@ import { emptyData, isSyncData, mergeData, type SyncData } from '../account/sync
 
 // 同步（009 research R6、contracts/api.md）：一个接口既推又拉。
 // 客户端带上次同步到的 rev 和这之后的改动；服务端合并后返回新 rev，客户端的 rev 已过时则一并返回完整数据
-const MAX_BODY = 2 * 1024 * 1024
+// 013 起含单词本（最多 5000 个词，按平均 2 条原句约 4 MB），上限从 2 MB / 5 MB 调大
+const MAX_BODY = 4 * 1024 * 1024
 // 合并后的总大小上限：草稿条数不限，反复推送会让一个账号的数据无限增长（010 R6-F5）。
 // 记录上限 500 条约 1 MB（009 plan），留足余量
-const MAX_STORED = 5 * 1024 * 1024
+const MAX_STORED = 12 * 1024 * 1024
 
 const isEmpty = (d: Partial<SyncData>) =>
-  !d.records?.length && [d.progress, d.drafts, d.favorites, d.dismissed].every((o) => !o || !Object.keys(o).length)
+  !d.records?.length && !d.vocab && [d.progress, d.drafts, d.favorites, d.dismissed, d.words].every((o) => !o || !Object.keys(o).length)
 
 export const memberDataEndpoint: Endpoint = {
   path: '/me/data',

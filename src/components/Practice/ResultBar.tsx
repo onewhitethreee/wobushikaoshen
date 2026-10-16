@@ -51,7 +51,7 @@ export const ResultBar: React.FC<{ score: number; total: number; band?: number |
       {band != null && (
         <div className="flex items-baseline gap-3 bg-chip px-4 py-2">
           <span className="text-[30px] font-bold leading-none tracking-tight text-primary-text tabular-nums">band {band.toFixed(1).replace(/\.0$/, '')}</span>
-          <span className="text-[12px] text-primary-text/80">按本站换算表估算，仅供参考</span>
+          <span className="text-[12px] text-primary-text/80">估算分数，仅供参考</span>
         </div>
       )}
       <div className="ml-auto flex flex-wrap gap-2">

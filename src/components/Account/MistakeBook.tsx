@@ -42,7 +42,7 @@ const yourAnswer = (m: Mistake, q?: LookupQuestion) => {
   return a?.trim() ? withText(a, q) : '—'
 }
 
-const Tabs: React.FC<{ label: string; testid: string; options: [string, number][]; value: string; onChange: (v: string) => void }> = ({
+export const Tabs: React.FC<{ label: string; testid: string; options: [string, number][]; value: string; onChange: (v: string) => void }> = ({
   label,
   testid,
   options,
@@ -126,15 +126,14 @@ export const MistakeBook: React.FC = () => {
     setOpen(null)
   }
 
-  if (all === null) return <p className="text-muted-foreground">正在读取…</p>
+  if (all === null) return <p className="text-muted-foreground">加载中…</p>
 
   return (
     <div className="flex flex-col gap-4">
       {!loggedIn && (
         <p className="bg-muted px-5 py-4 text-[13px] text-muted-foreground">
-          错题保存在这台设备上。
           <Link className="ml-1 inline-flex min-h-11 items-center text-foreground underline underline-offset-4" href="/login?next=/me/mistakes">
-            登录后可在其他设备查看 ↗
+            登录后换设备也能看到 ↗
           </Link>
         </p>
       )}
@@ -207,7 +206,7 @@ export const MistakeBook: React.FC = () => {
                   <div className="ml-auto">
                     {gone ? (
                       <button className="inline-flex min-h-11 items-center px-3 text-sm text-muted-foreground hover:text-foreground" onClick={() => dismiss(m.key)} type="button">
-                        移除
+                        移出
                       </button>
                     ) : (
                       <Link

@@ -157,9 +157,9 @@ const testColumn = (slug: 'listening' | 'reading', tests: Test[], units: Unit[])
       },
       {
         id: 'part',
-        label: isL ? '按 Part 练' : '按篇目练',
+        label: isL ? '按 Part 练' : '按 Passage 练',
         match: { kind: 'group' },
-        filters: [{ id: 'part', label: isL ? 'Part' : '篇目', options: parts }, ...tagFilter, status],
+        filters: [{ id: 'part', label: isL ? 'Part' : 'Passage', options: parts }, ...tagFilter, status],
       },
       ...(hasUnits
         ? [
@@ -167,7 +167,7 @@ const testColumn = (slug: 'listening' | 'reading', tests: Test[], units: Unit[])
               id: 'unit',
               label: isL ? '整个 Part 练' : '整篇练',
               match: { kind: 'unit' },
-              filters: [{ id: 'part', label: isL ? 'Part' : '篇目', options: parts }, ...tagFilter, status],
+              filters: [{ id: 'part', label: isL ? 'Part' : 'Passage', options: parts }, ...tagFilter, status],
             },
           ]
         : []),
@@ -230,7 +230,7 @@ const speakingColumn = (qs: SpeakingQuestion[]): ColumnConfig | null => {
       facets: { part: q.part },
       actions: [
         { label: '看题', doneLabel: '再看一遍', href: `/speaking?start=${q.id}`, cost: free },
-        { label: 'AI 口语模考', href: `/speaking?mock=${q.id}`, cost: quota1 },
+        { label: '口语批改', href: `/speaking?mock=${q.id}`, cost: quota1 },
       ],
     }
   })

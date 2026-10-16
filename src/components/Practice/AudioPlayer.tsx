@@ -126,7 +126,7 @@ export const AudioPlayer: React.FC<{
       <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-y border-border bg-background px-1 py-2">
         {error ? (
           <p className="flex min-h-11 flex-1 items-center gap-3 text-sm" role="alert">
-            音频加载失败，题目可以照常作答。
+            音频加载失败。
             <button
               className="min-h-11 rounded-lg border border-input px-4 font-semibold hover:border-primary hover:text-primary-text"
               onClick={() => {

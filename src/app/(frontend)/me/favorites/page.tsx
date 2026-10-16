@@ -12,7 +12,6 @@ export default function Page() {
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <div className="flex flex-col gap-2">
           <h1 className="text-[30px] font-medium tracking-[-0.02em]">我的收藏</h1>
-          <p className="text-[15px] text-muted-foreground">收藏的单元和题目，点进去直接练。</p>
         </div>
         <FavoriteList />
       </div>

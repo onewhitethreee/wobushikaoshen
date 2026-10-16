@@ -67,7 +67,7 @@ test.describe('首页', () => {
 
     const soon = page.getByText('即将开放', { exact: true })
     expect(await soon.evaluate((el) => el.closest('a,button'))).toBeNull()
-    await expect(page.getByText('示例数据').first()).toBeVisible()
+    await expect(page.getByText('示例数据')).toHaveCount(0)
 
     await page.getByText('阅读 Passage 1', { exact: true }).click()
     await expect(page.getByLabel('阅读 Passage 1')).toBeChecked()
@@ -107,7 +107,7 @@ test.describe('栏目页', () => {
   test('未登录也有状态筛选，本机无记录时正确率区显示引导', async ({ page }) => {
     await page.goto(BASE + '/listening')
     await expect(page.getByRole('button', { name: '已做', exact: true })).toBeVisible()
-    await expect(page.locator('aside')).toContainText('做完第一组题')
+    await expect(page.locator('aside')).toContainText('做完一组题后')
     await expect(page.locator('aside')).not.toContainText('%')
   })
 
@@ -140,9 +140,9 @@ test.describe('栏目页', () => {
     expect(aside!.y).toBeGreaterThan(main!.y)
   })
 
-  test('阅读页有篇目标签', async ({ page }) => {
+  test('阅读页有 Passage 标签', async ({ page }) => {
     await page.goto(BASE + '/reading')
-    await page.getByRole('tab', { name: '按篇目练' }).click()
+    await page.getByRole('tab', { name: '按 Passage 练' }).click()
     await expect(page.getByRole('button', { name: 'Passage 1', exact: true })).toBeVisible()
   })
 
@@ -161,10 +161,10 @@ test.describe('栏目页', () => {
 
     await page.goto(BASE + '/writing?demo=loggedin')
     await expect(page.locator('aside')).toContainText('剩余')
-    await expect(page.locator('aside')).toContainText('示例')
+    await expect(page.locator('aside')).not.toContainText('示例')
 
     await page.goto(BASE + '/speaking')
-    await expect(page.getByText('AI 口语模考').first()).toBeVisible()
+    await expect(page.getByText('口语批改').first()).toBeVisible()
     await expect(page.getByText('1 额度').first()).toBeVisible()
   })
 

@@ -15,10 +15,10 @@ const pendingNotice = (config: ColumnConfig, q: ColumnQuery) => {
   const id = q.start ?? q.review ?? q.mock
   const row = id ? config.rows.find((r) => r.id === id) : undefined
   if (!row) return null
-  if (q.review) return `「${row.title}」的 AI 批改即将开放。现在点了不会扣额度，先写着，开放后再交。`
-  if (q.mock && config.slug === 'speaking') return `「${row.title}」的 AI 口语模考即将开放。现在点了不会扣额度。`
-  if (config.slug === 'mock') return '模考界面正在按电脑考试 1:1 制作，上线后从这里直接进入。'
-  return `「${row.title}」的练习界面正在做，上线后点这里就能直接开始。先看看别的题，或者明天再来。`
+  if (q.review) return 'AI 批改还没开放，这次不扣额度。'
+  if (q.mock && config.slug === 'speaking') return '口语批改还没开放，这次不扣额度。'
+  if (config.slug === 'mock') return '模考还在制作中，做好后从这里进入。'
+  return '这组题还不能练，先看看别的题。'
 }
 
 // 五个栏目页共用：三栏，标题区放在中栏顶部（006 FR-054）
@@ -34,7 +34,7 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; loggedIn: boolean; que
 
   const header = (
     <div className="flex flex-col gap-3" key="header">
-      <nav aria-label="面包屑" className="text-[13px] text-muted-foreground">
+      <nav aria-label="当前位置" className="text-[13px] text-muted-foreground">
         <Link className="inline-flex min-h-11 items-center hover:text-foreground" href="/">
           首页
         </Link>{' '}

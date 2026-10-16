@@ -138,10 +138,13 @@ const PUBLIC_READ = [
 ]
 const PRIVATE = [
   'users', 'members', 'email-sends', 'login-codes', 'member-data', 'ai-settings', 'mail-settings',
+  'credit-entries', 'note-submissions', 'note-screenshots', 'credit-settings',
   'payload-folders', 'payload-locked-documents', 'payload-preferences', 'payload-migrations', 'payload-kv', 'payload-jobs',
 ]
-// 考生唯一能读的私有集合：members（只有自己那条，上面"考生列表只看得到自己"已测）
-const MEMBER_EXTRA_READ = ['members']
+// 谁都不能经 Payload 读写（管理员也不行）：013 词典只由 /api/dict 直接查表
+const DENY_ALL = ['dict-entries']
+// 考生能读的私有集合：都只限自己的（members 上面"考生列表只看得到自己"已测，011 的三个在 credits.int.spec.ts 测）
+const MEMBER_EXTRA_READ = ['members', 'credit-entries', 'note-submissions', 'note-screenshots']
 
 describe('访问矩阵', () => {
   beforeAll(async () => {
@@ -164,7 +167,7 @@ describe('访问矩阵', () => {
   ]
 
   it('每个集合 / 全局都在期望表里', () => {
-    const unknown = slugs().map((s) => s.slug).filter((s) => !PUBLIC_READ.includes(s) && !PRIVATE.includes(s))
+    const unknown = slugs().map((s) => s.slug).filter((s) => !PUBLIC_READ.includes(s) && !PRIVATE.includes(s) && !DENY_ALL.includes(s))
     expect(unknown).toEqual([])
   })
 
@@ -185,5 +188,6 @@ describe('访问矩阵', () => {
     if (!admin) return
     const r = await resultsFor({ ...admin, collection: 'users' })
     expect(PRIVATE.filter((s) => !s.startsWith('payload-') && !allowed(r, s, 'read'))).toEqual([])
+    expect(DENY_ALL.flatMap((s) => ['create', 'read', 'update', 'delete'].filter((op) => allowed(r, s, op)))).toEqual([])
   })
 })

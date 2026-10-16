@@ -2,6 +2,7 @@
 
 整站跑在一台服务器上：`db`（Postgres 17）和 `app`（Next.js + Payload）两个容器，外面一层 nginx 负责 HTTPS。
 媒体（题目配图、听力音频，约 3.3GB）存在服务器磁盘 `public/media`，挂进 app 容器。
+考生上传的小红书笔记截图存在 `private/note-screenshots`（不在 `public/` 下，只有本人和管理员能打开），同样挂进 app 容器。
 
 配置文件：`Dockerfile`、`docker-compose.yml`、`.env.example`。
 
@@ -65,10 +66,24 @@ docker compose exec db psql -U postgres -d ielts -c "delete from users_sessions"
 - 本机库是 `pnpm dev` 自动同步出来的表结构，和迁移建的只差列顺序。pg_restore 按列名导入，不受影响。
 - 测试数据（`e2e-`、`fixture-` 开头）测完会自动删除，导出前可以确认一下没有残留。
 
-### ③ 媒体目录权限、构建、启动
+### ③ 导入词典（双击查词、单词本用）
+
+下载 [ECDICT](https://github.com/skywind3000/ECDICT)（MIT 许可，约 66 MB；固定到某次提交并核对校验值），用 `migrate` 服务的镜像导入，约 40 万条、1 分钟以内：
+
+```bash
+curl -L -o ecdict.csv https://raw.githubusercontent.com/skywind3000/ECDICT/82c9872576b23118d7c42e920c11beb77f510ae2/ecdict.csv
+echo "1a6947e04785db63613a92e14903cdae7954f7e84860b10e68e5c7cbb3f9c3cf  ecdict.csv" | sha256sum -c
+docker compose run --rm -v "$PWD/ecdict.csv:/tmp/ecdict.csv:ro" migrate pnpm import:dict /tmp/ecdict.csv
+rm ecdict.csv
+```
+
+导入是整表替换，可以重复执行。没导入词典时，网站其他功能照常，只是双击查词都显示"词典里没有这个词"。
+
+### ④ 媒体目录权限、构建、启动
 
 ```bash
 mkdir -p public/media && sudo chown -R 1001:1001 public/media   # 容器以 uid 1001 运行，不改的话后台上传会失败
+mkdir -p private/note-screenshots && sudo chown -R 1001:1001 private   # 笔记截图，同理
 docker compose build app
 docker compose up -d app
 docker compose logs -f app       # 看到 Ready 即可
@@ -123,6 +138,7 @@ docker compose build app && docker compose up -d app
 ```
 
 - 构建期间旧容器继续提供服务，`up -d` 换新容器时会断几秒。
+- 词典只在第一次部署时导入；以后换新版 ECDICT 时，按 3 ③ 的命令重新导入即可。
 - 安全修复要**先部署上线，再同步公开仓库**。
 
 ## 7. 备份
@@ -132,7 +148,11 @@ docker compose build app && docker compose up -d app
 docker compose exec -T db pg_dump -U postgres -d ielts -Fc > backup/ielts-$(date +%F).dump
 # 媒体：增量同步到别的机器或对象存储
 rsync -a public/media/ <备份位置>/media/
+# 笔记截图（永久保留，审核凭证）
+rsync -a private/ <备份位置>/private/
 ```
+
+词典（`dict_entries` 表）可以随时从 ECDICT 重新导入，不必单独备份；整库备份里带着它也无妨（约 60 MB）。
 
 恢复整库：在空库上执行 `pg_restore -U postgres -d ielts --clean --if-exists <文件>`。这是整库备份，带表结构，不需要先跑 migrate。
 
@@ -144,4 +164,5 @@ rsync -a public/media/ <备份位置>/media/
 | app 启动即退出，日志提示 SECRET | 三个 SECRET 不足 32 位，或者还是示例值                                                      |
 | 登录成功但刷新后仍未登录        | 没走 HTTPS，或者 `NEXT_PUBLIC_SERVER_URL` 和实际访问地址不一致                            |
 | 后台上传图片 / 音频失败         | `public/media` 没有 `chown 1001:1001`                                                   |
+| 考生提交笔记时上传截图失败      | `private` 没有 `chown 1001:1001`                                                        |
 | 验证码限频把所有人当成同一个 IP | nginx 没设 `X-Forwarded-For`                                                              |

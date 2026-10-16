@@ -104,7 +104,7 @@ test.describe('写作题库', () => {
     for (const text of await rows.allInnerTexts()) expect(text).toContain('地图')
   })
 
-  test('写作页：题目、配图、字数、草稿保存在本机', async ({ page }) => {
+  test('写作页：题目、配图、字数、草稿自动保存', async ({ page }) => {
     await page.goto(`${BASE}/writing/${mapId}`)
     await expect(page.getByRole('heading', { level: 1 })).toHaveText('E2E Harbour Changes')
     await expect(page.getByText('测试用港口变化').first()).toBeVisible()
@@ -113,7 +113,7 @@ test.describe('写作题库', () => {
 
     await page.getByLabel('在这里写').fill('The harbour has changed a lot over the years.')
     await expect(page.getByTestId('word-count')).toContainText('9 词')
-    await expect(page.getByText('已保存在本机')).toBeVisible()
+    await expect(page.getByText('已保存', { exact: true })).toBeVisible()
     await page.reload()
     await expect(page.getByLabel('在这里写')).toHaveValue('The harbour has changed a lot over the years.')
   })
@@ -486,7 +486,7 @@ test.describe('听力单元', () => {
     await page.goto(`${BASE}/practice/u${unitId}`)
     const prev = page.getByRole('button', { name: '上一句' })
     await expect(prev.locator('kbd')).toBeVisible()
-    await expect(prev).toHaveAttribute('title', /1\.5 秒/)
+    await expect(prev).toHaveAttribute('title', /回到句首/)
     await page.getByRole('heading', { level: 1 }).click()
     await page.keyboard.press('?')
     const dialog = page.getByRole('dialog', { name: '快捷键' })

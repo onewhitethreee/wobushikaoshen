@@ -39,7 +39,8 @@ services:
     environment:
       DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/ielts
     ports: ['127.0.0.1:3000:3000']
-    volumes: ['./public/media:/app/public/media']
+    # private/：考生上传的小红书笔记截图（011），不公开，备份时要带上
+    volumes: ['./public/media:/app/public/media', './private:/app/private']
     depends_on: [db]
 
 volumes:

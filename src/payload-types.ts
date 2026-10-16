@@ -77,10 +77,14 @@ export interface Config {
     'email-sends': EmailSend;
     'login-codes': LoginCode;
     'member-data': MemberDatum;
+    'credit-entries': CreditEntry;
+    'note-submissions': NoteSubmission;
+    'note-screenshots': NoteScreenshot;
     tests: Test;
     units: Unit;
     'writing-tasks': WritingTask;
     'speaking-questions': SpeakingQuestion;
+    'dict-entries': DictEntry;
     redirects: Redirect;
     search: Search;
     'payload-kv': PayloadKv;
@@ -91,6 +95,9 @@ export interface Config {
     'payload-migrations': PayloadMigration;
   };
   collectionsJoins: {
+    members: {
+      credits: 'credit-entries';
+    };
     'payload-folders': {
       documentsAndFolders: 'payload-folders' | 'media';
     };
@@ -105,10 +112,14 @@ export interface Config {
     'email-sends': EmailSendsSelect<false> | EmailSendsSelect<true>;
     'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
     'member-data': MemberDataSelect<false> | MemberDataSelect<true>;
+    'credit-entries': CreditEntriesSelect<false> | CreditEntriesSelect<true>;
+    'note-submissions': NoteSubmissionsSelect<false> | NoteSubmissionsSelect<true>;
+    'note-screenshots': NoteScreenshotsSelect<false> | NoteScreenshotsSelect<true>;
     tests: TestsSelect<false> | TestsSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
     'writing-tasks': WritingTasksSelect<false> | WritingTasksSelect<true>;
     'speaking-questions': SpeakingQuestionsSelect<false> | SpeakingQuestionsSelect<true>;
+    'dict-entries': DictEntriesSelect<false> | DictEntriesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -128,6 +139,7 @@ export interface Config {
     'band-scales': BandScale;
     'ai-settings': AiSetting;
     'mail-settings': MailSetting;
+    'credit-settings': CreditSetting;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
@@ -135,6 +147,7 @@ export interface Config {
     'band-scales': BandScalesSelect<false> | BandScalesSelect<true>;
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
     'mail-settings': MailSettingsSelect<false> | MailSettingsSelect<true>;
+    'credit-settings': CreditSettingsSelect<false> | CreditSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -626,6 +639,15 @@ export interface ArchiveBlock {
 export interface Member {
   id: number;
   lastLoginAt?: string | null;
+  passwordSet?: boolean | null;
+  inviteCode?: string | null;
+  invitedBy?: (number | null) | Member;
+  balance?: number | null;
+  credits?: {
+    docs?: (number | CreditEntry)[];
+    hasNextPage?: boolean;
+    totalDocs?: number;
+  };
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -645,6 +667,26 @@ export interface Member {
     | null;
   password?: string | null;
   collection: 'members';
+}
+/**
+ * 流水不能修改或删除；发错了就新建一条反向调整。
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credit-entries".
+ */
+export interface CreditEntry {
+  id: number;
+  member: number | Member;
+  amount: number;
+  reason: 'invite' | 'invitee' | 'note' | 'spend' | 'refund' | 'adjust';
+  /**
+   * 防重复发放的唯一键
+   */
+  refKey?: string | null;
+  relatedMember?: (number | null) | Member;
+  note?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -694,6 +736,48 @@ export interface MemberDatum {
     | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "note-submissions".
+ */
+export interface NoteSubmission {
+  id: number;
+  member: number | Member;
+  url: string;
+  noteKey?: string | null;
+  screenshot: number | NoteScreenshot;
+  remark?: string | null;
+  status: 'pending' | 'approved' | 'rejected';
+  /**
+   * 通过时按这个数发放；已按「额度设置」预填，可修改
+   */
+  amount?: number | null;
+  rejectPreset?: ('链接打不开' | '笔记里没提到本站' | '截图和链接对不上' | '重复提交' | '其他') | null;
+  rejectReason?: string | null;
+  reviewedBy?: (number | null) | User;
+  reviewedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "note-screenshots".
+ */
+export interface NoteScreenshot {
+  id: number;
+  member: number | Member;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1115,6 +1199,18 @@ export interface Unit {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dict-entries".
+ */
+export interface DictEntry {
+  id: number;
+  word: string;
+  phonetic?: string | null;
+  translation?: string | null;
+  exchange?: string | null;
+  lemma?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1323,6 +1419,18 @@ export interface PayloadLockedDocument {
         value: number | MemberDatum;
       } | null)
     | ({
+        relationTo: 'credit-entries';
+        value: number | CreditEntry;
+      } | null)
+    | ({
+        relationTo: 'note-submissions';
+        value: number | NoteSubmission;
+      } | null)
+    | ({
+        relationTo: 'note-screenshots';
+        value: number | NoteScreenshot;
+      } | null)
+    | ({
         relationTo: 'tests';
         value: number | Test;
       } | null)
@@ -1337,6 +1445,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'speaking-questions';
         value: number | SpeakingQuestion;
+      } | null)
+    | ({
+        relationTo: 'dict-entries';
+        value: number | DictEntry;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1700,6 +1812,11 @@ export interface UsersSelect<T extends boolean = true> {
  */
 export interface MembersSelect<T extends boolean = true> {
   lastLoginAt?: T;
+  passwordSet?: T;
+  inviteCode?: T;
+  invitedBy?: T;
+  balance?: T;
+  credits?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -1755,6 +1872,57 @@ export interface MemberDataSelect<T extends boolean = true> {
   data?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credit-entries_select".
+ */
+export interface CreditEntriesSelect<T extends boolean = true> {
+  member?: T;
+  amount?: T;
+  reason?: T;
+  refKey?: T;
+  relatedMember?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "note-submissions_select".
+ */
+export interface NoteSubmissionsSelect<T extends boolean = true> {
+  member?: T;
+  url?: T;
+  noteKey?: T;
+  screenshot?: T;
+  remark?: T;
+  status?: T;
+  amount?: T;
+  rejectPreset?: T;
+  rejectReason?: T;
+  reviewedBy?: T;
+  reviewedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "note-screenshots_select".
+ */
+export interface NoteScreenshotsSelect<T extends boolean = true> {
+  member?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1996,6 +2164,17 @@ export interface SpeakingQuestionsSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dict-entries_select".
+ */
+export interface DictEntriesSelect<T extends boolean = true> {
+  word?: T;
+  phonetic?: T;
+  translation?: T;
+  exchange?: T;
+  lemma?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2265,6 +2444,31 @@ export interface MailSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credit-settings".
+ */
+export interface CreditSetting {
+  id: number;
+  /**
+   * 每成功邀请 1 位新用户，邀请人得多少额度
+   */
+  inviterReward: number;
+  /**
+   * 通过邀请链接注册的新用户得多少额度
+   */
+  inviteeReward: number;
+  /**
+   * 每位邀请人最多得几次邀请奖励；之后被邀请人照常得
+   */
+  inviterCap: number;
+  /**
+   * 审核小红书笔记时预填的额度，可逐篇修改
+   */
+  noteDefault: number;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
@@ -2383,6 +2587,19 @@ export interface MailSettingsSelect<T extends boolean = true> {
         lastErrorAt?: T;
         lastError?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "credit-settings_select".
+ */
+export interface CreditSettingsSelect<T extends boolean = true> {
+  inviterReward?: T;
+  inviteeReward?: T;
+  inviterCap?: T;
+  noteDefault?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

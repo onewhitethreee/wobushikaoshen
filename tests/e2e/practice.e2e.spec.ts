@@ -210,7 +210,7 @@ test.describe('US5 整套与 band', () => {
     await page.getByTestId('explain-panel').getByRole('button', { name: '下一题' }).click()
     await expect(page.getByRole('tab', { name: 'Passage 2', exact: true })).toHaveAttribute('aria-selected', 'true')
     await expect(page.getByTestId('explain-panel')).toHaveAttribute('aria-label', '第 14 题解析')
-    await expect(page.getByText('按本站换算表估算')).toBeVisible()
+    await expect(page.getByText('估算分数，仅供参考')).toBeVisible()
 
     await page.goto(`${BASE}/practice/t${id}-r1`)
     await submit(page)
@@ -242,14 +242,14 @@ test.describe('US6 本地进度与记录', () => {
     await expect(page.getByTestId('ratio-ring').first()).toBeVisible()
   })
 
-  test('本机存储不可用时提示，仍能交卷', async ({ page }) => {
+  test('作答无法保存时提示，仍能交卷', async ({ page }) => {
     await page.addInitScript(() => {
       Storage.prototype.setItem = () => {
         throw new Error('QuotaExceededError')
       }
     })
     await page.goto(`${BASE}/practice/t${id}-l1`)
-    await expect(page.getByText('记录不会保存')).toBeVisible()
+    await expect(page.getByText('这次作答没法保存')).toBeVisible()
     await submit(page)
     await expect(page.getByText('答对 0 / 10')).toBeVisible()
   })

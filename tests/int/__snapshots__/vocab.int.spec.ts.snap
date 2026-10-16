@@ -1,0 +1,16 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`每日队列与调度 > 固定输入结果稳定（不加随机扰动） 1`] = `
+{
+  "difficulty": 7.39223814,
+  "due": 1792311600000,
+  "elapsed_days": 2,
+  "lapses": 1,
+  "last_review": 1792311000000,
+  "learning_steps": 0,
+  "reps": 3,
+  "scheduled_days": 0,
+  "stability": 0.60770166,
+  "state": 3,
+}
+`;

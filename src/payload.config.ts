@@ -13,9 +13,14 @@ import { Pages } from './collections/Pages'
 import { Posts } from './collections/Posts'
 import { Users } from './collections/Users'
 import { Members } from './collections/Members'
+import { DictEntries } from './collections/DictEntries'
 import { EmailSends } from './collections/EmailSends'
 import { LoginCodes } from './collections/LoginCodes'
 import { MemberData } from './collections/MemberData'
+import { CreditEntries } from './collections/CreditEntries'
+import { NoteScreenshots } from './collections/NoteScreenshots'
+import { NoteSubmissions } from './collections/NoteSubmissions'
+import { CreditSettings } from './globals/CreditSettings'
 import { Tests } from './collections/Tests'
 import { Units } from './collections/Units'
 import { WritingTasks } from './collections/WritingTasks'
@@ -26,8 +31,12 @@ import { BandScales } from './globals/BandScales'
 import { importEndpoint } from './endpoints/import'
 import { mailTestEndpoint } from './endpoints/mailTest'
 import { authEndpoints } from './endpoints/auth'
+import { passwordEndpoint } from './endpoints/password'
 import { memberDataEndpoint } from './endpoints/memberData'
 import { lookupEndpoint } from './endpoints/lookup'
+import { dictEndpoint } from './endpoints/dict'
+import { creditsEndpoint } from './endpoints/credits'
+import { notesEndpoint } from './endpoints/notes'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
@@ -76,14 +85,14 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, Tests, Units, WritingTasks, SpeakingQuestions],
+  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, CreditEntries, NoteSubmissions, NoteScreenshots, Tests, Units, WritingTasks, SpeakingQuestions, DictEntries],
   cors: [getServerSideURL()].filter(Boolean),
   // 只认本站来源的 cookie：别的网站带着考生 / 管理员 cookie 发来的请求按未登录处理（010 attack-matrix A12）
   csrf: [getServerSideURL()].filter(Boolean),
-  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, memberDataEndpoint, lookupEndpoint],
+  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, dictEndpoint, creditsEndpoint, notesEndpoint],
   // 网站不用 GraphQL，关掉少一个对外接口（009 安全自查）
   graphQL: { disable: true },
-  globals: [Header, Footer, BandScales, AiSettings, MailSettings],
+  globals: [Header, Footer, BandScales, AiSettings, MailSettings, CreditSettings],
   plugins: [
     ...plugins,
     // 配置了 S3 时媒体放对象存储，浏览器直连 S3_PUBLIC_URL；未配置时存本地磁盘 public/media

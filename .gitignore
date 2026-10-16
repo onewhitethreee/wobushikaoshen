@@ -26,3 +26,6 @@ node_modules/
 /scripts/*.tmp.ts
 *.tsbuildinfo
 /tests/e2e/*.tmp.spec.ts
+
+# 011 考生上传的笔记截图（私有，不在 public 下）
+/private/

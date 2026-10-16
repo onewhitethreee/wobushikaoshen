@@ -4,13 +4,13 @@ import { CopyIcon } from '@payloadcms/ui/icons/Copy'
 import { useState } from 'react'
 
 export function CopyButton({ code }: { code: string }) {
-  const [text, setText] = useState('Copy')
+  const [text, setText] = useState('复制')
 
   function updateCopyStatus() {
-    if (text === 'Copy') {
-      setText(() => 'Copied!')
+    if (text === '复制') {
+      setText(() => '已复制')
       setTimeout(() => {
-        setText(() => 'Copy')
+        setText(() => '复制')
       }, 1000)
     }
   }

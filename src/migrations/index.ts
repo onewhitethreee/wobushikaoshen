@@ -4,6 +4,9 @@ import * as migration_20261008_230428_writing_source_fields from './20261008_230
 import * as migration_20261011_145854_ai_settings from './20261011_145854_ai_settings';
 import * as migration_20261013_223045_unit_summary from './20261013_223045_unit_summary';
 import * as migration_20261014_131240_009_account from './20261014_131240_009_account';
+import * as migration_20261016_003353_011_credits from './20261016_003353_011_credits';
+import * as migration_20261016_110413_012_password from './20261016_110413_012_password';
+import * as migration_20261016_121936_013_dict from './20261016_121936_013_dict';
 
 export const migrations = [
   {
@@ -34,6 +37,21 @@ export const migrations = [
   {
     up: migration_20261014_131240_009_account.up,
     down: migration_20261014_131240_009_account.down,
-    name: '20261014_131240_009_account'
+    name: '20261014_131240_009_account',
+  },
+  {
+    up: migration_20261016_003353_011_credits.up,
+    down: migration_20261016_003353_011_credits.down,
+    name: '20261016_003353_011_credits',
+  },
+  {
+    up: migration_20261016_110413_012_password.up,
+    down: migration_20261016_110413_012_password.down,
+    name: '20261016_110413_012_password',
+  },
+  {
+    up: migration_20261016_121936_013_dict.up,
+    down: migration_20261016_121936_013_dict.down,
+    name: '20261016_121936_013_dict'
   },
 ];

@@ -44,7 +44,7 @@ export const WritingPad: React.FC<{ taskId: string; minWords: number }> = ({
   return (
     <div className="flex flex-col gap-2">
       <label className="text-sm text-muted-foreground" htmlFor="essay">
-        在这里写（草稿自动保存在本机）
+        在这里写，草稿会自动保存
       </label>
       <textarea
         className="min-h-[360px] w-full resize-y border-[1.5px] border-input bg-background p-4 text-[16px] leading-7 outline-none focus:border-foreground"
@@ -63,7 +63,7 @@ export const WritingPad: React.FC<{ taskId: string; minWords: number }> = ({
         >
           {words} 词{short ? ` · 还差 ${minWords - words} 词` : ' · 已达字数要求'}
         </span>
-        <span className="text-muted-foreground">{saved ? '已保存在本机' : '保存中…'}</span>
+        <span className="text-muted-foreground">{saved ? '已保存' : '保存中…'}</span>
       </p>
     </div>
   )

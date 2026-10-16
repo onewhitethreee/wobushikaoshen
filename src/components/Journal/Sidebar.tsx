@@ -52,11 +52,10 @@ export const Sidebar: React.FC<{ modules: SidebarModule[]; loggedIn: boolean; sl
           <section className={sand} key={i}>
             <div className="mb-3 flex items-baseline justify-between">
               <h2 className="text-lg font-semibold">我的额度</h2>
-              {loggedIn && <span className="text-xs text-muted-foreground">示例</span>}
             </div>
             {loggedIn ? (
               <p className="mb-3">
-                剩余 <b className="text-3xl font-medium">{session.balance}</b> 次
+                剩余 <b className="text-3xl font-medium">{session.balance}</b> 额度
               </p>
             ) : (
               <p className="mb-3 font-semibold">登录后查看额度</p>

@@ -1,6 +1,8 @@
 // 本机数据与账号同步（009 research R6、R7）。未登录时什么都不做，练习只用本机。
 // 写入总是先落本机，再防抖推送；服务端返回的数据与本机再合并一次，不会覆盖掉还没推出去的改动
 import { mergeData, type SyncData } from '@/account/sync'
+import { load as loadVocab, save as saveVocab, VOCAB_KEY } from '@/vocab/store'
+
 import { KEY, WRITING_KEY, load, loadDrafts, save, saveDrafts } from './store'
 
 /** 本机数据被同步改过后派发，已挂载的组件重读本机 */
@@ -25,7 +27,13 @@ const localSince = (t: number): SyncData => {
     drafts: since(loadDrafts(), (d) => d.at, t),
     favorites: since(store.favorites, (m) => m.at, t),
     dismissed: since(store.dismissed, (m) => m.at, t),
+    ...localVocabSince(t),
   }
+}
+
+const localVocabSince = (t: number): Pick<SyncData, 'words' | 'vocab'> => {
+  const v = loadVocab()
+  return { words: since(v.words, (w) => w.at, t), ...(v.vocab.at && v.vocab.at >= t ? { vocab: v.vocab } : {}) }
 }
 
 const apply = (server: SyncData | undefined, rev: number, at: number) => {
@@ -37,6 +45,9 @@ const apply = (server: SyncData | undefined, rev: number, at: number) => {
     store.favorites = m.favorites
     store.dismissed = m.dismissed
     saveDrafts(m.drafts)
+    // 单词本写回自己的键；这里不再触发推送（推送由本次同步完成）
+    const v = loadVocab()
+    if (v.ok) saveVocab({ words: m.words ?? {}, vocab: m.vocab ?? v.vocab }, false)
   }
   store.syncedRev = rev
   store.syncedAt = at
@@ -92,5 +103,6 @@ export const clearLocal = () => {
   try {
     localStorage.removeItem(KEY)
     localStorage.removeItem(WRITING_KEY)
+    localStorage.removeItem(VOCAB_KEY)
   } catch {}
 }

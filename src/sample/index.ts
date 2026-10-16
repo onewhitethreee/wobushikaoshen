@@ -163,7 +163,7 @@ const listening: ColumnConfig = {
   slug: 'listening',
   title: '听力',
   cost: free,
-  note: '不登录也能做，登录后保存记录和错题',
+  note: '不登录也能做',
   tabs: [
     {
       id: 'type',
@@ -194,8 +194,8 @@ const listening: ColumnConfig = {
     {
       kind: 'note',
       title: '听力不扣额度',
-      body: '额度只在写作批改和口语模考时用。发小红书笔记、邀请好友都能拿。',
-      link: { label: '怎么拿额度', href: '/#quota' },
+      body: '额度只在写作和口语批改时用。发小红书笔记、邀请好友都能领。',
+      link: { label: '怎么领额度', href: '/#quota' },
     },
   ],
 }
@@ -217,9 +217,9 @@ const reading: ColumnConfig = {
     },
     {
       id: 'part',
-      label: '按篇目练',
+      label: '按 Passage 练',
       match: { kind: 'group' },
-      filters: [{ id: 'part', label: '篇目', options: ['全部', 'Passage 1', 'Passage 2', 'Passage 3'] }, status],
+      filters: [{ id: 'part', label: 'Passage', options: ['全部', 'Passage 1', 'Passage 2', 'Passage 3'] }, status],
     },
     { id: 'set', label: '整套练', match: { kind: 'set' }, filters: [status] },
   ],
@@ -238,8 +238,8 @@ const reading: ColumnConfig = {
     {
       kind: 'note',
       title: '阅读不扣额度',
-      body: '额度只在写作批改和口语模考时用。发小红书笔记、邀请好友都能拿。',
-      link: { label: '怎么拿额度', href: '/#quota' },
+      body: '额度只在写作和口语批改时用。发小红书笔记、邀请好友都能领。',
+      link: { label: '怎么领额度', href: '/#quota' },
     },
   ],
 }
@@ -330,8 +330,8 @@ const speaking: ColumnConfig = {
   slug: 'speaking',
   title: '口语',
   cost: quota1,
-  costLabel: '模考',
-  note: '题目和思路免费看，AI 口语模考按次扣额度',
+  costLabel: '批改',
+  note: '题目和思路免费看，口语批改按次扣额度',
   tabs: (['1', '2', '3'] as const).map((p) => ({
     id: `p${p}`,
     label: `Part ${p}`,
@@ -352,15 +352,15 @@ const speaking: ColumnConfig = {
     record: i === 0 ? '已练 · 未模考' : undefined,
     actions: [
       { label: '看题', doneLabel: '再看一遍', href: `/speaking?start=${id}`, cost: free },
-      { label: 'AI 口语模考', href: `/speaking?mock=${id}`, cost: quota1 },
+      { label: '口语批改', href: `/speaking?mock=${id}`, cost: quota1 },
     ],
   })),
   sidebar: [
     { kind: 'quota' },
     {
       kind: 'note',
-      title: '口语模考需要录音',
-      body: '找个安静的地方。先看题准备思路不扣额度，开始 AI 口语模考才扣。',
+      title: '口语批改需要录音',
+      body: '找个安静的地方。看题准备思路不扣额度，开始口语批改才扣。',
     },
   ],
 }
@@ -402,7 +402,7 @@ const mock: ColumnConfig = {
     {
       kind: 'note',
       title: '考前准备',
-      body: '开始前会先把整场音频下载好，加载完成才开始计时。听力音频只播放一次，和考场一样。',
+      body: '听力音频只播放一次，和考场一样。',
     },
     { kind: 'quota' },
   ],
@@ -411,7 +411,7 @@ const mock: ColumnConfig = {
 export const columns: Record<ColumnSlug, ColumnConfig> = { listening, reading, writing, speaking, mock }
 
 export const home: HomeData = {
-  issueLine: '2026 年 10 月 · 本月更新 听力 6 组 · 阅读 4 篇 · 示例数据',
+  issueLine: '',
   subjects: [
     {
       slug: 'listening',
@@ -451,8 +451,8 @@ export const home: HomeData = {
       slug: 'speaking',
       name: '口语',
       cost: quota1,
-      costLabel: '模考',
-      desc: '看题免费，AI 口语模考按次扣额度。',
+      costLabel: '批改',
+      desc: '看题免费，口语批改按次扣额度。',
       items: [
         { id: 'k1', title: '家乡', meta: 'Part 1', count: '5 题' },
         { id: 'k3', title: '一次改变你看法的谈话', meta: 'Part 2 题卡' },
@@ -460,7 +460,7 @@ export const home: HomeData = {
       moreLabel: '全部口语题',
     },
   ],
-  mock: { listening: '40 题 · 约 30 分钟', reading: '40 题 · 60 分钟', result: '交卷即出分数段' },
+  mock: { listening: '40 题 · 约 30 分钟', reading: '40 题 · 60 分钟', result: '交卷即出分' },
   quotaWays: [
     { title: '发一篇小红书备考笔记', desc: '审核通过后发放额度' },
     { title: '邀请好友注册', desc: '好友用你的链接注册后发放额度' },

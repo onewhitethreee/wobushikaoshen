@@ -41,7 +41,7 @@ export default async function Page({ params }: Props) {
     <>
       <section>
         <div className="container pt-6 pb-1">
-          <nav aria-label="面包屑" className="text-[13px] text-muted-foreground">
+          <nav aria-label="当前位置" className="text-[13px] text-muted-foreground">
             <Link className="inline-flex min-h-11 items-center hover:text-foreground" href="/">
               首页
             </Link>{' '}
@@ -54,11 +54,11 @@ export default async function Page({ params }: Props) {
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
             <div className="flex min-w-0 items-center gap-3">
               {isL ? <Headphones aria-hidden="true" className="size-7 shrink-0" strokeWidth={1.75} /> : <BookOpen aria-hidden="true" className="size-7 shrink-0" strokeWidth={1.75} />}
-              <h1 className="min-w-0 text-[22px] font-bold leading-tight tracking-tight text-balance md:text-[30px]">{unit.title}</h1>
+              <h1 data-unit-title className="min-w-0 text-[22px] font-bold leading-tight tracking-tight text-balance md:text-[30px]">{unit.title}</h1>
               <FavoriteButton favKey={`u:${unit.id}`} />
             </div>
             <CostMark cost={{ kind: 'free' }} />
-            <span className="bg-muted px-2.5 py-0.5 text-[12px] text-muted-foreground tabular-nums">{count} 题 · 记录保存在本机</span>
+            <span className="bg-muted px-2.5 py-0.5 text-[12px] text-muted-foreground tabular-nums">{count} 题</span>
           </div>
         </div>
       </section>

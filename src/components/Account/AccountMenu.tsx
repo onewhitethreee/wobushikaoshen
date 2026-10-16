@@ -17,14 +17,16 @@ const mask = (email: string) => {
 export const AccountMenu: React.FC = () => {
   const pathname = usePathname()
   const [email, setEmail] = useState<string | null | undefined>(undefined)
+  const [passwordSet, setPasswordSet] = useState(false)
   const menu = useRef<HTMLDetailsElement>(null)
 
   useEffect(() => {
     fetch('/api/members/me', { credentials: 'include' })
       .then((r) => r.json())
-      .then((d: { user?: { email?: string; collection?: string } | null }) =>
-        setEmail(d.user?.collection === 'members' && d.user.email ? d.user.email : null),
-      )
+      .then((d: { user?: { email?: string; collection?: string; passwordSet?: boolean | null } | null }) => {
+        setEmail(d.user?.collection === 'members' && d.user.email ? d.user.email : null)
+        setPasswordSet(Boolean(d.user?.passwordSet))
+      })
       .catch(() => setEmail(null))
   }, [])
 
@@ -69,6 +71,26 @@ export const AccountMenu: React.FC = () => {
         <li>
           <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/favorites">
             我的收藏
+          </Link>
+        </li>
+        <li>
+          <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/words">
+            单词本
+          </Link>
+        </li>
+        <li>
+          <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/review">
+            背单词
+          </Link>
+        </li>
+        <li>
+          <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/credits">
+            我的额度
+          </Link>
+        </li>
+        <li>
+          <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/password">
+            {passwordSet ? '修改密码' : '设置密码'}
           </Link>
         </li>
         <li className="border-t border-border">

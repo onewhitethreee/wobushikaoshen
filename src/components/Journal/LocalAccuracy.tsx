@@ -41,7 +41,7 @@ export const LocalAccuracy: React.FC<{ slug: 'listening' | 'reading'; typeNames:
     return (
       <div className="flex items-center gap-4">
         <EmptyChartArt className="w-24 shrink-0" />
-        <p className="text-sm text-muted-foreground">做完第一组题，这里按题型列出正确率，哪项最低就先练哪项。</p>
+        <p className="text-sm text-muted-foreground">做完一组题后，这里显示各题型的正确率。</p>
       </div>
     )
 
@@ -78,7 +78,6 @@ export const LocalAccuracy: React.FC<{ slug: 'listening' | 'reading'; typeNames:
           <ArrowUpRight aria-hidden="true" className="size-4" strokeWidth={2} />
         </Link>
       )}
-      <p className="mt-2 text-xs text-muted-foreground">记录保存在本机，换设备或清缓存会丢失</p>
     </>
   )
 }

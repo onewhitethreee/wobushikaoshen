@@ -49,14 +49,15 @@ describe('/api/me/data（A11、A14）', () => {
   const drafts = (prefix: string, n: number) =>
     Object.fromEntries(Array.from({ length: n }, (_, i) => [`${prefix}-${i}`, { text: 'x'.repeat(19_000), at: 1 }]))
 
-  it('没有 content-length 头（分块传输）也不能超过 2 MB', async () => {
-    const big = JSON.stringify({ baseRev: -1, data: { drafts: drafts('e2e-big', 120) } })
+  // 013 起上限为请求 4 MB、存储 12 MB（含单词本）
+  it('没有 content-length 头（分块传输）也不能超过 4 MB', async () => {
+    const big = JSON.stringify({ baseRev: -1, data: { drafts: drafts('e2e-big', 240) } })
     expect((await call(big)).status).toBe(413)
   })
 
-  it('每次都不超 2 MB、反复推也不能把一个账号的数据撑到无限大（F5）', async () => {
+  it('每次都不超 4 MB、反复推也不能把一个账号的数据撑到无限大（F5）', async () => {
     const statuses: number[] = []
-    for (let k = 0; k < 6; k++) statuses.push((await call(JSON.stringify({ baseRev: -1, data: { drafts: drafts(`e2e-grow${k}`, 90) } }))).status)
+    for (let k = 0; k < 6; k++) statuses.push((await call(JSON.stringify({ baseRev: -1, data: { drafts: drafts(`e2e-grow${k}`, 180) } }))).status)
     expect(statuses).toContain(413)
   })
 

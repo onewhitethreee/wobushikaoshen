@@ -75,7 +75,7 @@ test.describe('错题本', () => {
   test('没有错题时显示空状态和练习入口', async ({ page }) => {
     await page.goto(`${BASE}/me/mistakes`)
     await expect(page.getByText('交卷后做错的题会出现在这里')).toBeVisible()
-    await expect(page.getByText('登录后可在其他设备查看')).toBeVisible()
+    await expect(page.getByText('登录后换设备也能看到')).toBeVisible()
   })
 })
 
@@ -110,7 +110,7 @@ test.describe('收藏', () => {
     await expect(rows.first()).toContainText(/第 \d+ 题/)
 
     // 取消：行还在、可撤销；撤销后恢复
-    await page.getByRole('button', { name: /^单元/ }).click()
+    await page.getByRole('button', { name: /^整组/ }).click()
     await rows.first().getByTestId('fav-btn').click()
     await expect(rows.first().getByRole('button', { name: '撤销' })).toBeVisible()
     await rows.first().getByRole('button', { name: '撤销' }).click()

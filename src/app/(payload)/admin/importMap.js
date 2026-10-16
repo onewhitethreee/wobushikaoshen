@@ -19,6 +19,8 @@ import { HorizontalRuleFeatureClient as HorizontalRuleFeatureClient_e70f5e05f09f
 import { BlocksFeatureClient as BlocksFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { FolderTableCell as FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { FolderField as FolderField_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
+import { NoteScreenshotPreview as NoteScreenshotPreview_bd1270e13b4f8acb1432eab26c48dba8 } from '@/components/Account/NoteScreenshotPreview'
+import { NotesListFilter as NotesListFilter_c7863f45ba83d2bfe39095fa7178b7c7 } from '@/components/Account/NotesListFilter'
 import { AnswerTrial as AnswerTrial_59faf93a3a932fe78e5a6a13651729bd } from '@/components/AnswerTrial'
 import { GroupRowLabel as GroupRowLabel_df959563b2e8ae22f12c526ba2cdd698 } from '@/collections/Tests/GroupRowLabel'
 import { ImportButton as ImportButton_f23ae46249ccae755f3d23295703bf17 } from '@/components/ImportButton'
@@ -54,6 +56,8 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BlocksFeatureClient": BlocksFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/next/rsc#FolderTableCell": FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/next/rsc#FolderField": FolderField_f9c02e79a4aed9a3924487c0cd4cafb1,
+  "@/components/Account/NoteScreenshotPreview#NoteScreenshotPreview": NoteScreenshotPreview_bd1270e13b4f8acb1432eab26c48dba8,
+  "@/components/Account/NotesListFilter#NotesListFilter": NotesListFilter_c7863f45ba83d2bfe39095fa7178b7c7,
   "@/components/AnswerTrial#AnswerTrial": AnswerTrial_59faf93a3a932fe78e5a6a13651729bd,
   "@/collections/Tests/GroupRowLabel#GroupRowLabel": GroupRowLabel_df959563b2e8ae22f12c526ba2cdd698,
   "@/components/ImportButton#ImportButton": ImportButton_f23ae46249ccae755f3d23295703bf17,

@@ -44,7 +44,7 @@ export default async function Page({ params }: Props) {
 
   return (
     <main className="container flex flex-col gap-6 pt-6 pb-24" id="main">
-      <nav aria-label="面包屑" className="text-[13px] text-muted-foreground">
+      <nav aria-label="当前位置" className="text-[13px] text-muted-foreground">
         <Link className="inline-flex min-h-11 items-center hover:text-foreground" href="/">
           首页
         </Link>{' '}

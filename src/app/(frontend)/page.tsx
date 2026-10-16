@@ -34,7 +34,7 @@ export default async function HomePage() {
       {/* 首屏：整块米色区，左标题 + 选科，右三块编号色块（006 FR-051） */}
       <section className="flex animate-rise flex-wrap gap-10 bg-muted p-[clamp(20px,4vw,48px)]">
         <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-7">
-          <p className="text-[15px] text-muted-foreground">{home.issueLine}</p>
+          {home.issueLine && <p className="text-[15px] text-muted-foreground">{home.issueLine}</p>}
           <h1 className="text-[clamp(30px,4.4vw,60px)] leading-[1.18] font-medium tracking-[-0.02em]">
             听力阅读模考，
             <br />
@@ -110,12 +110,12 @@ export default async function HomePage() {
           id="quota"
         >
           <h2 className="text-[26px] leading-snug font-medium tracking-[-0.02em]" id="quota-title">
-            写作批改和口语模考
+            写作和口语批改
             <br />
             要用额度
           </h2>
           <p className="text-sm text-muted-foreground">
-            这两项要调用 AI，每次都有真实成本，所以按次用额度。题目随便看、随便写，交给 AI 批改那一步才扣。
+            看题、写作不扣额度，交给 AI 批改时才扣。
           </p>
           <p className="mt-4 text-sm text-muted-foreground">怎么领</p>
           <ul className="flex flex-col gap-3">

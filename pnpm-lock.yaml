@@ -108,6 +108,9 @@ importers:
       tailwind-merge:
         specifier: ^3.4.0
         version: 3.7.0
+      ts-fsrs:
+        specifier: 5.4.2
+        version: 5.4.2
     devDependencies:
       '@eslint/eslintrc':
         specifier: ^3.2.0
@@ -4734,6 +4737,10 @@ packages:
     peerDependenciesMeta:
       typescript:
         optional: true
+
+  ts-fsrs@5.4.2:
+    resolution: {integrity: sha512-z4qop4pzTcyTzuJ566d9EaX/4bZZzhYfeaPImfVr+xcYT65c5oBgFDijUhCE/D+C78eaolHIhKRZ04/RwF+v2g==}
+    engines: {node: '>=20.0.0'}
 
   tsconfck@3.1.6:
     resolution: {integrity: sha512-ks6Vjr/jEw0P1gmOVwutM3B7fWxoWBL2KRDb1JfqGVawBmO5UsvmWOQFGHBPl5yxYz4eERr19E6L7NMv+Fej4w==}
@@ -10056,6 +10063,8 @@ snapshots:
   ts-essentials@10.0.3(typescript@5.7.3):
     optionalDependencies:
       typescript: 5.7.3
+
+  ts-fsrs@5.4.2: {}
 
   tsconfck@3.1.6(typescript@5.7.3):
     optionalDependencies:

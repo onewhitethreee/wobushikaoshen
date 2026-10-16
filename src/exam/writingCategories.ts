@@ -10,9 +10,9 @@ export const WRITING_CATEGORIES = {
     { value: 'opinion', label: '观点型' },
     { value: 'discussion', label: '讨论型' },
     { value: 'report', label: '报告型' },
-    { value: 'mixed', label: '混搭型' },
+    { value: 'mixed', label: '混合型' },
     { value: 'comparison', label: '比较型' },
-    { value: 'advantage', label: '好坏型' },
+    { value: 'advantage', label: '利弊型' },
   ],
 } as const
 

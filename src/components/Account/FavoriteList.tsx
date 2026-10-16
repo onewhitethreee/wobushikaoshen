@@ -80,7 +80,7 @@ export const FavoriteList: React.FC = () => {
     window.dispatchEvent(new Event(STORE_EVENT))
   }
 
-  if (favs === null) return <p className="text-muted-foreground">正在读取…</p>
+  if (favs === null) return <p className="text-muted-foreground">加载中…</p>
 
   const count = (k: Fav['kind']) => favs.filter((f) => f.kind === k && f.on).length
 
@@ -88,9 +88,8 @@ export const FavoriteList: React.FC = () => {
     <div className="flex flex-col gap-4">
       {!loggedIn && (
         <p className="bg-muted px-5 py-4 text-[13px] text-muted-foreground">
-          收藏保存在这台设备上。
           <Link className="ml-1 inline-flex min-h-11 items-center text-foreground underline underline-offset-4" href="/login?next=/me/favorites">
-            登录后可在其他设备查看 ↗
+            登录后换设备也能看到 ↗
           </Link>
         </p>
       )}
@@ -98,7 +97,7 @@ export const FavoriteList: React.FC = () => {
       <div aria-label="收藏类型" className="flex gap-x-7 border-b border-border" role="group">
         {(
           [
-            ['unit', '单元'],
+            ['unit', '整组'],
             ['question', '题目'],
           ] as const
         ).map(([k, label]) => (
@@ -125,7 +124,7 @@ export const FavoriteList: React.FC = () => {
 
       {!inTab.length ? (
         <p className="py-10 text-[15px] text-muted-foreground">
-          在{tab === 'unit' ? '栏目页、练习页或写作题' : '交卷后解析面板的题号'}旁点 ☆ 收藏，会出现在这里。
+          {tab === 'unit' ? '点题目旁的 ☆ 收藏。' : '交卷后，点解析里题号旁的 ☆ 收藏。'}
         </p>
       ) : (
         <ul className="border-t border-border">

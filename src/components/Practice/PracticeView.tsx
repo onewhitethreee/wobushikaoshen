@@ -223,6 +223,30 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
     if (!submitted && el instanceof HTMLInputElement) el.focus({ preventScroll: true })
   }
 
+  // 013 单词本"回到原文"：#p{k}-s{n} 定位第 k 个 Part 的句子，#q-{n} 定位题目；短暂高亮（research R5）。
+  // 听力原文交卷后才显示，没交卷时找不到句子就只打开页面
+  useEffect(() => {
+    const m = /^#(?:p(\d+)-(s\d+)|q-(\d+))$/.exec(location.hash)
+    if (!m) return
+    const t = setTimeout(() => {
+      if (m[3]) {
+        const stop = order.find((o) => o.anchor === Number(m[3]))
+        if (stop) goTo(stop)
+        return
+      }
+      if (!unit.sections[Number(m[1])]) return
+      flushSync(() => {
+        setSectionIndex(Number(m[1]))
+        setPane('passage')
+        setHighlight(m[2])
+      })
+      document.getElementById(m[2])?.scrollIntoView({ block: 'center' })
+      highlightTimer.current = setTimeout(() => setHighlight(undefined), 2000)
+    })
+    return () => clearTimeout(t)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 只在打开页面时按 hash 定位一次
+  }, [])
+
   const openExplain = (anchor: number) => {
     const stop = order.find((o) => o.anchor === anchor)
     if (!stop) return
@@ -325,7 +349,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
         onNext: goNext,
         prevLabel: '上一句',
         nextLabel: '下一句',
-        prevTitle: '上一句（←）· 当前句播放超过 1.5 秒时先回到句首',
+        prevTitle: '回到句首 / 上一句（←）',
         nextTitle: '下一句（→）',
         loop: submitted ? { on: Boolean(looping), toggle: toggleLoop } : undefined,
       }
@@ -405,7 +429,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
               )}
               role="status"
             >
-              {notice === 'restored' ? '已恢复上次的作答' : '本机存储不可用，记录不会保存。题目照常可做、可交卷。'}
+              {notice === 'restored' ? '已恢复上次的作答' : '这次作答没法保存，刷新或离开页面后会丢失。'}
               {notice === 'restored' && (
                 <button className="min-h-11 rounded-lg px-2 font-semibold hover:bg-card" onClick={restart} type="button">
                   重新开始
@@ -418,7 +442,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
 
       {unit.sections.length > 1 && (
         <div className="container mt-4">
-          <div aria-label="分部" className="flex max-w-full gap-x-7 overflow-x-auto border-b border-border" role="tablist">
+          <div aria-label="选择 Part" className="flex max-w-full gap-x-7 overflow-x-auto border-b border-border" role="tablist">
             {unit.sections.map((s, i) => (
               <button
                 aria-selected={i === sectionIndex}
@@ -470,7 +494,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
             </button>
           ))}
         </div>
-        <div className="lg:grid lg:grid-cols-2 lg:gap-6">
+        <div className="lg:grid lg:grid-cols-2 lg:gap-6" data-section={sectionIndex}>
           <div
             className={cn(pane === 'passage' ? 'block' : 'hidden', 'lg:block lg:h-[calc(100dvh-8rem-var(--audio-h))] lg:overflow-y-auto')}
             data-testid="passage-pane"

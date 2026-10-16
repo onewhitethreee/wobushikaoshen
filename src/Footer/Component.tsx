@@ -12,7 +12,13 @@ export async function Footer() {
   return (
     <footer className="mt-auto border-t border-border">
       <div className="container py-8 flex flex-wrap items-center gap-x-10 gap-y-3 justify-between text-[13px] text-muted-foreground">
-        <p>题目整理自网络公开资料。</p>
+        <p>
+          题目整理自网络公开资料。词典数据来自{' '}
+          <a className="underline underline-offset-4 hover:text-foreground" href="https://github.com/skywind3000/ECDICT" rel="noreferrer" target="_blank">
+            ECDICT
+          </a>
+          （MIT 许可）。
+        </p>
         <div className="flex flex-wrap items-center gap-x-7 gap-y-2">
           {navItems.map(({ link }, i) => {
             return <CMSLink className="hover:text-foreground hover:underline underline-offset-4" key={i} {...link} />
