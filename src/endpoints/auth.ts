@@ -3,7 +3,7 @@ import type { Endpoint, PayloadRequest } from 'payload'
 import { getFieldsToSign, jwtSign } from 'payload'
 import { addSessionToUser, generatePayloadCookie } from 'payload/shared'
 
-import { grantInvite } from '../account/credits'
+import { grantInvite, grantSignup } from '../account/credits'
 import { MailUnavailable, sendMail } from '../account/mail'
 import { checkRate, clientIp, isEmail, issue, normalizeEmail, verify } from '../account/codes'
 import { clearFailures, ipLimited, lockedFor, recordFailure, verifyHash } from '../account/password'
@@ -104,6 +104,15 @@ const verifyCode: Endpoint = {
     const id = found.docs[0].id
     const cookie = await signIn(req, id)
 
+    let signup = 0
+    if (created) {
+      try {
+        signup = await grantSignup(payload, id)
+      } catch (err) {
+        payload.logger.error({ err, msg: '注册赠送发放失败' })
+      }
+    }
+
     // 邀请（011 research R5）：只有这次新建了账号才算；发放失败不影响登录
     const inviteCode = readCookie(req, INVITE_COOKIE)
     let invite: { amount: number; inviterRewarded: boolean } | null = null
@@ -118,7 +127,7 @@ const verifyCode: Endpoint = {
     const headers = new Headers({ 'Set-Cookie': cookie })
     if (inviteCode) headers.append('Set-Cookie', `${INVITE_COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
     return Response.json(
-      { ok: true, email: maskEmail(email), created, ...(invite?.amount ? { invite } : {}) },
+      { ok: true, email: maskEmail(email), created, ...(signup ? { signup } : {}), ...(invite?.amount ? { invite } : {}) },
       { headers },
     )
   },

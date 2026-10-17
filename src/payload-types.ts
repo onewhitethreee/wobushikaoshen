@@ -78,6 +78,7 @@ export interface Config {
     'login-codes': LoginCode;
     'member-data': MemberDatum;
     'credit-entries': CreditEntry;
+    'redeem-codes': RedeemCode;
     'note-submissions': NoteSubmission;
     'note-screenshots': NoteScreenshot;
     tests: Test;
@@ -116,6 +117,7 @@ export interface Config {
     'login-codes': LoginCodesSelect<false> | LoginCodesSelect<true>;
     'member-data': MemberDataSelect<false> | MemberDataSelect<true>;
     'credit-entries': CreditEntriesSelect<false> | CreditEntriesSelect<true>;
+    'redeem-codes': RedeemCodesSelect<false> | RedeemCodesSelect<true>;
     'note-submissions': NoteSubmissionsSelect<false> | NoteSubmissionsSelect<true>;
     'note-screenshots': NoteScreenshotsSelect<false> | NoteScreenshotsSelect<true>;
     tests: TestsSelect<false> | TestsSelect<true>;
@@ -684,7 +686,7 @@ export interface CreditEntry {
   id: number;
   member: number | Member;
   amount: number;
-  reason: 'invite' | 'invitee' | 'note' | 'spend' | 'refund' | 'adjust';
+  reason: 'signup' | 'redeem' | 'invite' | 'invitee' | 'note' | 'spend' | 'refund' | 'adjust';
   use?: string | null;
   /**
    * 防重复发放的唯一键
@@ -741,6 +743,38 @@ export interface MemberDatum {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * 保存后自动生成兑换码，复制发给考生。每位考生每个码只能用一次；想提前作废，把到期时间改成现在。
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redeem-codes".
+ */
+export interface RedeemCode {
+  id: number;
+  /**
+   * 保存后自动生成
+   */
+  code: string;
+  /**
+   * 兑换一次得多少额度
+   */
+  amount: number;
+  /**
+   * 总共能被几位考生兑换
+   */
+  maxUses: number;
+  used?: number | null;
+  /**
+   * 不填就一直有效
+   */
+  expiresAt?: string | null;
+  /**
+   * 发给谁、什么活动，考生看不到
+   */
+  note?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1541,6 +1575,10 @@ export interface PayloadLockedDocument {
         value: number | CreditEntry;
       } | null)
     | ({
+        relationTo: 'redeem-codes';
+        value: number | RedeemCode;
+      } | null)
+    | ({
         relationTo: 'note-submissions';
         value: number | NoteSubmission;
       } | null)
@@ -2014,6 +2052,20 @@ export interface CreditEntriesSelect<T extends boolean = true> {
   use?: T;
   refKey?: T;
   relatedMember?: T;
+  note?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "redeem-codes_select".
+ */
+export interface RedeemCodesSelect<T extends boolean = true> {
+  code?: T;
+  amount?: T;
+  maxUses?: T;
+  used?: T;
+  expiresAt?: T;
   note?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -2636,6 +2688,10 @@ export interface MailSetting {
 export interface CreditSetting {
   id: number;
   /**
+   * 新用户注册时得多少额度；通过邀请链接注册的另得被邀请人奖励
+   */
+  signupReward: number;
+  /**
    * 每成功邀请 1 位新用户，邀请人得多少额度
    */
   inviterReward: number;
@@ -2784,6 +2840,7 @@ export interface MailSettingsSelect<T extends boolean = true> {
  * via the `definition` "credit-settings_select".
  */
 export interface CreditSettingsSelect<T extends boolean = true> {
+  signupReward?: T;
   inviterReward?: T;
   inviteeReward?: T;
   inviterCap?: T;

@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Website template for Payload",
   "license": "AGPL-3.0-only",
   "type": "module",

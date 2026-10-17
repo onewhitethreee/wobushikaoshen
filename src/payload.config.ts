@@ -18,6 +18,7 @@ import { EmailSends } from './collections/EmailSends'
 import { LoginCodes } from './collections/LoginCodes'
 import { MemberData } from './collections/MemberData'
 import { CreditEntries } from './collections/CreditEntries'
+import { RedeemCodes } from './collections/RedeemCodes'
 import { NoteScreenshots } from './collections/NoteScreenshots'
 import { NoteSubmissions } from './collections/NoteSubmissions'
 import { CreditSettings } from './globals/CreditSettings'
@@ -38,7 +39,7 @@ import { passwordEndpoint } from './endpoints/password'
 import { memberDataEndpoint } from './endpoints/memberData'
 import { lookupEndpoint } from './endpoints/lookup'
 import { dictEndpoint } from './endpoints/dict'
-import { creditsEndpoint } from './endpoints/credits'
+import { creditsEndpoint, redeemEndpoint } from './endpoints/credits'
 import { notesEndpoint } from './endpoints/notes'
 import { writingReviewEndpoints } from './endpoints/writingReviews'
 import { expireStale } from './review/writing'
@@ -92,11 +93,11 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, CreditEntries, NoteSubmissions, NoteScreenshots, Tests, Units, WritingTasks, WritingReviews, AnswerExplanations, ExplanationUnlocks, SpeakingQuestions, DictEntries],
+  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, CreditEntries, RedeemCodes, NoteSubmissions, NoteScreenshots, Tests, Units, WritingTasks, WritingReviews, AnswerExplanations, ExplanationUnlocks, SpeakingQuestions, DictEntries],
   cors: [getServerSideURL()].filter(Boolean),
   // 只认本站来源的 cookie：别的网站带着考生 / 管理员 cookie 发来的请求按未登录处理（010 attack-matrix A12）
   csrf: [getServerSideURL()].filter(Boolean),
-  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, dictEndpoint, creditsEndpoint, notesEndpoint, ...writingReviewEndpoints, ...explanationEndpoints],
+  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, dictEndpoint, creditsEndpoint, redeemEndpoint, notesEndpoint, ...writingReviewEndpoints, ...explanationEndpoints],
   // 进程重启会丢掉进行中的批改 / 讲解：启动时把超时的改为失败并退回（015 research R2、data-model）
   onInit: async (payload) => {
     await expireStale(payload).catch((e) => payload.logger.error(e, '启动扫描批改失败'))

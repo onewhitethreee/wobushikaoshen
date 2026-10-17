@@ -21,6 +21,7 @@ const post = async (url: string, body: unknown) => {
     error?: string
     retryIn?: number
     resendIn?: number
+    signup?: number
     invite?: { amount: number; inviterRewarded: boolean }
   }
   return { ok: res.ok, status: res.status, ...data }
@@ -108,7 +109,8 @@ export const LoginForm: React.FC<{ next?: string }> = ({ next }) => {
     }
     // 通过邀请链接注册的新用户：先去"我的额度"看到奖励提示（011 contracts/ui.md）
     const inv = 'invite' in r ? r.invite : undefined
-    await finish('code', inv ? `/me/credits?invited=${inv.amount}${inv.inviterRewarded ? '&both=1' : ''}` : safeNext(next))
+    const signup = 'signup' in r && r.signup ? `&signup=${r.signup}` : ''
+    await finish('code', inv ? `/me/credits?invited=${inv.amount}${signup}${inv.inviterRewarded ? '&both=1' : ''}` : safeNext(next))
   }
 
   const passwordLogin = async (e: React.FormEvent) => {

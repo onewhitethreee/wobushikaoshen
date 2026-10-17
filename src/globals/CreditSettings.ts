@@ -19,6 +19,7 @@ export const CreditSettings: GlobalConfig = {
   label: '额度设置',
   access: { read: authenticated, update: authenticated },
   fields: [
+    int('signupReward', '注册赠送', 10, 0, '新用户注册时得多少额度；通过邀请链接注册的另得被邀请人奖励'),
     int('inviterReward', '邀请人奖励', 3, 0, '每成功邀请 1 位新用户，邀请人得多少额度'),
     int('inviteeReward', '被邀请人奖励', 3, 0, '通过邀请链接注册的新用户得多少额度'),
     int('inviterCap', '邀请奖励上限（次）', 10, 0, '每位邀请人最多得几次邀请奖励；之后被邀请人照常得'),

@@ -12,7 +12,7 @@ import { isAdminOrSelf } from '../access/isAdminOrSelf'
 const BLOCKED = new Set(['login', 'forgotPassword', 'resetPassword'])
 
 // 邀请码（011 research R4）：8 位，去掉 0/O/1/I/L 免得看错
-const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
+export const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789'
 export const newInviteCode = () => Array.from({ length: 8 }, () => ALPHABET[randomInt(ALPHABET.length)]).join('')
 
 // 009 建的账号没有邀请码，第一次打开"我的额度"时补上；撞码（概率极低）就再试一次

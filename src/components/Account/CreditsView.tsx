@@ -6,7 +6,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
 
-// 我的额度（011 contracts/ui.md）：余额、邀请好友、小红书笔记换额度、流水
+// 我的额度（011 contracts/ui.md、016）：余额、兑换码、邀请好友、小红书笔记换额度、流水
 type Entry = { id: number; at: string; reason: string; amount: number; after: number; use?: 'review' | 'explain'; note?: string }
 type Submission = { id: number; at: string; url: string; screenshot?: string; status: 'pending' | 'approved' | 'rejected'; amount?: number; reason?: string }
 type Data = {
@@ -24,6 +24,8 @@ const REASON: Record<string, string> = {
   spend: '使用',
   refund: '退回',
   adjust: '站长调整',
+  signup: '注册赠送',
+  redeem: '兑换码',
 }
 
 // 扣费 / 退回的用途，与 src/account/credits.ts 的 USES 一致（那边带服务端依赖，前端不能直接引）
@@ -58,7 +60,11 @@ export const CreditsView: React.FC = () => {
   useEffect(() => {
     const q = new URLSearchParams(window.location.search)
     const n = Number(q.get('invited'))
-    if (n > 0) {
+    const s = Number(q.get('signup'))
+    if (n > 0 && s > 0) {
+      setWelcome(`你得到 ${n + s} 额度（含注册赠送 ${s}）${q.get('both') ? `，邀请人也得到 ${n} 额度` : ''}`)
+      window.history.replaceState(null, '', '/me/credits')
+    } else if (n > 0) {
       setWelcome(q.get('both') ? `你和邀请人各得 ${n} 额度` : `你得到 ${n} 额度`)
       window.history.replaceState(null, '', '/me/credits')
     }
@@ -94,13 +100,14 @@ export const CreditsView: React.FC = () => {
         <span className="text-[15px] text-muted-foreground">额度</span>
       </div>
 
+      <Redeem onRedeemed={() => load(page)} />
       <Invite invite={data.invite} />
       <Notes onSubmitted={() => load(page)} submissions={data.submissions} />
 
       <section className="flex flex-col gap-4">
         <H2>额度明细</H2>
         {!data.entries.length ? (
-          <p className="text-[15px] text-muted-foreground">还没有额度。邀请好友或发小红书笔记都能领。</p>
+          <p className="text-[15px] text-muted-foreground">还没有额度。邀请好友、发小红书笔记或用兑换码都能领。</p>
         ) : (
           <>
             <ul className="border-t border-border">
@@ -140,6 +147,59 @@ export const CreditsView: React.FC = () => {
         )}
       </section>
     </div>
+  )
+}
+
+const Redeem: React.FC<{ onRedeemed: () => void }> = ({ onRedeemed }) => {
+  const [code, setCode] = useState('')
+  const [busy, setBusy] = useState(false)
+  const [result, setResult] = useState<{ ok: boolean; text: string } | null>(null)
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setBusy(true)
+    setResult(null)
+    const res = await fetch('/api/me/redeem', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code }),
+    }).catch(() => null)
+    setBusy(false)
+    if (!res) return setResult({ ok: false, text: '网络不通，请稍后再试' })
+    const body = (await res.json().catch(() => ({}))) as { amount?: number; error?: string }
+    if (!res.ok) return setResult({ ok: false, text: body.error ?? '兑换失败' })
+    setCode('')
+    setResult({ ok: true, text: `得到 ${body.amount} 额度` })
+    onRedeemed()
+  }
+
+  return (
+    <section className="flex flex-col gap-3">
+      <H2>兑换码</H2>
+      <p className="text-[15px] text-muted-foreground">有兑换码的话，在这里换成额度。</p>
+      <form className="flex flex-wrap gap-2" onSubmit={submit}>
+        <input
+          aria-label="兑换码"
+          autoComplete="off"
+          className="h-11 min-w-0 flex-[1_1_240px] border border-input bg-background px-3 text-[15px]"
+          data-testid="redeem-code"
+          onChange={(e) => setCode(e.target.value)}
+          value={code}
+        />
+        <Button className="h-11" data-testid="redeem-submit" disabled={busy || !code.trim()} type="submit">
+          {busy ? '兑换中…' : '兑换'}
+        </Button>
+      </form>
+      <p
+        aria-live="polite"
+        className={cn('min-h-6 text-[13px]', result?.ok ? 'text-success' : 'text-error')}
+        data-testid="redeem-result"
+        role={result?.ok ? 'status' : undefined}
+      >
+        {result?.text}
+      </p>
+    </section>
   )
 }
 

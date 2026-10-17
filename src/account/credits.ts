@@ -103,6 +103,33 @@ export const refund = async (payload: Payload, spendEntryId: number) => {
   })
 }
 
+// 注册赠送：只在新建账号时调用，refKey 保证每个账号只发一次。返回实际发放数
+export const grantSignup = async (payload: Payload, memberId: number) => {
+  const { signupReward } = await getSettings(payload)
+  if (signupReward <= 0) return 0
+  return (await grant(payload, { memberId, amount: signupReward, reason: 'signup', refKey: `signup:${memberId}` })) ? signupReward : 0
+}
+
+export type RedeemResult = { ok: true; amount: number } | { ok: false; reason: 'missing' | 'expired' | 'used' | 'exhausted' }
+
+// 兑换码（RedeemCodes）：锁住码那一行，同时兑换的请求排队，次数不会超；每人每码一次靠 refKey 唯一
+export const redeem = async (payload: Payload, { memberId, code }: { memberId: number; code: string }): Promise<RedeemResult> =>
+  drizzle(payload).transaction(async (tx) => {
+    const { rows } = await tx.execute(sql`SELECT id, amount, max_uses, expires_at FROM redeem_codes WHERE code = ${code} FOR UPDATE`)
+    const c = rows[0]
+    if (!c) return { ok: false, reason: 'missing' }
+    if (c.expires_at && new Date(c.expires_at as string) <= new Date()) return { ok: false, reason: 'expired' }
+    const refKey = `redeem:${c.id}:${memberId}`
+    const { rows: [u] } = await tx.execute(sql`
+      SELECT COUNT(*) AS n, COUNT(*) FILTER (WHERE ref_key = ${refKey}) AS mine
+      FROM credit_entries WHERE ref_key LIKE ${`redeem:${c.id}:%`}`)
+    if (Number(u.mine)) return { ok: false, reason: 'used' }
+    if (Number(u.n) >= Number(c.max_uses)) return { ok: false, reason: 'exhausted' }
+    const amount = Number(c.amount)
+    const id = await insert(tx, { memberId, amount, reason: 'redeem', refKey, note: `兑换码 ${code}` })
+    return id ? { ok: true, amount } : { ok: false, reason: 'used' }
+  })
+
 // 邀请奖励（research R5）：只在新建账号时调用。被邀请人一定得；邀请人得奖次数达到上限后不再得
 export const grantInvite = async (payload: Payload, { inviteeId, code }: { inviteeId: number; code: string }) => {
   const found = await payload.find({

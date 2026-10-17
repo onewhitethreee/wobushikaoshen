@@ -1,9 +1,10 @@
 import { sql } from '@payloadcms/db-postgres'
 import type { Endpoint } from 'payload'
 
-import { getSettings, purposeOf } from '../account/credits'
+import { getSettings, purposeOf, redeem } from '../account/credits'
 import { ensureInviteCode } from '../collections/Members'
 import { rejectText } from '../collections/NoteSubmissions'
+import { formatCode } from '../collections/RedeemCodes'
 import { getServerSideURL } from '../utilities/getURL'
 
 // 我的额度（011 contracts/api.md）：余额、流水（每页 50 条，after = 这条之后的余额）、邀请信息、我的笔记提交
@@ -79,5 +80,31 @@ export const creditsEndpoint: Endpoint = {
         reason: s.status === 'rejected' ? rejectText(s) : undefined,
       })),
     })
+  },
+}
+
+const REDEEM_FAIL = {
+  missing: ['兑换码不对', 404],
+  expired: ['兑换码已过期', 410],
+  used: ['你已经用过这个兑换码', 409],
+  exhausted: ['兑换码已被领完', 409],
+} as const
+
+// 兑换码换额度
+export const redeemEndpoint: Endpoint = {
+  path: '/me/redeem',
+  method: 'post',
+  handler: async (req) => {
+    const user = req.user
+    if (user?.collection !== 'members') return Response.json({ error: '请先登录' }, { status: 401 })
+    const body = ((await req.json?.().catch(() => null)) ?? {}) as { code?: unknown }
+    const code = formatCode(body.code)
+    if (!code) return Response.json({ error: '请输入兑换码' }, { status: 400 })
+    const r = await redeem(req.payload, { memberId: user.id as number, code })
+    if (!r.ok) {
+      const [error, status] = REDEEM_FAIL[r.reason]
+      return Response.json({ error }, { status })
+    }
+    return Response.json({ ok: true, amount: r.amount })
   },
 }

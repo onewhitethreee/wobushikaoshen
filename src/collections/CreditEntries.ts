@@ -13,6 +13,8 @@ const adminOrOwner: Access = ({ req: { user } }) => {
 }
 
 export const REASONS = [
+  { label: '注册赠送', value: 'signup' },
+  { label: '兑换码', value: 'redeem' },
   { label: '邀请奖励', value: 'invite' },
   { label: '被邀请奖励', value: 'invitee' },
   { label: '笔记奖励', value: 'note' },

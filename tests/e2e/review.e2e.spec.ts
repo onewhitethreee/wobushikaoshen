@@ -19,6 +19,7 @@ const mail = (k: string) => `e2e-review-${k}-${stamp}@example.test`
 let payload: Payload
 let originalMail: MailSetting
 let originalAi: AiSetting
+let originalSignup: number
 let stub: Server
 let stubCalls = 0
 let task2: number
@@ -125,6 +126,9 @@ test.describe('写作 AI 批改', () => {
     payload = await getPayload({ config: await config })
     originalMail = (await payload.findGlobal({ slug: 'mail-settings', overrideAccess: true, showHiddenFields: true })) as MailSetting
     originalAi = await payload.findGlobal({ slug: 'ai-settings', overrideAccess: true })
+    // 本文件的余额断言从 0 算起：关掉 016 的注册赠送，测完恢复
+    originalSignup = (await payload.findGlobal({ slug: 'credit-settings', overrideAccess: true })).signupReward
+    await payload.updateGlobal({ slug: 'credit-settings', overrideAccess: true, data: { signupReward: 0 } })
     await payload.updateGlobal({
       slug: 'mail-settings',
       overrideAccess: true,
@@ -146,6 +150,7 @@ test.describe('写作 AI 批改', () => {
     await payload.db.updateOne({ collection: 'writing-tasks', id: task1.id, data: { chartData: task1.chartData ?? null } })
     await payload.db.updateGlobal({ slug: 'ai-settings', data: { baseUrl: originalAi.baseUrl, apiKey: originalAi.apiKey ?? null } })
     await payload.db.updateGlobal({ slug: 'mail-settings', data: { primary: originalMail.primary, backup: originalMail.backup } })
+    await payload.updateGlobal({ slug: 'credit-settings', overrideAccess: true, data: { signupReward: originalSignup } })
     stub?.close()
     await cleanup()
   })
