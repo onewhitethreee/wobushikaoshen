@@ -35,12 +35,18 @@ const markOf = (on: boolean, key: string, correct?: string[]): Mark => {
 
 const choiceBtn = (m: Mark) =>
   cn(
-    'flex min-h-11 min-w-11 items-center rounded-xl border px-3 text-left text-sm',
+    'flex min-h-11 min-w-11 items-center rounded-xl border px-3 text-left text-sm pointer-fine:select-text',
     m === 'on' && 'animate-pop border-primary bg-primary-soft font-semibold text-primary-text',
     m === 'right' && 'border-success/60 bg-success-soft font-semibold text-success',
     m === 'wrong' && 'border-error/60 bg-error-soft font-semibold text-error',
     m === 'off' && 'border-border bg-card hover:border-primary/50 hover:bg-primary-soft/40',
   )
+
+/** 014：在选项按钮里拖选文字（准备高亮）时，松开鼠标不算选中这个选项（research R6） */
+const selecting = (el: Element) => {
+  const s = window.getSelection()
+  return Boolean(s && !s.isCollapsed && s.anchorNode && el.contains(s.anchorNode))
+}
 
 /** 选项字母小方块：跟随选项状态变色 */
 const KeyBadge: React.FC<{ k: string; m: Mark }> = ({ k, m }) => (
@@ -111,6 +117,7 @@ const ResultLine: React.FC<{ group: GroupView; q: Question; answer: Answers[numb
         'mt-3 flex min-h-11 w-full animate-reveal flex-wrap items-center gap-x-4 gap-y-1 rounded-xl px-3.5 py-2 text-left text-sm hover:ring-2 hover:ring-primary/25',
         r.ok ? 'border border-border' : 'bg-error-soft',
       )}
+      data-hl-skip
       data-testid={`feedback-${q.number}`}
       onClick={() => onExplain?.(q.number)}
       type="button"
@@ -177,7 +184,7 @@ const Blank: React.FC<{
             <X aria-label="错误" className="size-4 shrink-0 text-error" strokeWidth={3} />
           ))}
       </span>
-      {over && <span className="animate-reveal font-sans text-xs font-semibold text-error">超过 {group.maxWords} 个词</span>}
+      {over && <span data-hl-skip className="animate-reveal font-sans text-xs font-semibold text-error">超过 {group.maxWords} 个词</span>}
     </span>
   )
 }
@@ -207,7 +214,7 @@ const RadioRow: React.FC<{
           className={choiceBtn(m)}
           data-key={o.key}
           key={o.key}
-          onClick={() => !submitted && onPick(o.key)}
+          onClick={(e) => !submitted && !selecting(e.currentTarget) && onPick(o.key)}
           role="radio"
           type="button"
         >
@@ -244,7 +251,7 @@ export const QuestionGroup: React.FC<Props> = ({ group, answers, onAnswer, submi
         return (
           <span className="mx-1 inline-flex min-w-14 items-baseline gap-1.5 rounded-md bg-muted px-2 font-sans text-sm" key={i}>
             <span className="text-xs text-muted-foreground tabular-nums">{n}</span>
-            <b>{str(n)}</b>
+            <b data-hl-skip>{str(n)}</b>
           </span>
         )
       })}
@@ -279,7 +286,7 @@ export const QuestionGroup: React.FC<Props> = ({ group, answers, onAnswer, submi
       {content && <div className="mb-2 flex flex-col gap-1.5 text-[15px] leading-8">{content}</div>}
 
       {isText && submitted && inContent.size > 0 && (
-        <ol className="mt-3 flex flex-col gap-2">
+        <ol className="mt-3 flex flex-col gap-2" data-hl-skip>
           {group.questions
             .filter((q) => inContent.has(q.number))
             .map((q) => (
@@ -362,8 +369,8 @@ const MultiChoice: React.FC<{
             className={cn(choiceBtn(m), blocked && m === 'off' && 'text-muted-foreground')}
             data-key={o.key}
             key={o.key}
-            onClick={() => {
-              if (submitted) return
+            onClick={(e) => {
+              if (submitted || selecting(e.currentTarget)) return
               if (on) onChange(value.filter((k) => k !== o.key))
               else if (!full) onChange([...value, o.key])
             }}

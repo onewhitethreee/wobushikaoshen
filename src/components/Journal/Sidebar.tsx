@@ -3,18 +3,15 @@ import Link from 'next/link'
 import React from 'react'
 
 import { listeningType, readingType } from '@/content/columns'
-import { session, type ColumnSlug, type SidebarModule } from '@/sample'
+import type { ColumnSlug, SidebarModule } from '@/sample'
 
 import { LocalAccuracy } from './LocalAccuracy'
+import { QuotaBalance } from './QuotaBalance'
 
 // 右栏（006 FR-054）：模考 = 明黄卡，额度 / 提示 = 米色卡，正确率不加底
 const sand = 'bg-muted px-5 py-5'
 
-export const Sidebar: React.FC<{ modules: SidebarModule[]; loggedIn: boolean; slug: ColumnSlug }> = ({
-  modules,
-  loggedIn,
-  slug,
-}) => (
+export const Sidebar: React.FC<{ modules: SidebarModule[]; slug: ColumnSlug }> = ({ modules, slug }) => (
   <>
     {modules.map((m, i) => {
       if (m.kind === 'mock') {
@@ -53,13 +50,7 @@ export const Sidebar: React.FC<{ modules: SidebarModule[]; loggedIn: boolean; sl
             <div className="mb-3 flex items-baseline justify-between">
               <h2 className="text-lg font-semibold">我的额度</h2>
             </div>
-            {loggedIn ? (
-              <p className="mb-3">
-                剩余 <b className="text-3xl font-medium">{session.balance}</b> 额度
-              </p>
-            ) : (
-              <p className="mb-3 font-semibold">登录后查看额度</p>
-            )}
+            <QuotaBalance />
             <ul className="flex flex-col text-sm text-muted-foreground">
               <li className="flex items-center gap-2 border-t border-border py-2.5">发小红书备考笔记，审核通过后发放</li>
               <li className="flex items-center gap-2 border-t border-border py-2.5">邀请好友注册后发放</li>

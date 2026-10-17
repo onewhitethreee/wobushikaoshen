@@ -102,8 +102,6 @@ export const PracticeBrowser: React.FC<{
   // 标签和筛选写进网址，刷新、返回、分享都能保留
   useEffect(() => {
     const q = new URLSearchParams()
-    const demo = new URLSearchParams(window.location.search).get('demo')
-    if (demo) q.set('demo', demo)
     if (tabId !== config.tabs[0].id) q.set('tab', tabId)
     for (const [k, v] of Object.entries(filters)) if (v !== ALL) q.set(k, v)
     if (current > 1) q.set('page', String(current))

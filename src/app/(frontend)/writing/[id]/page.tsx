@@ -8,12 +8,11 @@ import { getPayload } from 'payload'
 import React, { cache } from 'react'
 
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
-import { CostMark } from '@/components/Journal/CostMark'
-import { WritingPad } from '@/components/Writing/WritingPad'
+import { ReviewPanel } from '@/components/Writing/ReviewPanel'
 import { categoryLabel } from '@/exam/writingCategories'
 import type { Media, WritingTask } from '@/payload-types'
 
-// 写作题页（007 R11）：看题、看图、在本机写；AI 批改仍未开放
+// 写作题页（007 R11）：看题、看图、在本机写；AI 批改（015）。Task 1 没有图表数据时不能批改
 const load = cache(async (id: string): Promise<WritingTask | null> => {
   if (!/^\d+$/.test(id)) return null
   const payload = await getPayload({ config: configPromise })
@@ -103,13 +102,12 @@ export default async function Page({ params }: Props) {
         </section>
 
         <section aria-label="作答" className="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
-          <WritingPad minWords={minWords} taskId={String(task.id)} />
-          <div className="flex flex-wrap items-center gap-3 border-t border-border pt-4">
-            <span className="inline-flex min-h-11 cursor-not-allowed items-center border-[1.5px] border-input px-5 text-sm font-semibold text-muted-foreground">
-              AI 批改 · 即将开放
-            </span>
-            <CostMark cost={{ kind: 'quota', amount: 1 }} label="批改" />
-          </div>
+          <ReviewPanel
+            minWords={minWords}
+            reviewable={!t1 || Boolean(task.chartData?.trim())}
+            taskId={task.id}
+            taskType={task.taskType}
+          />
         </section>
       </div>
     </main>

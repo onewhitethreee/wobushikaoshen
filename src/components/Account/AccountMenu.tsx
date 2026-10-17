@@ -84,6 +84,11 @@ export const AccountMenu: React.FC = () => {
           </Link>
         </li>
         <li>
+          <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/reviews">
+            写作批改
+          </Link>
+        </li>
+        <li>
           <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/credits">
             我的额度
           </Link>

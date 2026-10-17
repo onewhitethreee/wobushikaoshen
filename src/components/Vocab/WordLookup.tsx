@@ -199,7 +199,7 @@ export const WordLookup: React.FC = () => {
       {live(said)}
       <div
         aria-label="释义"
-        className="fixed z-30 flex flex-col gap-2 border border-border bg-background p-4 text-[15px] shadow-[0_10px_30px_-12px_rgb(0_0_0/0.35)] outline-none"
+        className="fixed z-30 flex flex-col gap-2 border border-input bg-background p-4 text-[15px] outline-none"
         data-lookup-card
         data-testid="lookup-card"
         ref={box}

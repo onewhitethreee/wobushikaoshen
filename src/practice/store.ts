@@ -2,12 +2,14 @@
 // 读写都包在 try/catch 里：隐私模式、配额满时练习照常，只是不保存。
 import type { Answers, ScoreItem, UnitId } from '@/exam/practice'
 import type { QuestionType } from '@/exam/scoring'
+import type { Marks } from '@/practice/marks'
 
 export const KEY = 'ybz:practice:v1'
 export const WRITING_KEY = 'ybz:writing:v1'
 export const MAX_RECORDS = 500
 
-export type Progress = { version: string; answers: Answers; savedAt: number }
+// marks：014 做题高亮，交卷前随进度保存（旧进度没有）
+export type Progress = { version: string; answers: Answers; savedAt: number; marks?: Marks }
 // module：练习单元的网址 u{id} 看不出听力 / 阅读，记录里另存（旧记录没有，按网址判断）
 // answers：009 起交卷时一并保存，错题本显示"你的答案"（旧记录没有）
 export type PracticeRecord = {
@@ -123,8 +125,9 @@ export const getProgress = (store: Store, unitId: UnitId, version: string): Prog
   return p
 }
 
-export const setProgress = (store: Store, unitId: UnitId, version: string, answers: Answers) => {
-  store.progress[unitId] = { version, answers, savedAt: Date.now() }
+export const setProgress = (store: Store, unitId: UnitId, version: string, answers: Answers, marks?: Marks) => {
+  const kept = marks && Object.fromEntries(Object.entries(marks).filter(([, l]) => l.length))
+  store.progress[unitId] = { version, answers, savedAt: Date.now(), ...(kept && Object.keys(kept).length ? { marks: kept } : {}) }
 }
 
 export const addRecord = (store: Store, record: PracticeRecord) => {

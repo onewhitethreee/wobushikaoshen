@@ -82,6 +82,18 @@ const isWord = (w: Record<string, unknown>) =>
       w.src.every((s) => isObj(s) && str(s.text, 300) && str(s.href, 300) && str(s.title, 200) && num(s.at)))) &&
   (w.card === undefined || (isObj(w.card) && CARD_NUMS.every((k) => num((w.card as Record<string, unknown>)[k])) && (w.card.last_review === undefined || num(w.card.last_review))))
 
+// 014 做题高亮：键 ≤ 64 个、键长 ≤ 16；每键 ≤ 300 段；每段两个非负整数且 start < end ≤ 200000（data-model）
+const int = (v: unknown) => Number.isInteger(v) && (v as number) >= 0
+const isMarks = (m: unknown) =>
+  m === undefined ||
+  (isObj(m) &&
+    Object.keys(m).length <= 64 &&
+    Object.entries(m).every(
+      ([k, l]) =>
+        str(k, 16) && Array.isArray(l) && l.length <= 300 &&
+        l.every((s) => Array.isArray(s) && s.length === 2 && int(s[0]) && int(s[1]) && s[0] < s[1] && s[1] <= 200_000),
+    ))
+
 /** 接口收到的数据逐项校验形状，不合格整体拒收 */
 export const isSyncData = (d: unknown): d is Partial<SyncData> =>
   isObj(d) &&
@@ -93,7 +105,7 @@ export const isSyncData = (d: unknown): d is Partial<SyncData> =>
           isObj(r) && str(r.unitId) && num(r.at) && num(r.score) && num(r.total) && Array.isArray(r.items) && r.items.length <= 200 &&
           (r.module === undefined || r.module === 'l' || r.module === 'r') && (r.answers === undefined || isObj(r.answers)),
       ))) &&
-  every(d.progress, (p) => str(p.version) && isObj(p.answers) && num(p.savedAt)) &&
+  every(d.progress, (p) => str(p.version) && isObj(p.answers) && num(p.savedAt) && isMarks(p.marks)) &&
   every(d.drafts, (x) => str(x.text, 20_000) && num(x.at)) &&
   every(d.favorites, (m) => num(m.at) && typeof m.on === 'boolean') &&
   every(d.dismissed, (m) => num(m.at) && typeof m.on === 'boolean') &&

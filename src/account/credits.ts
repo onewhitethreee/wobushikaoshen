@@ -67,20 +67,30 @@ export const grant = async (payload: Payload, { memberId, amount, reason, refKey
   }
 }
 
-// 扣减：余额不足返回 null，不写流水（宪章 I：先扣再调用 AI）
+// 扣费 / 退回的用途（015 data-model 额度流水）：按 refKey 前缀区分
+export const USES = { review: '写作批改', explain: '错题讲解' } as const
+export const purposeOf = (refKey: string | null | undefined) => {
+  const m = /^(?:refund:)?(review|explain):/.exec(refKey ?? '')
+  return m ? (m[1] as keyof typeof USES) : undefined
+}
+
+export type SpendResult = { ok: true; id: number } | { ok: false; reason: 'balance' | 'duplicate' }
+
+// 扣减：余额不足或 refKey 已用过都不写流水（宪章 I：先扣再调用 AI）。refKey 冲突 = 同一次请求重复到达（015 research R3）
 export const spend = async (
   payload: Payload,
   { memberId, amount, refKey, note }: { memberId: number; amount: number; refKey?: string; note?: string },
-): Promise<number | null> => {
+): Promise<SpendResult> => {
   if (!Number.isInteger(amount) || amount <= 0) throw new Error('扣减数必须是正整数')
   return drizzle(payload).transaction(async (tx) => {
     await lockMember(tx, memberId)
-    if ((await sumOf(tx, memberId)) < amount) return null
-    return insert(tx, { memberId, amount: -amount, reason: 'spend', refKey, note })
+    if ((await sumOf(tx, memberId)) < amount) return { ok: false, reason: 'balance' }
+    const id = await insert(tx, { memberId, amount: -amount, reason: 'spend', refKey, note })
+    return id ? { ok: true, id } : { ok: false, reason: 'duplicate' }
   })
 }
 
-// 退回某条消耗：同一条最多退一次（refKey = refund:<id>）
+// 退回某条消耗：同一条最多退一次（refKey = refund:<扣费 refKey>，扣费没有 refKey 时用 refund:<id>）
 export const refund = async (payload: Payload, spendEntryId: number) => {
   const e = await payload.findByID({ collection: 'credit-entries', id: spendEntryId, overrideAccess: true, depth: 0 })
   if (e.reason !== 'spend') throw new Error('只能退回消耗流水')
@@ -88,7 +98,7 @@ export const refund = async (payload: Payload, spendEntryId: number) => {
     memberId: e.member as number,
     amount: -e.amount,
     reason: 'refund',
-    refKey: `refund:${e.id}`,
+    refKey: `refund:${e.refKey ?? e.id}`,
     note: '退回',
   })
 }

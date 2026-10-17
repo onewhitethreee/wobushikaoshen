@@ -153,6 +153,7 @@
   --success-solid: var(--ok-9);
   --warning: var(--sun-11);
   --warning-soft: var(--sun-3);
+  --highlight: var(--sun-7);
   --error: var(--err-11);
   --error-soft: var(--err-3);
   --shadow-card-v: none;
@@ -252,6 +253,7 @@
   --success-solid: var(--ok-9);
   --warning: var(--sun-11);
   --warning-soft: var(--sun-3);
+  --highlight: var(--sun-7);
   --error: var(--err-11);
   --error-soft: var(--err-3);
 }

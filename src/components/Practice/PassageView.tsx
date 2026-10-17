@@ -14,7 +14,7 @@ export const sentenceRange = (target?: string): [number, number] | null => {
 export const PassageView: React.FC<{ passage: NonNullable<Section['passage']>; highlight?: string }> = ({ passage, highlight }) => {
   const range = sentenceRange(highlight)
   return (
-    <article className="bg-muted px-4 py-6 sm:px-7">
+    <article className="bg-muted px-4 py-6 sm:px-7" data-hl="p">
       {passage.title && <h2 className="mb-4 font-bold tracking-tight text-[26px] leading-snug text-balance">{passage.title}</h2>}
       {passage.imageUrl && (
         <a className="mb-4 block" href={passage.imageUrl} rel="noreferrer" target="_blank" title="点开看大图">

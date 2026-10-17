@@ -192,7 +192,7 @@ const writingColumn = (tasks: WritingTask[]): ColumnConfig | null => {
       facets: { task, ...(category ? { category } : {}) },
       actions: [
         { label: '开始写', doneLabel: '再写一遍', href: `/writing/${w.id}`, cost: free },
-        { label: 'AI 批改', href: `/writing?review=${w.id}`, cost: quota1 },
+        { label: 'AI 批改', href: `/writing/${w.id}#review`, cost: quota1 },
       ],
     }
   })

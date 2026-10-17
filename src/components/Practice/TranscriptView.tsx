@@ -46,7 +46,7 @@ export const TranscriptView: React.FC<{ lines: TranscriptLine[]; highlight?: str
                   data-highlight={on || undefined}
                   id={`s${l.n}`}
                   // 只响应点击：键盘用 ← → 按句跳转，不给几十句原文各一个 Tab 停靠点
-                  {...(onPick && { title: '从这句开始播放', onClick: () => onPick(l.n) })}
+                  {...(onPick && { title: '从这句开始播放', onClick: () => getSelection()?.isCollapsed !== false && onPick(l.n) })}
                 >
                   {l.text}
                 </span>{' '}

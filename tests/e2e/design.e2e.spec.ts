@@ -83,7 +83,7 @@ test.describe('栏目页', () => {
     Number((await page.getByTestId('result-count').innerText()).replace(/\D/g, ''))
 
   test('听力筛选、空状态与清除', async ({ page }) => {
-    await page.goto(BASE + '/listening?demo=loggedin')
+    await page.goto(BASE + '/listening')
     const initial = await count(page)
 
     const map = page.getByRole('button', { name: '地图题', exact: true })
@@ -158,10 +158,6 @@ test.describe('栏目页', () => {
     await expect(page.getByText('开始写').first()).toBeVisible()
     await expect(page.locator('aside')).toContainText('登录后查看额度')
     await expect(page.locator('aside')).not.toContainText('剩余')
-
-    await page.goto(BASE + '/writing?demo=loggedin')
-    await expect(page.locator('aside')).toContainText('剩余')
-    await expect(page.locator('aside')).not.toContainText('示例')
 
     await page.goto(BASE + '/speaking')
     await expect(page.getByText('口语批改').first()).toBeVisible()

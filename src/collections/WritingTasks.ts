@@ -21,7 +21,7 @@ export const WritingTasks: CollectionConfig = {
   versions: { drafts: true },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'taskType', 'category', 'sourceType', '_status'],
+    defaultColumns: ['title', 'taskType', 'category', 'chartChecked', 'sourceType', '_status'],
     listSearchableFields: ['title', 'titleZh', 'sourceId'],
     components: { beforeListTable: ['@/components/ImportButton#ImportButton'] },
   },
@@ -36,7 +36,10 @@ export const WritingTasks: CollectionConfig = {
       },
     ],
     beforeChange: [
-      ({ data, originalDoc }) => {
+      ({ data, originalDoc, req }) => {
+        // 后台手改了图表数据 → 来源记为人工（015 data-model）；chart:data 脚本不带后台用户，保持 vision
+        if (req.user?.collection === 'users' && data.chartData !== undefined && data.chartData !== originalDoc?.chartData)
+          data.chartSource = 'manual'
         // 批量发布 / 取消发布只带改动的字段（如 { _status }），校验要看合并后的完整文档
         if (data._status === 'published') {
           const errors = validateWritingTask({ ...originalDoc, ...data })
@@ -74,6 +77,31 @@ export const WritingTasks: CollectionConfig = {
       type: 'upload',
       relationTo: 'media',
       admin: { condition: (_d, sibling) => sibling?.taskType === 'task1', description: 'Task 1 发布时必填' },
+    },
+    {
+      name: 'chartData',
+      label: '图表数据',
+      type: 'textarea',
+      admin: {
+        condition: (_d, sibling) => sibling?.taskType === 'task1',
+        description: 'AI 批改读这段文字判断数据是否写对（pnpm chart:data 生成）。没有图表数据的 Task 1 不能批改',
+      },
+    },
+    {
+      type: 'row',
+      admin: { condition: (_d, sibling) => sibling?.taskType === 'task1' },
+      fields: [
+        { name: 'chartChecked', label: '图表数据已核对', type: 'checkbox' },
+        {
+          name: 'chartSource',
+          label: '图表数据来源',
+          type: 'select',
+          options: [
+            { label: '看图模型', value: 'vision' },
+            { label: '人工', value: 'manual' },
+          ],
+        },
+      ],
     },
     {
       type: 'row',

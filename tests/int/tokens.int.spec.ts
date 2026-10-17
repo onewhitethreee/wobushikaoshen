@@ -42,6 +42,8 @@ const TEXT: [string, string][] = [
   ['primary-foreground', 'primary'],
   ['sun-foreground', 'sun'],
   ['mark-foreground', 'mark'],
+  // 014 做题高亮底色上的正文
+  ['foreground', 'highlight'],
   // 题号、选项字母、对错圆标：页面底色的字压在实心成功色 / 错误色上
   ['background', 'success'],
   ['background', 'error'],

@@ -7,6 +7,7 @@ import { FavoriteButton } from '@/components/Account/FavoriteButton'
 import type { Answers, GroupView, ScoreItem } from '@/exam/practice'
 import { cn } from '@/utilities/ui'
 
+import { AiExplain } from './AiExplain'
 import { locateLabel, resultOf, Verdict, type Question } from './QuestionGroup'
 
 // 交卷后的解析面板（008 contracts/result-panel.md）：一次一道题，上一题 / 下一题连续翻。
@@ -26,6 +27,7 @@ export const bold = (text: string) =>
 const navBtn = 'inline-flex min-h-11 items-center gap-1 rounded-lg px-2.5 text-sm font-semibold hover:bg-muted disabled:pointer-events-none disabled:opacity-40'
 
 export const ExplainPanel: React.FC<{
+  unitId: string
   group: GroupView
   q: Question
   answer: Answers[number] | undefined
@@ -39,7 +41,7 @@ export const ExplainPanel: React.FC<{
   onToggle: () => void
   onClose: () => void
   ref?: React.Ref<HTMLElement>
-}> = ({ group, q, answer, items, open, collapsed, onPrev, onNext, onLocate, onToggle, onClose, ref }) => {
+}> = ({ unitId, group, q, answer, items, open, collapsed, onPrev, onNext, onLocate, onToggle, onClose, ref }) => {
   const r = resultOf(group, q, answer, items)
   const label = locateLabel(group, q)
   const nums = q.span > 1 ? `${q.number}–${q.number + q.span - 1}` : String(q.number)
@@ -109,6 +111,7 @@ export const ExplainPanel: React.FC<{
             在原文中定位
           </button>
         )}
+        {!r.ok && <AiExplain answer={answer} key={q.number} number={q.number} unitId={unitId} />}
       </div>
     </section>
   )

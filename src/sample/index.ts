@@ -66,14 +66,11 @@ export type HomeData = {
     cost: Cost
     costLabel?: string
     desc: string
-    items: { id: string; title: string; meta: string; count?: string }[]
     moreLabel: string
   }[]
   mock: { listening: string; reading: string; result: string }
   quotaWays: { title: string; desc: string; disabled?: boolean }[]
 }
-
-export const session = { loggedIn: false, balance: 3 }
 
 const free: Cost = { kind: 'free' }
 const quota1: Cost = { kind: 'quota', amount: 1 }
@@ -418,10 +415,6 @@ export const home: HomeData = {
       name: '听力',
       cost: free,
       desc: '按 Part、按题型练，做完看原文和解析。',
-      items: [
-        { id: 'l1', title: '社区图书馆的会员新规', meta: 'Part 2 · 表格填空', count: '10 题' },
-        { id: 'l6', title: '城市屋顶农场的兴起', meta: 'Part 4 · 笔记填空', count: '10 题' },
-      ],
       moreLabel: '全部听力练习',
     },
     {
@@ -429,10 +422,6 @@ export const home: HomeData = {
       name: '阅读',
       cost: free,
       desc: '学术类长文，判断、匹配、填空都有。',
-      items: [
-        { id: 'r1', title: '珊瑚礁如何自我修复', meta: '判断题', count: '13 题' },
-        { id: 'r2', title: '十九世纪的铁路与标准时间', meta: '段落标题匹配', count: '14 题' },
-      ],
       moreLabel: '全部阅读练习',
     },
     {
@@ -441,10 +430,6 @@ export const home: HomeData = {
       cost: quota1,
       costLabel: '批改',
       desc: '写作免费，交给 AI 批改时扣额度。',
-      items: [
-        { id: 'w1', title: '三国家庭能源消耗对比', meta: 'Task 1 · 柱状图' },
-        { id: 'w4', title: '远程办公利大于弊吗', meta: 'Task 2 · 观点类' },
-      ],
       moreLabel: '全部写作题',
     },
     {
@@ -453,10 +438,6 @@ export const home: HomeData = {
       cost: quota1,
       costLabel: '批改',
       desc: '看题免费，口语批改按次扣额度。',
-      items: [
-        { id: 'k1', title: '家乡', meta: 'Part 1', count: '5 题' },
-        { id: 'k3', title: '一次改变你看法的谈话', meta: 'Part 2 题卡' },
-      ],
       moreLabel: '全部口语题',
     },
   ],

@@ -31,7 +31,7 @@ export const ListeningAside: React.FC<{
     const notes = section.groups.filter((g) => g.instructions || g.imageUrl)
     if (!notes.length) return <p className="py-6 text-sm text-muted-foreground">交卷后这里显示原文</p>
     return (
-      <div className="flex flex-col gap-6 py-2">
+      <div className="flex flex-col gap-6 py-2" data-hl="n">
         {notes.map((g) => (
           <div className="flex flex-col gap-3" key={g.key}>
             {g.instructions && <p className="text-sm italic text-muted-foreground">{g.instructions}</p>}
@@ -75,7 +75,7 @@ export const ListeningAside: React.FC<{
         </details>
       )}
       {transcriptHidden ? null : section.transcript ? (
-        <div className="text-[15px] leading-7 whitespace-pre-line">
+        <div className="text-[15px] leading-7 whitespace-pre-line" data-hl="t">
           {typeof section.transcript === 'string' ? section.transcript : <TranscriptView current={current} highlight={highlight} lines={section.transcript} onPick={onPick} />}
         </div>
       ) : (

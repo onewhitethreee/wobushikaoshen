@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
 
 // 我的额度（011 contracts/ui.md）：余额、邀请好友、小红书笔记换额度、流水
-type Entry = { id: number; at: string; reason: string; amount: number; after: number; note?: string }
+type Entry = { id: number; at: string; reason: string; amount: number; after: number; use?: 'review' | 'explain'; note?: string }
 type Submission = { id: number; at: string; url: string; screenshot?: string; status: 'pending' | 'approved' | 'rejected'; amount?: number; reason?: string }
 type Data = {
   balance: number
@@ -26,7 +26,10 @@ const REASON: Record<string, string> = {
   adjust: '站长调整',
 }
 
-const when = (at: string) => {
+// 扣费 / 退回的用途，与 src/account/credits.ts 的 USES 一致（那边带服务端依赖，前端不能直接引）
+const USE = { review: '写作批改', explain: '错题讲解' }
+
+export const when = (at: string) => {
   const d = new Date(at)
   const pad = (n: number) => String(n).padStart(2, '0')
   return `${d.getFullYear()}年${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`
@@ -104,7 +107,10 @@ export const CreditsView: React.FC = () => {
               {data.entries.map((e) => (
                 <li className="flex items-start gap-x-6 border-b border-border py-3" data-testid="credit-entry" key={e.id}>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-[15px]">{REASON[e.reason] ?? e.reason}</span>
+                    <span className="block text-[15px]">
+                      {REASON[e.reason] ?? e.reason}
+                      {e.use && ` · ${USE[e.use]}`}
+                    </span>
                     <span className="text-[13px] text-muted-foreground">
                       {when(e.at)}
                       {e.note ? ` · ${e.note}` : ''}

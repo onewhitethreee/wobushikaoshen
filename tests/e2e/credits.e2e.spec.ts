@@ -129,6 +129,10 @@ test.describe('额度账户', () => {
     await pageB.reload()
     await expect(pageB.getByTestId('credit-balance')).toHaveText(String(s.inviteeReward + 15))
     await expect(pageB.getByTestId('note-status').first()).toHaveText('已通过 +15')
+    // 栏目侧栏显示同一个余额
+    await pageB.goto(`${BASE}/writing`)
+    await expect(pageB.locator('aside')).toContainText(`剩余 ${s.inviteeReward + 15} 额度`)
+    await pageB.goto(`${BASE}/me/credits`)
 
     // 同一篇再交：提示已提交过
     await uploadNote(pageB, `${NOTE}${id}`, png)

@@ -83,6 +83,9 @@ export interface Config {
     tests: Test;
     units: Unit;
     'writing-tasks': WritingTask;
+    'writing-reviews': WritingReview;
+    'answer-explanations': AnswerExplanation;
+    'explanation-unlocks': ExplanationUnlock;
     'speaking-questions': SpeakingQuestion;
     'dict-entries': DictEntry;
     redirects: Redirect;
@@ -118,6 +121,9 @@ export interface Config {
     tests: TestsSelect<false> | TestsSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
     'writing-tasks': WritingTasksSelect<false> | WritingTasksSelect<true>;
+    'writing-reviews': WritingReviewsSelect<false> | WritingReviewsSelect<true>;
+    'answer-explanations': AnswerExplanationsSelect<false> | AnswerExplanationsSelect<true>;
+    'explanation-unlocks': ExplanationUnlocksSelect<false> | ExplanationUnlocksSelect<true>;
     'speaking-questions': SpeakingQuestionsSelect<false> | SpeakingQuestionsSelect<true>;
     'dict-entries': DictEntriesSelect<false> | DictEntriesSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
@@ -679,6 +685,7 @@ export interface CreditEntry {
   member: number | Member;
   amount: number;
   reason: 'invite' | 'invitee' | 'note' | 'spend' | 'refund' | 'adjust';
+  use?: string | null;
   /**
    * 防重复发放的唯一键
    */
@@ -1014,6 +1021,12 @@ export interface WritingTask {
    * Task 1 发布时必填
    */
   image?: (number | null) | Media;
+  /**
+   * AI 批改读这段文字判断数据是否写对（pnpm chart:data 生成）。没有图表数据的 Task 1 不能批改
+   */
+  chartData?: string | null;
+  chartChecked?: boolean | null;
+  chartSource?: ('vision' | 'manual') | null;
   minWords?: number | null;
   suggestedMinutes?: number | null;
   sampleAnswer?: string | null;
@@ -1196,6 +1209,111 @@ export interface Unit {
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
+}
+/**
+ * 考生的写作批改记录，只读。失败的记录考生看不到，失败原因和用量在详情里。
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "writing-reviews".
+ */
+export interface WritingReview {
+  id: number;
+  member: number | Member;
+  task: number | WritingTask;
+  status: 'pending' | 'done' | 'failed';
+  overall?: number | null;
+  essay: string;
+  essayHash?: string | null;
+  words?: number | null;
+  criteria?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  paragraphs?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  rewrites?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  lengthNote?: string | null;
+  failReason?: string | null;
+  spendEntry?: (number | null) | CreditEntry;
+  refundEntry?: (number | null) | CreditEntry;
+  /**
+   * { prompt, completion, ms, model }
+   */
+  usage?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * AI 生成的错题讲解，按题目和错误答案缓存。可以改正文；删掉后下次有人请求会重新生成。
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-explanations".
+ */
+export interface AnswerExplanation {
+  id: number;
+  cacheKey: string;
+  unitId?: string | null;
+  number?: number | null;
+  /**
+   * 规范化后的答案，未作答为 ∅
+   */
+  answer?: string | null;
+  /**
+   * **粗体** 显示为粗体
+   */
+  body: string;
+  usage?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "explanation-unlocks".
+ */
+export interface ExplanationUnlock {
+  id: number;
+  member: number | Member;
+  cacheKey: string;
+  key: string;
+  spendEntry?: (number | null) | CreditEntry;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1441,6 +1559,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'writing-tasks';
         value: number | WritingTask;
+      } | null)
+    | ({
+        relationTo: 'writing-reviews';
+        value: number | WritingReview;
+      } | null)
+    | ({
+        relationTo: 'answer-explanations';
+        value: number | AnswerExplanation;
+      } | null)
+    | ({
+        relationTo: 'explanation-unlocks';
+        value: number | ExplanationUnlock;
       } | null)
     | ({
         relationTo: 'speaking-questions';
@@ -1881,6 +2011,7 @@ export interface CreditEntriesSelect<T extends boolean = true> {
   member?: T;
   amount?: T;
   reason?: T;
+  use?: T;
   refKey?: T;
   relatedMember?: T;
   note?: T;
@@ -2127,6 +2258,9 @@ export interface WritingTasksSelect<T extends boolean = true> {
   titleZh?: T;
   prompt?: T;
   image?: T;
+  chartData?: T;
+  chartChecked?: T;
+  chartSource?: T;
   minWords?: T;
   suggestedMinutes?: T;
   sampleAnswer?: T;
@@ -2136,6 +2270,55 @@ export interface WritingTasksSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "writing-reviews_select".
+ */
+export interface WritingReviewsSelect<T extends boolean = true> {
+  member?: T;
+  task?: T;
+  status?: T;
+  overall?: T;
+  essay?: T;
+  essayHash?: T;
+  words?: T;
+  criteria?: T;
+  paragraphs?: T;
+  rewrites?: T;
+  lengthNote?: T;
+  failReason?: T;
+  spendEntry?: T;
+  refundEntry?: T;
+  usage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-explanations_select".
+ */
+export interface AnswerExplanationsSelect<T extends boolean = true> {
+  cacheKey?: T;
+  unitId?: T;
+  number?: T;
+  answer?: T;
+  body?: T;
+  usage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "explanation-unlocks_select".
+ */
+export interface ExplanationUnlocksSelect<T extends boolean = true> {
+  member?: T;
+  cacheKey?: T;
+  key?: T;
+  spendEntry?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2397,6 +2580,10 @@ export interface AiSetting {
   baseUrl: string;
   model: string;
   /**
+   * 只用于 Task 1 图表转文字（pnpm chart:data）
+   */
+  visionModel?: string | null;
+  /**
    * 留空 = 不调用 AI。密钥存数据库，只有登录后台可见
    */
   apiKey?: string | null;
@@ -2545,6 +2732,7 @@ export interface BandScalesSelect<T extends boolean = true> {
 export interface AiSettingsSelect<T extends boolean = true> {
   baseUrl?: T;
   model?: T;
+  visionModel?: T;
   apiKey?: T;
   updatedAt?: T;
   createdAt?: T;

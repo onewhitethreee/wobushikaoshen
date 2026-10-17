@@ -5,6 +5,7 @@ import Link from 'next/link'
 import React, { useEffect, useMemo, useState } from 'react'
 
 import { mistakes, type Mistake } from '@/account/mistakes'
+import { AiExplain } from '@/components/Practice/AiExplain'
 import { listeningType, readingType } from '@/exam/typeNames'
 import type { LookupItem, LookupQuestion } from '@/endpoints/lookup'
 import { dismissMistake, load, save } from '@/practice/store'
@@ -231,6 +232,11 @@ export const MistakeBook: React.FC = () => {
                     <dt className="text-muted-foreground">正确答案</dt>
                     <dd className="text-success">{q ? withText(q.answers, q) : '…'}</dd>
                   </dl>
+                )}
+                {expanded && !gone && q && (
+                  <div className="bg-muted px-5 pb-4 text-[14px]">
+                    <AiExplain answer={m.answers?.[q.number]} number={q.number} unitId={m.groupKey} />
+                  </div>
                 )}
               </li>
             )

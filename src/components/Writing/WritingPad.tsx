@@ -7,10 +7,13 @@ import { loadDrafts, saveDrafts } from '@/practice/store'
 import { STORE_EVENT, schedulePush, sync } from '@/practice/syncClient'
 import { cn } from '@/utilities/ui'
 
-// 写作框：实时字数，草稿存本机（隐私模式、配额满时照常写，只是不保存）；已登录时草稿随账号同步（009）
-export const WritingPad: React.FC<{ taskId: string; minWords: number }> = ({
+// 写作框：实时字数，草稿存本机（隐私模式、配额满时照常写，只是不保存）；已登录时草稿随账号同步（009）。
+// onText 把当前文字交给批改面板（015），批改中 readOnly
+export const WritingPad: React.FC<{ taskId: string; minWords: number; onText?: (text: string) => void; readOnly?: boolean }> = ({
   taskId,
   minWords,
+  onText,
+  readOnly,
 }) => {
   const [text, setText] = useState('')
   const [saved, setSaved] = useState(true)
@@ -38,6 +41,8 @@ export const WritingPad: React.FC<{ taskId: string; minWords: number }> = ({
     return () => clearTimeout(t)
   }, [text, taskId])
 
+  useEffect(() => onText?.(text), [text, onText])
+
   const words = countWords(text)
   const short = words < minWords
 
@@ -47,12 +52,13 @@ export const WritingPad: React.FC<{ taskId: string; minWords: number }> = ({
         在这里写，草稿会自动保存
       </label>
       <textarea
-        className="min-h-[360px] w-full resize-y border-[1.5px] border-input bg-background p-4 text-[16px] leading-7 outline-none focus:border-foreground"
+        className="min-h-[360px] w-full resize-y border-[1.5px] border-input bg-background p-4 text-[16px] leading-7 outline-none focus:border-foreground read-only:bg-muted read-only:text-muted-foreground"
         id="essay"
         onChange={(e) => {
           setText(e.target.value)
           setSaved(false)
         }}
+        readOnly={readOnly}
         spellCheck={false}
         value={text}
       />

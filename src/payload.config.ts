@@ -24,6 +24,9 @@ import { CreditSettings } from './globals/CreditSettings'
 import { Tests } from './collections/Tests'
 import { Units } from './collections/Units'
 import { WritingTasks } from './collections/WritingTasks'
+import { WritingReviews } from './collections/WritingReviews'
+import { AnswerExplanations } from './collections/AnswerExplanations'
+import { ExplanationUnlocks } from './collections/ExplanationUnlocks'
 import { SpeakingQuestions } from './collections/SpeakingQuestions'
 import { AiSettings } from './globals/AiSettings'
 import { MailSettings } from './globals/MailSettings'
@@ -37,6 +40,10 @@ import { lookupEndpoint } from './endpoints/lookup'
 import { dictEndpoint } from './endpoints/dict'
 import { creditsEndpoint } from './endpoints/credits'
 import { notesEndpoint } from './endpoints/notes'
+import { writingReviewEndpoints } from './endpoints/writingReviews'
+import { expireStale } from './review/writing'
+import { expireStaleExplains } from './review/explain'
+import { explanationEndpoints } from './endpoints/explanations'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
@@ -85,11 +92,16 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, CreditEntries, NoteSubmissions, NoteScreenshots, Tests, Units, WritingTasks, SpeakingQuestions, DictEntries],
+  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, CreditEntries, NoteSubmissions, NoteScreenshots, Tests, Units, WritingTasks, WritingReviews, AnswerExplanations, ExplanationUnlocks, SpeakingQuestions, DictEntries],
   cors: [getServerSideURL()].filter(Boolean),
   // 只认本站来源的 cookie：别的网站带着考生 / 管理员 cookie 发来的请求按未登录处理（010 attack-matrix A12）
   csrf: [getServerSideURL()].filter(Boolean),
-  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, dictEndpoint, creditsEndpoint, notesEndpoint],
+  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, dictEndpoint, creditsEndpoint, notesEndpoint, ...writingReviewEndpoints, ...explanationEndpoints],
+  // 进程重启会丢掉进行中的批改 / 讲解：启动时把超时的改为失败并退回（015 research R2、data-model）
+  onInit: async (payload) => {
+    await expireStale(payload).catch((e) => payload.logger.error(e, '启动扫描批改失败'))
+    await expireStaleExplains(payload).catch((e) => payload.logger.error(e, '启动扫描讲解失败'))
+  },
   // 网站不用 GraphQL，关掉少一个对外接口（009 安全自查）
   graphQL: { disable: true },
   globals: [Header, Footer, BandScales, AiSettings, MailSettings, CreditSettings],

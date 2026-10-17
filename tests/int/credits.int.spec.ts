@@ -39,7 +39,7 @@ describe('余额与扣减', () => {
   it('余额不足时扣减被拒，不写流水', async () => {
     const m = await mk()
     await grant(payload, { memberId: m.id, amount: 2, reason: 'adjust', note: 't' })
-    expect(await spend(payload, { memberId: m.id, amount: 3 })).toBeNull()
+    expect(await spend(payload, { memberId: m.id, amount: 3 })).toEqual({ ok: false, reason: 'balance' })
     const { totalDocs } = await payload.count({ collection: 'credit-entries', where: { member: { equals: m.id } } })
     expect(totalDocs).toBe(1)
   })
@@ -48,17 +48,17 @@ describe('余额与扣减', () => {
     const m = await mk()
     await grant(payload, { memberId: m.id, amount: 1, reason: 'adjust', note: 't' })
     const results = await Promise.all(Array.from({ length: 10 }, () => spend(payload, { memberId: m.id, amount: 1 })))
-    expect(results.filter(Boolean)).toHaveLength(1)
+    expect(results.filter((r) => r.ok)).toHaveLength(1)
     expect(await balance(payload, m.id)).toBe(0)
   })
 
   it('同一条消耗只能退回一次', async () => {
     const m = await mk()
     await grant(payload, { memberId: m.id, amount: 3, reason: 'adjust', note: 't' })
-    const id = await spend(payload, { memberId: m.id, amount: 2 })
-    expect(id).toBeTruthy()
-    expect(await refund(payload, id!)).toBeTruthy()
-    expect(await refund(payload, id!)).toBeNull()
+    const r = await spend(payload, { memberId: m.id, amount: 2 })
+    if (!r.ok) throw new Error('扣减失败')
+    expect(await refund(payload, r.id)).toBeTruthy()
+    expect(await refund(payload, r.id)).toBeNull()
     expect(await balance(payload, m.id)).toBe(3)
   })
 

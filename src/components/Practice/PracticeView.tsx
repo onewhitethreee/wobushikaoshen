@@ -5,6 +5,7 @@ import { flushSync } from 'react-dom'
 
 import { Button } from '@/components/ui/button'
 import { bandFor, scoreUnit, type Answers, type PracticeUnit } from '@/exam/practice'
+import type { Marks } from '@/practice/marks'
 import { addRecord, getProgress, load, save, setProgress } from '@/practice/store'
 import { schedulePush, sync } from '@/practice/syncClient'
 import { cn } from '@/utilities/ui'
@@ -12,6 +13,7 @@ import { cn } from '@/utilities/ui'
 import { AudioPlayer, type AudioControls, type AudioNav } from './AudioPlayer'
 import { ListeningAside } from './ListeningAside'
 import { ExplainPanel } from './ExplainPanel'
+import { Highlighter } from './Highlighter'
 import { explainOrder, type ExplainStop } from './explain'
 import { PassageView, sentenceRange } from './PassageView'
 import { locateLabel, QuestionGroup } from './QuestionGroup'
@@ -41,6 +43,9 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [collapsed, setCollapsed] = useState(false)
   const [transcriptHidden, setTranscriptHidden] = useState(false)
+  // 014 做题高亮：交卷前随作答进度保存，交卷后只在当前页面
+  const [marks, setMarks] = useState<Marks>({})
+  const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const audioBar = useRef<HTMLDivElement>(null)
   const [audioH, setAudioH] = useState(0)
@@ -64,6 +69,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   }, [submitted])
   const storageOk = useRef(true)
   const ready = useRef(false)
+  // 用户动过（作答、高亮、重做）才写本机：打开页面时不写，否则会删掉同步刚取回的其他设备进度
+  const touched = useRef(false)
   const highlightTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
   // 004 听力按句控制：播放器、当前时间、单句循环（只对开启时所在的 Part 生效）、跟随暂停
   const player = useRef<AudioControls>(null)
@@ -85,17 +92,18 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       setAnswers(p.answers)
       setNotice('restored')
     }
+    if (p?.marks) setMarks(p.marks)
     ready.current = true
     void sync() // 已登录时取回其他设备的记录（009）
   }, [unit.id, unit.version])
 
   // 作答变化 500ms 后写入本机
   useEffect(() => {
-    if (!ready.current || submitted) return
+    if (!ready.current || submitted || !touched.current) return
     const t = setTimeout(() => {
       // 每次都重读本机：同步可能刚合并进别的设备的数据，不能用旧副本覆盖
       const { store } = load()
-      if (Object.keys(answers).length) setProgress(store, unit.id, unit.version, answers)
+      if (Object.keys(answers).length || Object.values(marks).some((l) => l.length)) setProgress(store, unit.id, unit.version, answers, marks)
       else delete store.progress[unit.id]
       if (save(store)) schedulePush()
       else if (storageOk.current) {
@@ -104,7 +112,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       }
     }, 500)
     return () => clearTimeout(t)
-  }, [answers, submitted, unit.id, unit.version])
+  }, [answers, marks, submitted, unit.id, unit.version])
 
   const slots = useMemo<Slot[]>(
     () =>
@@ -163,7 +171,14 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   const result = useMemo(() => (submitted ? scoreUnit(unit, answers) : null), [submitted, unit, answers])
   const correct = new Map(result?.items.map((i) => [i.number, i.correct]))
 
-  const onAnswer = (n: number, v: string | string[]) => setAnswers((a) => ({ ...a, [n]: v }))
+  const onAnswer = (n: number, v: string | string[]) => {
+    touched.current = true
+    setAnswers((a) => ({ ...a, [n]: v }))
+  }
+  const onMarks = (m: Marks) => {
+    touched.current = true
+    setMarks(m)
+  }
 
   const doSubmit = () => {
     const r = scoreUnit(unit, answers)
@@ -200,7 +215,9 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   }
 
   const restart = () => {
+    touched.current = true
     setAnswers({})
+    setMarks({})
     setSubmitted(false)
     setConfirming(false)
     setHighlight(undefined)
@@ -408,6 +425,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       open={sheetOpen}
       q={explained.q}
       ref={panelRef}
+      unitId={unit.id}
     />
   )
 
@@ -417,7 +435,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   }
 
   return (
-    <div id="main" style={{ '--audio-h': `${audioH}px`, '--panel-h': `${panelH}px` } as React.CSSProperties}>
+    <div id="main" ref={rootRef} style={{ '--audio-h': `${audioH}px`, '--panel-h': `${panelH}px` } as React.CSSProperties}>
       {(result || notice) && (
         <div className="mx-auto flex max-w-[77.5rem] flex-col gap-3 px-[clamp(1rem,4vw,2.5rem)] pt-5">
           {result && <ResultBar band={band} listHref={isL ? '/listening' : '/reading'} onRetry={restart} score={result.score} total={result.total} />}
@@ -528,6 +546,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
               pane === 'questions' ? 'flex' : 'hidden',
               'flex-col gap-5 lg:flex lg:h-[calc(100dvh-8rem-var(--audio-h))] lg:overflow-y-auto lg:pb-(--panel-h)',
             )}
+            data-hl="q"
             data-testid="questions-pane"
             onFocus={trackCurrent}
           >
@@ -535,6 +554,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
           </div>
         </div>
       </div>
+
+      <Highlighter marks={marks} onChange={onMarks} root={rootRef} />
 
       <div className="sticky bottom-0 z-10">
         {/* 解析面板与两栏同一网格，电脑端落在题目栏下方、题号条上方 */}

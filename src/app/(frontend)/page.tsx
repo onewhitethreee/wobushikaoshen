@@ -10,7 +10,8 @@ import { CostMark } from '@/components/Journal/CostMark'
 import { HeroTiles } from '@/components/Journal/HeroTiles'
 import { MockBand } from '@/components/Journal/MockBand'
 import { StartForm } from '@/components/Journal/StartForm'
-import { home } from '@/sample'
+import { getColumn } from '@/content/columns'
+import { home, type PracticeRow } from '@/sample'
 import { cn } from '@/utilities/ui'
 
 export const revalidate = 60
@@ -19,15 +20,30 @@ export const metadata: Metadata = { title: { absolute: '我不是考神' } }
 
 const quotaTags = ['笔记', '邀请', '未开放']
 
+// 每科取两行：听力阅读优先整篇 / 整个 Part，没有就取前两行
+const picks = (rows: PracticeRow[]) => {
+  const units = rows.filter((r) => r.facets.kind === 'unit')
+  return (units.length ? units : rows).slice(0, 2).map((r) => ({
+    id: r.id,
+    title: r.title,
+    meta: r.meta.join(' · '),
+    count: r.count ? `${r.count} 题` : undefined,
+  }))
+}
+
 export default async function HomePage() {
   const payload = await getPayload({ config: configPromise })
-  const posts = await payload.find({
-    collection: 'posts',
-    where: { _status: { equals: 'published' } },
-    sort: '-publishedAt',
-    limit: 4,
-    depth: 1,
-  })
+  const [posts, ...cols] = await Promise.all([
+    payload.find({
+      collection: 'posts',
+      where: { _status: { equals: 'published' } },
+      sort: '-publishedAt',
+      limit: 4,
+      depth: 1,
+    }),
+    ...home.subjects.map((s) => getColumn(s.slug)),
+  ])
+  const subjects = home.subjects.map((s, i) => ({ ...s, items: picks(cols[i]!.rows) }))
 
   return (
     <main className="container flex flex-col pt-8 pb-24 md:pt-10" id="main">
@@ -56,7 +72,7 @@ export default async function HomePage() {
             </h2>
             <span className="text-sm text-muted-foreground">听力阅读免费 · 写作口语批改用额度</span>
           </div>
-          {home.subjects.map((s, i) => (
+          {subjects.map((s, i) => (
             <div className="grid grid-cols-[52px_minmax(0,1fr)] gap-5 border-t border-border py-7" data-testid={`subject-${s.name}`} key={s.slug}>
               <span
                 aria-hidden="true"

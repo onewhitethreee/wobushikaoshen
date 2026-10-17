@@ -26,7 +26,7 @@
 ```bash
 # 数据库与收信工具（首次创建；之后 docker start ielts-pg ielts-mail）
 docker run -d --name ielts-pg -e POSTGRES_USER=ielts -e POSTGRES_PASSWORD=<密码> -e POSTGRES_DB=ielts -p 5432:5432 postgres:17
-docker run -d --name ielts-mail -p 1025:1025 -p 8025:8025 axllent/mailpit
+docker run -d --name ielts-mail -e MP_SMTP_DISABLE_RDNS=true -p 1025:1025 -p 8025:8025 axllent/mailpit
 
 cd site
 cp .env.example .env      # DATABASE_URL 指向 ielts-pg；三个 SECRET 填 32 位以上随机串
@@ -48,12 +48,14 @@ pnpm dev                  # http://localhost:3000，后台 /admin
 
 | 目录 | 内容 |
 |---|---|
-| `app/(frontend)/` | 前台页面：`listening` `reading` `writing` `speaking` `mock` 栏目页，`practice/[unit]` 练习页，`writing/[id]` 写作页，`login`，`me/mistakes`，`me/favorites` |
+| `app/(frontend)/` | 前台页面：`listening` `reading` `writing` `speaking` `mock` 栏目页，`practice/[unit]` 练习页，`writing/[id]` 写作页（含 AI 批改），`login`，`me/mistakes`，`me/favorites`，`me/reviews`（写作批改记录） |
 | `app/(payload)/` | Payload 后台与 REST API（GraphQL 已关闭） |
 | `collections/` | 数据模型，见下表 |
 | `globals/` | 全站唯一设置：`AiSettings`（AI 设置）、`MailSettings`（邮件设置）、`BandScales`（分数换算表） |
-| `endpoints/` | 自定义接口：`auth`（验证码登录）、`memberData`（同步）、`import`（后台导入文件夹）、`mailTest`、`lookup` |
+| `endpoints/` | 自定义接口：`auth`（验证码登录）、`memberData`（同步）、`import`（后台导入文件夹）、`mailTest`、`lookup`、`writingReviews`（写作批改）、`explanations`（错题讲解） |
 | `account/` | 验证码签发与限频（`codes.ts`）、发信（`mail.ts`，主用失败切备用）、同步合并（`sync.ts`）、错题计算（`mistakes.ts`） |
+| `ai/` | `chat.ts`：读「AI 设置」、发一次 OpenAI 兼容的 chat 请求（超时、max_tokens、用量）。批改、讲解、`chart:data` 共用 |
+| `review/` | `writing.ts`（批改提示词、输出校验、总分、后台执行、超时扫描）、`explain.ts` / `explainKey.ts`（错题讲解：服务端判错、缓存键、出处句）、`charge.ts`（扣费 + 单用户每分钟 5 次限频，进程内计数） |
 | `practice/` | 浏览器端作答存储（`store.ts`，本机 localStorage）与同步客户端（`syncClient.ts`） |
 | `exam/` | 判分、题型名称、导入校验、分数换算默认值 |
 | `import/` | 导入包解析与入库 |
@@ -68,7 +70,10 @@ pnpm dev                  # http://localhost:3000，后台 /admin
 |---|---|
 | `tests` | 套题：听力 4 Part / 阅读 3 篇，以及写作、口语部分 |
 | `units` | 练习单元：一篇阅读或一个听力 Part，可以不属于整套题。`summary` 在保存时自动算，栏目页只读这个字段 |
-| `writing-tasks` / `speaking-questions` | 写作题 / 口语题 |
+| `writing-tasks` / `speaking-questions` | 写作题 / 口语题。Task 1 带 `chartData`（图表文字数据，批改用）、`chartChecked`、`chartSource` |
+| `writing-reviews` | 写作批改记录：pending → done / failed，失败自动退回额度。考生只能经 `/api/me/writing-reviews` 读自己的 |
+| `answer-explanations` | 错题讲解缓存：题组 + 题号 + 单元版本 + 规范化错误答案，考生共用 |
+| `explanation-unlocks` | 讲解查看权：付过费的考生再看不扣 |
 | `members` | 考生账号，只能用邮箱验证码登录。密码操作一律拒绝 |
 | `member-data` | 考生的交卷记录、进度、草稿、收藏、错题（同步用） |
 | `login-codes` / `email-sends` | 验证码记录、发信记录（限频与排错用） |
@@ -96,6 +101,8 @@ pnpm dev                  # http://localhost:3000，后台 /admin
 3. 导入后默认是草稿，在后台检查后发布（导入包写 `"publish": true` 时直接发布）。
 
 4. 一次性脚本：`pnpm backfill:summary`，给老数据补算单元的 `summary`。
+
+5. **Task 1 图表转文字**（写作批改要用）：`pnpm chart:data [--redo 4,12] [--only-failed] [--limit N]`。用「AI 设置」里的看图模型把已发布 Task 1 的图转成文字写进 `chartData`；默认只处理还没有的，失败的题号写进 `chart-data.failed.txt`。新导入 Task 1 后要再跑一次，然后在后台抽查、勾"图表数据已核对"。
 
 ## 5. 测试
 
@@ -129,7 +136,8 @@ pnpm test:e2e $(git ls-files tests/e2e) --workers=1             # playwright；�
 | 套题 / 练习单元 / 写作题 / 口语题 | 导入、检查、发布、下架；可以按来源题集筛选 |
 | 考生账号 | 查看考生；删除考生时连同学习数据一起删除（代用户注销） |
 | 邮件设置 | 主用、备用两套 SMTP，各有"发送测试邮件"按钮，并显示最近一次失败的原因。密码不回显，留空保存表示不修改 |
-| AI 设置 | 接口地址、模型（默认 `deepseek-chat`）、API key。key 只在服务端使用 |
+| AI 设置 | 接口地址、模型（默认 `deepseek-chat`）、看图模型（`chart:data` 用）、API key。key 只在服务端使用 |
+| 写作批改 / 错题讲解 | 批改记录只读（含失败原因和用量）；讲解可改正文、可删除（删掉后下次请求重新生成） |
 | 分数换算表 | 听力、阅读原始分对应的 band |
 | 发信记录 | 排查验证码收不到的问题 |
 

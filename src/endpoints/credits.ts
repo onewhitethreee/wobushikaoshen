@@ -1,7 +1,7 @@
 import { sql } from '@payloadcms/db-postgres'
 import type { Endpoint } from 'payload'
 
-import { getSettings } from '../account/credits'
+import { getSettings, purposeOf } from '../account/credits'
 import { ensureInviteCode } from '../collections/Members'
 import { rejectText } from '../collections/NoteSubmissions'
 import { getServerSideURL } from '../utilities/getURL'
@@ -30,7 +30,7 @@ export const creditsEndpoint: Endpoint = {
         FROM credit_entries WHERE member_id = ${memberId}`),
       db.execute(sql`
         SELECT * FROM (
-          SELECT id, created_at, reason, amount, note,
+          SELECT id, created_at, reason, amount, note, ref_key,
                  SUM(amount) OVER (ORDER BY created_at, id) AS after
           FROM credit_entries WHERE member_id = ${memberId}
         ) t ORDER BY created_at DESC, id DESC LIMIT ${PAGE} OFFSET ${(page - 1) * PAGE}`),
@@ -59,7 +59,8 @@ export const creditsEndpoint: Endpoint = {
         reason: r.reason,
         amount: Number(r.amount),
         after: Number(r.after),
-        note: r.reason === 'adjust' || r.reason === 'refund' ? (r.note ?? undefined) : undefined,
+        use: purposeOf(r.ref_key as string | null),
+        note: r.reason === 'adjust' || (r.reason === 'refund' && !purposeOf(r.ref_key as string | null)) ? (r.note ?? undefined) : undefined,
       })),
       invite: {
         link: `${getServerSideURL()}/i/${code}`,

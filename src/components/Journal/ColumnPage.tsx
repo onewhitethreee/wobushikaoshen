@@ -22,11 +22,7 @@ const pendingNotice = (config: ColumnConfig, q: ColumnQuery) => {
 }
 
 // 五个栏目页共用：三栏，标题区放在中栏顶部（006 FR-054）
-export const ColumnPage: React.FC<{ config: ColumnConfig; loggedIn: boolean; query: ColumnQuery }> = ({
-  config,
-  loggedIn,
-  query,
-}) => {
+export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> = ({ config, query }) => {
   const notice = pendingNotice(config, query)
   const mock = config.sidebar.find((m) => m.kind === 'mock')
   const filters: Record<string, string> = {}
@@ -62,7 +58,7 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; loggedIn: boolean; que
 
   return (
     <PracticeBrowser
-      aside={<Sidebar key="aside" loggedIn={loggedIn} modules={config.sidebar} slug={config.slug} />}
+      aside={<Sidebar key="aside" modules={config.sidebar} slug={config.slug} />}
       config={config}
       header={header}
       initial={{ tab: query.tab, filters, focus: query.focus, page: Math.max(1, Math.floor(Number(query.page))) || undefined }}

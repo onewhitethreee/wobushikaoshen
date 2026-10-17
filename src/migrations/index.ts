@@ -7,6 +7,7 @@ import * as migration_20261014_131240_009_account from './20261014_131240_009_ac
 import * as migration_20261016_003353_011_credits from './20261016_003353_011_credits';
 import * as migration_20261016_110413_012_password from './20261016_110413_012_password';
 import * as migration_20261016_121936_013_dict from './20261016_121936_013_dict';
+import * as migration_20261017_115619_015_review from './20261017_115619_015_review';
 
 export const migrations = [
   {
@@ -52,6 +53,11 @@ export const migrations = [
   {
     up: migration_20261016_121936_013_dict.up,
     down: migration_20261016_121936_013_dict.down,
-    name: '20261016_121936_013_dict'
+    name: '20261016_121936_013_dict',
+  },
+  {
+    up: migration_20261017_115619_015_review.up,
+    down: migration_20261017_115619_015_review.down,
+    name: '20261017_115619_015_review',
   },
 ];
