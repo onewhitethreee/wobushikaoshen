@@ -1,8 +1,8 @@
 # 我不是考神
 
-雅思学术类备考网站。听力、阅读、写作练习免费，不注册也能做；写作 AI 批改和错题 AI 讲解用额度，额度靠邀请好友、发小红书笔记领取，不收钱。
+雅思学术类备考网站。听力、阅读、写作练习免费，不注册也能做；写作 AI 批改和错题 AI 讲解用额度，额度靠邀请好友.
 
-线上地址：[wobushikaoshen.com](https://wobushikaoshen.com)
+线上地址：[wbsks.com](https://wbsks.com)
 
 ![听力栏目](docs/screenshots/listening-list.png)
 
