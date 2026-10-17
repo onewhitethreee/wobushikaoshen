@@ -60,7 +60,10 @@ rsync -avP public/media/ <服务器>:~/site/public/media/
 docker compose cp ielts-data.dump db:/tmp/
 docker compose exec db pg_restore -U postgres -d ielts --data-only --disable-triggers /tmp/ielts-data.dump
 docker compose exec db psql -U postgres -d ielts -c "delete from users_sessions"   # 清掉本机带来的登录会话
+docker compose exec db psql -U postgres -d ielts -c "select setval('payload_migrations_id_seq', (select max(id) from payload_migrations))"
 ```
+
+- 最后一条不能省：导出时排除了 `payload_migrations` 的数据，但它的序列值还是会带过来，把服务器上的计数改回本机的值，下次 migrate 写记录时会报 `duplicate key ... payload_migrations_pkey`。
 
 - 导出时 pg_dump 会提示 `circular foreign-key constraints`，这是正常的，`--disable-triggers` 就是用来处理它的。
 - 本机库是 `pnpm dev` 自动同步出来的表结构，和迁移建的只差列顺序。pg_restore 按列名导入，不受影响。
@@ -145,10 +148,11 @@ sudo certbot --nginx -d wobushikaoshen.com      # 自动改成 443 并续期
 
 ```bash
 git pull                                  # 或 rsync 新代码
-docker compose run --rm migrate           # 有新迁移时才需要；没有新迁移，跑了也无害
+docker compose run --rm --build migrate   # 有新迁移时才需要；没有新迁移，跑了也无害
 docker compose build app && docker compose up -d app
 ```
 
+- `migrate` 一定要带 `--build`：它用的是单独的镜像，不重新构建就还是旧代码、旧迁移。之后用它跑 `import:dict`、`chart:data` 也一样。
 - 构建期间旧容器继续提供服务，`up -d` 换新容器时会断几秒。
 - 词典只在第一次部署时导入；以后换新版 ECDICT 时，按 3 ③ 的命令重新导入即可。
 - 安全修复要**先部署上线，再同步公开仓库**。

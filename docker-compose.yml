@@ -3,7 +3,7 @@
 #   docker compose run --rm migrate          # 空库建表
 #   （导入数据、拷媒体到 ./public/media 并 chown -R 1001:1001 public/media）
 #   docker compose build app && docker compose up -d app
-# 之后更新代码：有新迁移先 run migrate，再 build app && up -d app
+# 之后更新代码：有新迁移先 run --rm --build migrate，再 build app && up -d app
 #
 # .env 里的 DATABASE_URL 写 127.0.0.1（构建走宿主网络连库），容器运行时下面改成连 db
 services:
@@ -22,6 +22,8 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://postgres:${DB_PASSWORD}@db:5432/ielts
+      # 不设的话 getPayload 按开发模式往生产库 push 表结构，还会写一条 dev 迁移记录，卡住以后的 migrate
+      NODE_ENV: production
     command: pnpm payload migrate
     depends_on: [db]
 

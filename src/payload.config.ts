@@ -89,6 +89,8 @@ export default buildConfig({
   // This config helps us configure global or default features that the other editors can inherit
   editor: defaultLexical,
   db: postgresAdapter({
+    // 只有 pnpm dev（NODE_ENV=development）才自动同步表结构；tsx 脚本、测试不设 NODE_ENV 时也不 push，免得误改生产库
+    push: process.env.NODE_ENV === 'development',
     pool: {
       connectionString: process.env.DATABASE_URL || '',
     },

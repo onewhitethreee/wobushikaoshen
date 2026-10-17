@@ -7,7 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { dictEndpoint } from '@/endpoints/dict'
 import { candidates, clean } from '@/vocab/lookup'
-import { buildRows, csvParser } from '../../scripts/import-dict'
+import { buildRows, csvParser } from '@/vocab/ecdict'
 
 describe('候选词', () => {
   it.each([

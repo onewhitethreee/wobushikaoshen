@@ -32,3 +32,6 @@ node_modules/
 
 # 015 chart:data 的失败题号
 /chart-data.failed.txt
+
+# 服务器在项目目录下存的数据库备份
+/backup/
