@@ -5,11 +5,12 @@ import { addSessionToUser, generatePayloadCookie } from 'payload/shared'
 
 import { grantInvite, grantSignup } from '../account/credits'
 import { MailUnavailable, sendMail } from '../account/mail'
+import { expiredLegacyCookie, memberCookiePrefix } from '../account/memberAuth'
 import { checkRate, clientIp, isEmail, issue, normalizeEmail, verify } from '../account/codes'
 import { clearFailures, ipLimited, lockedFor, recordFailure, verifyHash } from '../account/password'
 
 // 邮箱验证码登录（009 contracts/api.md）与密码登录（012 contracts/api.md）。登录成功后用 Payload 自带的令牌与 cookie，
-// 之后 /api/members/me、/api/members/logout 都是现成的（009 research R1）
+// 之后 /api/members/me 是现成的（009 research R1）。cookie 名与后台不同、退出另写，见 src/account/memberAuth.ts
 
 const json = async (req: PayloadRequest) => ((await req.json?.().catch(() => null)) ?? {}) as Record<string, unknown>
 const fail = (error: string, status: number, extra: Record<string, unknown> = {}) =>
@@ -20,8 +21,8 @@ export const maskEmail = (email: string) => {
   return `${name.slice(0, 2)}***@${domain}`
 }
 
-/** 两种登录共用（012 research R3）：记最近登录、加一个会话、签发带 sid 的令牌，返回 Set-Cookie 值。与 Payload 登录操作相同 */
-const signIn = async (req: PayloadRequest, id: number): Promise<string> => {
+/** 两种登录共用（012 research R3）：记最近登录、加一个会话、签发带 sid 的令牌，返回响应头（Set-Cookie）。与 Payload 登录操作相同 */
+const signIn = async (req: PayloadRequest, id: number): Promise<Headers> => {
   const { payload } = req
   const collectionConfig = payload.collections.members.config
   await payload.update({ collection: 'members', id, overrideAccess: true, data: { lastLoginAt: new Date().toISOString() } })
@@ -29,7 +30,10 @@ const signIn = async (req: PayloadRequest, id: number): Promise<string> => {
   const { sid } = await addSessionToUser({ collectionConfig, payload, req, user: user as never })
   const fieldsToSign = getFieldsToSign({ collectionConfig, email: user.email, sid, user: { ...user, collection: 'members' } as never })
   const { token } = await jwtSign({ fieldsToSign, secret: payload.secret, tokenExpiration: collectionConfig.auth.tokenExpiration })
-  return generatePayloadCookie({ collectionAuthConfig: collectionConfig.auth, cookiePrefix: payload.config.cookiePrefix, token }) as string
+  const headers = new Headers({ 'Set-Cookie': generatePayloadCookie({ collectionAuthConfig: collectionConfig.auth, cookiePrefix: memberCookiePrefix(payload), token }) as string })
+  const legacy = expiredLegacyCookie(req)
+  if (legacy) headers.append('Set-Cookie', legacy)
+  return headers
 }
 
 const sendCode: Endpoint = {
@@ -102,7 +106,7 @@ const verifyCode: Endpoint = {
       found = await payload.find({ collection: 'members', overrideAccess: true, where: { email: { equals: email } }, limit: 1 })
     }
     const id = found.docs[0].id
-    const cookie = await signIn(req, id)
+    const headers = await signIn(req, id)
 
     let signup = 0
     if (created) {
@@ -124,7 +128,6 @@ const verifyCode: Endpoint = {
       }
     }
 
-    const headers = new Headers({ 'Set-Cookie': cookie })
     if (inviteCode) headers.append('Set-Cookie', `${INVITE_COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
     return Response.json(
       { ok: true, email: maskEmail(email), created, ...(signup ? { signup } : {}), ...(invite?.amount ? { invite } : {}) },
@@ -157,8 +160,8 @@ const passwordLogin: Endpoint = {
       return fail('邮箱或密码不对', 401)
     }
     clearFailures(email)
-    const cookie = await signIn(req, doc.id)
-    return Response.json({ ok: true, email: maskEmail(email), created: false }, { headers: { 'Set-Cookie': cookie } })
+    const headers = await signIn(req, doc.id)
+    return Response.json({ ok: true, email: maskEmail(email), created: false }, { headers })
   },
 }
 

@@ -1,5 +1,6 @@
 import React from 'react'
 
+import { markPhrases } from '@/exam/paraphrase'
 import type { Section } from '@/exam/practice'
 import { cn } from '@/utilities/ui'
 
@@ -11,7 +12,25 @@ export const sentenceRange = (target?: string): [number, number] | null => {
 
 // 阅读原文：段落带字母锚点 #para-{label}；导入的单元按句渲染（#s{n}）。
 // 交卷后"在原文中定位"：highlight 是段落字母（高亮整段）或 "s{n}[-m]"（高亮这些句子）
-export const PassageView: React.FC<{ passage: NonNullable<Section['passage']>; highlight?: string }> = ({ passage, highlight }) => {
+/** 026：在高亮句里标出同义替换的原文说法（加粗 + 下划线，不只靠颜色） */
+export const Marked: React.FC<{ text: string; marks?: string[] }> = ({ text, marks }) =>
+  marks?.length ? (
+    <>
+      {markPhrases(text, marks).map((p, i) =>
+        p.mark ? (
+          <mark className="bg-transparent font-semibold text-foreground underline decoration-2 underline-offset-2" data-testid="paraphrase-mark" key={i}>
+            {p.text}
+          </mark>
+        ) : (
+          p.text
+        ),
+      )}
+    </>
+  ) : (
+    text
+  )
+
+export const PassageView: React.FC<{ passage: NonNullable<Section['passage']>; highlight?: string; marks?: string[] }> = ({ passage, highlight, marks }) => {
   const range = sentenceRange(highlight)
   return (
     <article className="bg-muted px-4 py-6 sm:px-7" data-hl="p">
@@ -49,7 +68,7 @@ export const PassageView: React.FC<{ passage: NonNullable<Section['passage']>; h
                         data-highlight={on || undefined}
                         id={`s${s.n}`}
                       >
-                        {s.text}
+                        <Marked marks={on ? marks : undefined} text={s.text} />
                       </span>{' '}
                     </React.Fragment>
                   )

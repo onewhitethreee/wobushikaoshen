@@ -64,6 +64,11 @@ export const AccountMenu: React.FC = () => {
       </summary>
       <ul className="absolute right-0 z-30 mt-1 min-w-40 border border-border bg-background py-1 text-sm">
         <li>
+          <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/progress">
+            学习进度
+          </Link>
+        </li>
+        <li>
           <Link className="flex min-h-11 items-center px-4 hover:bg-muted" href="/me/mistakes">
             错题本
           </Link>

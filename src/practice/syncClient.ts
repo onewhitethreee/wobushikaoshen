@@ -27,6 +27,8 @@ const localSince = (t: number): SyncData => {
     drafts: since(loadDrafts(), (d) => d.at, t),
     favorites: since(store.favorites, (m) => m.at, t),
     dismissed: since(store.dismissed, (m) => m.at, t),
+    dictation: since(store.dictation, (e) => e.at, t),
+    ...(store.plan && store.plan.at >= t ? { plan: store.plan } : {}),
     ...localVocabSince(t),
   }
 }
@@ -44,6 +46,8 @@ const apply = (server: SyncData | undefined, rev: number, at: number) => {
     store.progress = m.progress
     store.favorites = m.favorites
     store.dismissed = m.dismissed
+    store.dictation = m.dictation ?? {}
+    if (m.plan) store.plan = m.plan
     saveDrafts(m.drafts)
     // 单词本写回自己的键；这里不再触发推送（推送由本次同步完成）
     const v = loadVocab()

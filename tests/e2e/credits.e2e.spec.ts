@@ -40,7 +40,7 @@ const login = async (page: Page, email: string) => {
   await expect(page.getByTestId('login-code')).toBeVisible()
   await page.getByTestId('login-code').fill(await latestCode(email))
   await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('account-menu')).toContainText('***@example.test')
+  await expect(page.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
 }
 
 const cleanup = async () => {

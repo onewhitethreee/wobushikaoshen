@@ -62,7 +62,7 @@ export const LocalAccuracy: React.FC<{ slug: 'listening' | 'reading'; typeNames:
                 <span>{r.label}</span>
                 <span className="relative block h-1.5 overflow-hidden bg-border">
                   <span
-                    className={`absolute inset-y-0 left-0 origin-left animate-[grow_.8s_var(--ease-out-expo)_backwards] ${weak ? 'bg-sun' : 'bg-mark'}`}
+                    className={`absolute inset-y-0 left-0 origin-left animate-[grow_.8s_var(--ease-out-expo)_backwards] ${weak ? 'bg-warning' : 'bg-mark'}`}
                     style={{ width: `${r.percent}%` }}
                   />
                 </span>

@@ -72,6 +72,67 @@ test.describe('错题本', () => {
     await expect(rows.getByRole('link', { name: /重做/ }).first()).toHaveAttribute('href', `/practice/${g.id}`)
   })
 
+  test('打印：按来源分块带原文摘录，题目区没有答案，最后是答案与解析（018）', async ({ page }) => {
+    const g = await textGroup(page)
+    await submitEmpty(page, `/practice/${g.unit}`)
+    await page.goto(`${BASE}/me/mistakes`)
+    await expect(page.getByTestId('mistake-row').first()).toBeVisible()
+
+    // 调用 print 时 #print-sheet 还在，把内容存下来
+    await page.evaluate(() => {
+      const w = window as unknown as { __printed: string[]; __groups: string; print: () => void }
+      w.__printed = []
+      w.print = () => {
+        const sheet = document.getElementById('print-sheet')
+        w.__printed.push(sheet?.innerHTML ?? '')
+        w.__groups = [...(sheet?.querySelectorAll('.print-group') ?? [])].map((el) => el.textContent).join(' ')
+      }
+    })
+    await page.getByRole('button', { name: '打印' }).click()
+    await expect.poll(() => page.evaluate(() => (window as unknown as { __printed: string[] }).__printed.length)).toBe(1)
+    const html = await page.evaluate(() => (window as unknown as { __printed: string[] }).__printed[0])
+    expect(html).toContain('错题练习')
+    expect(html).toContain('答案与解析')
+    expect(html).toContain('<u>')
+
+    // 题组（题目区，不含原文摘录）里不出现这组题的正确答案；填空答案取自原文，摘录里本来就有
+    const groups = await page.evaluate(() => (window as unknown as { __groups: string }).__groups)
+    expect(groups.length).toBeGreaterThan(0)
+    for (const { a } of g.answers) if (a.length >= 3) expect(groups).not.toContain(a)
+    expect(html.split('class="answers"')[1]).toContain(g.answers[0].a)
+
+    // 打印完清理干净，按钮恢复
+    await expect(page.locator('#print-sheet')).toHaveCount(0)
+    await expect(page.getByRole('button', { name: '打印' })).toBeEnabled()
+  })
+
+  test('打印版面：深色模式下也是白底黑字，网站界面不出现，答案另起一页（018）', async ({ page }) => {
+    await page.addInitScript(() => window.localStorage.setItem('payload-theme', 'dark'))
+    const g = await textGroup(page)
+    await submitEmpty(page, `/practice/${g.unit}`)
+    await page.goto(`${BASE}/me/mistakes`)
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark')
+    await expect(page.getByTestId('mistake-row').first()).toBeVisible()
+
+    // print 抛错时 #print-sheet 留在页面上，在 print 媒体下检查
+    await page.evaluate(() => {
+      window.print = () => {
+        throw new Error('stop')
+      }
+    })
+    await page.emulateMedia({ media: 'print' })
+    await page.getByRole('button', { name: '打印' }).click()
+    const sheet = page.locator('#print-sheet')
+    await expect(sheet).toBeVisible()
+    await expect(page.getByRole('banner')).toBeHidden()
+    const style = await sheet.evaluate((el) => {
+      const cs = getComputedStyle(el)
+      return { bg: cs.backgroundColor, color: cs.color, page: getComputedStyle(el.querySelector('.answers')!).breakBefore }
+    })
+    expect(style).toEqual({ bg: 'rgb(255, 255, 255)', color: 'rgb(0, 0, 0)', page: 'page' })
+    await page.emulateMedia({ media: 'screen' })
+  })
+
   test('没有错题时显示空状态和练习入口', async ({ page }) => {
     await page.goto(`${BASE}/me/mistakes`)
     await expect(page.getByText('交卷后做错的题会出现在这里')).toBeVisible()

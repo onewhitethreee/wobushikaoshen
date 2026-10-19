@@ -214,10 +214,10 @@ export const PracticeBrowser: React.FC<{
         )}
       </div>
 
-      <main
+      <div
         aria-labelledby={`tab-${tab.id}`}
         className="flex min-w-0 flex-[999_1_560px] flex-col gap-5 pt-8 lg:px-10 lg:pt-10"
-        id="main"
+        id="practice-list"
         role="tabpanel"
       >
         {header}
@@ -288,12 +288,12 @@ export const PracticeBrowser: React.FC<{
             current={current}
             onGo={(p) => {
               setPage(p)
-              document.getElementById('main')?.scrollIntoView({ block: 'start' })
+              document.getElementById('practice-list')?.scrollIntoView({ block: 'start' })
             }}
             pages={pages}
           />
         )}
-      </main>
+      </div>
 
       <aside className="flex min-w-0 flex-[1_1_300px] flex-col gap-8 pt-8 lg:border-l lg:border-border lg:pt-10 lg:pl-8">
         {aside}

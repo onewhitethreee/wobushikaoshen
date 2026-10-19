@@ -412,5 +412,6 @@ const codeLogin = async (page: Page, email: string) => {
   await page.getByTestId('login-send').click()
   await page.getByTestId('login-code').fill(await latestCode(email))
   await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('account-menu')).toContainText('***@example.test')
+  // 登录后跳回首页，开发模式首页渲染约 3.5 秒，默认 5 秒不够（2026-10-19）
+  await expect(page.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
 }

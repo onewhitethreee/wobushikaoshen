@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowUpRight, ChevronDown } from 'lucide-react'
+import { ArrowUpRight, ChevronDown, Printer } from 'lucide-react'
 import Link from 'next/link'
 import React, { useEffect, useMemo, useState } from 'react'
 
@@ -8,14 +8,20 @@ import { mistakes, type Mistake } from '@/account/mistakes'
 import { AiExplain } from '@/components/Practice/AiExplain'
 import { listeningType, readingType } from '@/exam/typeNames'
 import type { LookupItem, LookupQuestion } from '@/endpoints/lookup'
-import { dismissMistake, load, save } from '@/practice/store'
+import { MAX_PRINT } from '@/practice/print'
+import { dismissMistake, load, save, type DictEntry } from '@/practice/store'
 import { STORE_EVENT, isMember, schedulePush, sync } from '@/practice/syncClient'
 import { cn } from '@/utilities/ui'
+
+import { DictationMistakes } from './DictationMistakes'
+import { printMistakes } from './PrintSheet'
 
 // 错题本（009 US3、contracts/ui.md）：按栏目 / 题型 / 掌握情况筛选，每页 20 条，只查当前页的题目信息
 const PAGE = 20
 const ALL = '全部'
 const MODULES = { [ALL]: null, 听力: 'l', 阅读: 'r' } as const
+// 023：听写错句单独一组（不是题目，不参与题型筛选和打印）
+const DICT = '听写'
 const STATES = { 未掌握: 'wrong', 已掌握: 'mastered' } as const
 
 const typeName = (m: Mistake) => (m.module === 'l' ? listeningType : readingType)[m.type] ?? m.type
@@ -76,6 +82,7 @@ export const Tabs: React.FC<{ label: string; testid: string; options: [string, n
 
 export const MistakeBook: React.FC = () => {
   const [all, setAll] = useState<Mistake[] | null>(null)
+  const [dict, setDict] = useState<DictEntry[]>([])
   const [loggedIn, setLoggedIn] = useState(true)
   const [mod, setMod] = useState<string>(ALL)
   const [type, setType] = useState<string>(ALL)
@@ -83,11 +90,13 @@ export const MistakeBook: React.FC = () => {
   const [page, setPage] = useState(1)
   const [open, setOpen] = useState<string | null>(null)
   const [info, setInfo] = useState<Record<string, LookupItem>>({})
+  const [printing, setPrinting] = useState<'idle' | 'busy' | 'failed'>('idle')
 
   useEffect(() => {
     const read = () => {
       const { store } = load()
       setAll(mistakes(store.records, store.dismissed))
+      setDict(Object.values(store.dictation).sort((a, b) => b.at - a.at))
     }
     read()
     window.addEventListener(STORE_EVENT, read)
@@ -97,9 +106,11 @@ export const MistakeBook: React.FC = () => {
   }, [])
 
   const inState = useMemo(() => (all ?? []).filter((m) => m.state === STATES[state]), [all, state])
+  const dictShown = dict.filter((e) => e.state === STATES[state])
+  const isDict = mod === DICT
   const inModule = inState.filter((m) => !MODULES[mod as keyof typeof MODULES] || m.module === MODULES[mod as keyof typeof MODULES])
   const types = [...new Set(inModule.map(typeName))]
-  const shown = inModule.filter((m) => type === ALL || typeName(m) === type)
+  const shown = isDict ? [] : inModule.filter((m) => type === ALL || typeName(m) === type)
   const pages = Math.max(1, Math.ceil(shown.length / PAGE))
   const current = Math.min(page, pages)
   const rows = shown.slice((current - 1) * PAGE, current * PAGE)
@@ -119,6 +130,23 @@ export const MistakeBook: React.FC = () => {
     save(store)
     schedulePush()
     setAll(mistakes(store.records, store.dismissed))
+  }
+
+  // 打印当前筛选下的全部错题（018）：最多 MAX_PRINT 道，按列表顺序（最近作答在前）
+  const print = async () => {
+    setPrinting('busy')
+    const answers = new Map(shown.map((m) => [m.groupKey, m.answers]))
+    try {
+      await printMistakes({
+        items: shown.slice(0, MAX_PRINT).map((m) => ({ groupKey: m.groupKey, number: m.number })),
+        total: shown.length,
+        filterLabel: [state, mod, type].filter((x) => x !== ALL).join(' · '),
+        answersOf: (k) => answers.get(k),
+      })
+      setPrinting('idle')
+    } catch {
+      setPrinting('failed')
+    }
   }
 
   const reset = (f: () => void) => {
@@ -142,7 +170,10 @@ export const MistakeBook: React.FC = () => {
       <Tabs
         label="掌握情况"
         onChange={(v) => reset(() => setState(v as keyof typeof STATES))}
-        options={Object.keys(STATES).map((s) => [s, (all ?? []).filter((m) => m.state === STATES[s as keyof typeof STATES]).length])}
+        options={Object.keys(STATES).map((s) => [
+          s,
+          (isDict ? dict : (all ?? [])).filter((m) => m.state === STATES[s as keyof typeof STATES]).length,
+        ])}
         testid="filter-state"
         value={state}
       />
@@ -152,11 +183,11 @@ export const MistakeBook: React.FC = () => {
           setMod(v)
           setType(ALL)
         })}
-        options={Object.entries(MODULES).map(([k, v]) => [k, inState.filter((m) => !v || m.module === v).length])}
+        options={[...Object.entries(MODULES).map(([k, v]): [string, number] => [k, inState.filter((m) => !v || m.module === v).length]), [DICT, dictShown.length]]}
         testid="filter-module"
         value={mod}
       />
-      {types.length > 1 && (
+      {!isDict && types.length > 1 && (
         <Tabs
           label="题型"
           onChange={(v) => reset(() => setType(v))}
@@ -166,7 +197,31 @@ export const MistakeBook: React.FC = () => {
         />
       )}
 
-      {!shown.length ? (
+      {isDict && <DictationMistakes entries={dictShown} state={STATES[state]} />}
+
+      {shown.length > 0 && (
+        <div className="flex flex-col items-end gap-2">
+          <button
+            className="inline-flex min-h-11 items-center gap-1.5 border-[1.5px] border-foreground px-4 text-sm font-semibold hover:bg-primary hover:text-primary-foreground disabled:opacity-60"
+            disabled={printing === 'busy'}
+            onClick={print}
+            type="button"
+          >
+            <Printer aria-hidden="true" className="size-4" />
+            {printing === 'busy' ? '准备打印…' : '打印'}
+          </button>
+          {shown.length > MAX_PRINT && (
+            <p className="text-[13px] text-muted-foreground">一次最多打印 {MAX_PRINT} 道，将打印最近的 {MAX_PRINT} 道；可以用筛选缩小范围</p>
+          )}
+          {printing === 'failed' && (
+            <p className="text-[13px] text-error" role="alert">
+              题目没加载出来，检查网络后重试
+            </p>
+          )}
+        </div>
+      )}
+
+      {isDict ? null : !shown.length ? (
         <div className="flex flex-col items-start gap-3 py-10">
           <p className="text-[15px] text-muted-foreground">
             {state === '未掌握' ? '交卷后做错的题会出现在这里。' : '错过、后来做对的题会出现在这里。'}

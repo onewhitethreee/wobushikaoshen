@@ -90,7 +90,13 @@ const getUnit = async (p: Extract<ParsedUnit, { kind: 'unit' }>): Promise<Practi
     sentences: x.sentences ?? [],
     text: (x.sentences ?? []).map((s) => s.text).join(' '),
   }))
-  const groups = (u.groups ?? []).map((g, gi) => toGroup(g, unitGroupKey(u.id, gi + 1), paragraphs, true))
+  const items = (u.paraphrases as { items?: Record<string, { q: string; s: string }[]> } | null | undefined)?.items ?? {}
+  const groups = (u.groups ?? []).map((g, gi) => {
+    const view = toGroup(g, unitGroupKey(u.id, gi + 1), paragraphs, true)
+    // 026 同义替换：按题号带进每道题
+    view.questions = view.questions.map((q) => (items[q.number]?.length ? { ...q, paraphrases: items[q.number] } : q))
+    return view
+  })
   const only = p.group ? groups[p.group - 1] : undefined
   if (p.group && !only) return null
 

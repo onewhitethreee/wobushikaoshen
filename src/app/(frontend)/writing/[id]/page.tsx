@@ -42,7 +42,7 @@ export default async function Page({ params }: Props) {
   const minutes = task.suggestedMinutes ?? (t1 ? 20 : 40)
 
   return (
-    <main className="container flex flex-col gap-6 pt-6 pb-24" id="main">
+    <div className="container flex flex-col gap-6 pt-6 pb-24">
       <nav aria-label="当前位置" className="text-[13px] text-muted-foreground">
         <Link className="inline-flex min-h-11 items-center hover:text-foreground" href="/">
           首页
@@ -110,6 +110,6 @@ export default async function Page({ params }: Props) {
           />
         </section>
       </div>
-    </main>
+    </div>
   )
 }

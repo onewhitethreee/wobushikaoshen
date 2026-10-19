@@ -38,6 +38,8 @@ import { authEndpoints } from './endpoints/auth'
 import { passwordEndpoint } from './endpoints/password'
 import { memberDataEndpoint } from './endpoints/memberData'
 import { lookupEndpoint } from './endpoints/lookup'
+import { printEndpoint } from './endpoints/print'
+import { playlistEndpoint } from './endpoints/playlist'
 import { dictEndpoint } from './endpoints/dict'
 import { creditsEndpoint, redeemEndpoint } from './endpoints/credits'
 import { notesEndpoint } from './endpoints/notes'
@@ -99,7 +101,7 @@ export default buildConfig({
   cors: [getServerSideURL()].filter(Boolean),
   // 只认本站来源的 cookie：别的网站带着考生 / 管理员 cookie 发来的请求按未登录处理（010 attack-matrix A12）
   csrf: [getServerSideURL()].filter(Boolean),
-  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, dictEndpoint, creditsEndpoint, redeemEndpoint, notesEndpoint, ...writingReviewEndpoints, ...explanationEndpoints],
+  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, printEndpoint, playlistEndpoint, dictEndpoint, creditsEndpoint, redeemEndpoint, notesEndpoint, ...writingReviewEndpoints, ...explanationEndpoints],
   // 进程重启会丢掉进行中的批改 / 讲解：启动时把超时的改为失败并退回（015 research R2、data-model）
   onInit: async (payload) => {
     await expireStale(payload).catch((e) => payload.logger.error(e, '启动扫描批改失败'))

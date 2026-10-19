@@ -240,6 +240,30 @@ test.describe('写作 AI 批改', () => {
     await expect(page.getByTestId('review-overall')).toHaveText('6.5')
     const detailUrl = page.url()
 
+    // 详情还在批改 → 自动再取，批改完直接显示结果（第一次响应改成 pending）
+    let first = true
+    await page.route('**/api/me/writing-reviews/*', async (route) => {
+      // 转发时浏览器的 Sec-Fetch-Site 不在，补 Origin 才过 CSRF 检查
+      const res = await route.fetch({ headers: { ...(await route.request().allHeaders()), origin: BASE } })
+      const body = await res.json()
+      await route.fulfill({ response: res, json: first ? { ...body, status: 'pending' } : body })
+      first = false
+    })
+    await page.reload()
+    await expect(page.getByText('还在批改，完成后会自动显示结果。')).toBeVisible()
+    await expect(page.getByTestId('review-overall')).toHaveText('6.5', { timeout: 15_000 })
+    await page.unroute('**/api/me/writing-reviews/*')
+
+    // 列表请求失败 → 提示重试，不一直"加载中…"
+    await page.route('**/api/me/writing-reviews?*', (route) => route.fulfill({ status: 500, body: '' }))
+    await page.goto(`${BASE}/me/reviews`)
+    await expect(page.getByText('没加载出来，检查网络后重试。')).toBeVisible()
+    await page.unroute('**/api/me/writing-reviews?*')
+    await page.getByRole('button', { name: '重试' }).click()
+    await expect(page.getByTestId('review-row')).toHaveCount(2)
+    await page.goto(detailUrl)
+    await expect(page.getByTestId('review-overall')).toHaveText('6.5')
+
     // 手机宽度：详情页不横向滚动（FR-052）
     await page.setViewportSize({ width: 390, height: 844 })
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)

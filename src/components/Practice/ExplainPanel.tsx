@@ -5,6 +5,7 @@ import React from 'react'
 
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
 import type { Answers, GroupView, ScoreItem } from '@/exam/practice'
+import { fmt } from '@/practice/timer'
 import { cn } from '@/utilities/ui'
 
 import { AiExplain } from './AiExplain'
@@ -41,7 +42,9 @@ export const ExplainPanel: React.FC<{
   onToggle: () => void
   onClose: () => void
   ref?: React.Ref<HTMLElement>
-}> = ({ unitId, group, q, answer, items, open, collapsed, onPrev, onNext, onLocate, onToggle, onClose, ref }) => {
+  /** 020：本题用时（秒）；没有用时数据时不传 */
+  seconds?: number
+}> = ({ unitId, group, q, answer, items, open, collapsed, onPrev, onNext, onLocate, onToggle, onClose, ref, seconds }) => {
   const r = resultOf(group, q, answer, items)
   const label = locateLabel(group, q)
   const nums = q.span > 1 ? `${q.number}–${q.number + q.span - 1}` : String(q.number)
@@ -60,6 +63,11 @@ export const ExplainPanel: React.FC<{
     >
       <header className="flex items-center gap-1 border-b border-border px-3 py-1">
         <span className="pl-1 text-sm font-semibold tabular-nums">第 {nums} 题</span>
+        {seconds !== undefined && (
+          <span className="pl-2 text-[13px] text-muted-foreground tabular-nums" data-testid="q-time">
+            本题用时 {fmt(seconds)}
+          </span>
+        )}
         <FavoriteButton className="mr-auto" favKey={`q:${group.key}#${q.number}`} />
         <button aria-label="上一题" className={navBtn} disabled={!onPrev} onClick={onPrev} type="button">
           <ChevronLeft aria-hidden="true" className="size-4" />
@@ -110,6 +118,18 @@ export const ExplainPanel: React.FC<{
             <Crosshair aria-hidden="true" className="size-4" strokeWidth={1.5} />
             在原文中定位
           </button>
+        )}
+        {q.paraphrases && q.paraphrases.length > 0 && (
+          <div className="flex flex-col gap-1" data-testid="paraphrases">
+            <p className="font-semibold">同义替换</p>
+            <ul className="flex flex-col gap-0.5">
+              {q.paraphrases.map((p) => (
+                <li key={`${p.q}|${p.s}`}>
+                  {p.q} <span aria-label="对应原文">↔</span> <b className="font-semibold">{p.s}</b>
+                </li>
+              ))}
+            </ul>
+          </div>
         )}
         {!r.ok && <AiExplain answer={answer} key={q.number} number={q.number} unitId={unitId} />}
       </div>

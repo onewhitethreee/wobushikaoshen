@@ -46,7 +46,7 @@ export const ReviewResult: React.FC<{ review: Review }> = ({ review }) => (
     </div>
 
     <section className="flex flex-col gap-3">
-      <h3 className="text-[18px] font-medium">逐段建议</h3>
+      <h2 className="text-[18px] font-medium">逐段建议</h2>
       <ol className="flex flex-col gap-3">
         {review.paragraphs.map((p) => (
           <li className="flex gap-3 text-[15px] leading-7" key={p.index}>
@@ -58,7 +58,7 @@ export const ReviewResult: React.FC<{ review: Review }> = ({ review }) => (
     </section>
 
     <section className="flex flex-col gap-3">
-      <h3 className="text-[18px] font-medium">可以这样改</h3>
+      <h2 className="text-[18px] font-medium">可以这样改</h2>
       <ul className="flex flex-col gap-5">
         {review.rewrites.map((r, i) => (
           <li className="flex flex-col gap-1.5 text-[15px] leading-7" key={i}>

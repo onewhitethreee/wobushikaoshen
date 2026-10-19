@@ -18,13 +18,15 @@ export const ListeningAside: React.FC<{
   section: Section
   submitted: boolean
   highlight?: string
+  /** 026 同义替换的原文说法 */
+  marks?: string[]
   transcriptHidden: boolean
   onToggleTranscript: () => void
   /** 004：正在播放的句子、点句播放、跟随暂停时的"回到当前句" */
   current?: number
   onPick?: (n: number) => void
   onResume?: () => void
-}> = ({ section, submitted, highlight, transcriptHidden, onToggleTranscript, current, onPick, onResume }) => {
+}> = ({ section, submitted, highlight, marks, transcriptHidden, onToggleTranscript, current, onPick, onResume }) => {
   const images = section.groups.flatMap((g) => (g.imageUrl ? [g.imageUrl] : []))
 
   if (!submitted) {
@@ -76,7 +78,7 @@ export const ListeningAside: React.FC<{
       )}
       {transcriptHidden ? null : section.transcript ? (
         <div className="text-[15px] leading-7 whitespace-pre-line" data-hl="t">
-          {typeof section.transcript === 'string' ? section.transcript : <TranscriptView current={current} highlight={highlight} lines={section.transcript} onPick={onPick} />}
+          {typeof section.transcript === 'string' ? section.transcript : <TranscriptView current={current} highlight={highlight} lines={section.transcript} marks={marks} onPick={onPick} />}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">这个 Part 暂无原文。</p>

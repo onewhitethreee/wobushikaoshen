@@ -1,12 +1,14 @@
 'use client'
 
-import React, { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 import { Button } from '@/components/ui/button'
 import { bandFor, scoreUnit, type Answers, type PracticeUnit } from '@/exam/practice'
 import type { Marks } from '@/practice/marks'
 import { addRecord, getProgress, load, save, setProgress } from '@/practice/store'
+import { anchorOf, limitSeconds, toSaved, topTimes, type Clock, type TimerMode } from '@/practice/timer'
 import { schedulePush, sync } from '@/practice/syncClient'
 import { cn } from '@/utilities/ui'
 
@@ -18,6 +20,8 @@ import { explainOrder, type ExplainStop } from './explain'
 import { PassageView, sentenceRange } from './PassageView'
 import { locateLabel, QuestionGroup } from './QuestionGroup'
 import { ResultBar } from './ResultBar'
+import { ShareDialog } from './ShareDialog'
+import { Timer } from './Timer'
 import { currentIndex, nextStart, prevStart, timedLines, type TimedLine } from './sentences'
 import { ShortcutHelp, type ShortcutHelpHandle } from './ShortcutHelp'
 import { SubmitConfirm } from './SubmitConfirm'
@@ -45,6 +49,13 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   const [transcriptHidden, setTranscriptHidden] = useState(false)
   // 014 做题高亮：交卷前随作答进度保存，交卷后只在当前页面
   const [marks, setMarks] = useState<Marks>({})
+  // 020 做题计时：计时状态放 ref（每秒不重绘整页），交卷时的用时放 state 给成绩条和解析面板
+  const clock = useRef<Clock>({ elapsed: 0, times: {} })
+  const timerMode = useRef<TimerMode>('up')
+  const [sharing, setSharing] = useState(false)
+  const [submittedAt, setSubmittedAt] = useState(0)
+  const [lastTime, setLastTime] = useState<{ duration: number; limit?: number; times: Record<number, number> } | null>(null)
+  const limit = useMemo(() => limitSeconds(unit), [unit])
   const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLElement>(null)
   const audioBar = useRef<HTMLDivElement>(null)
@@ -93,6 +104,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       setNotice('restored')
     }
     if (p?.marks) setMarks(p.marks)
+    if (p?.elapsed) clock.current = { elapsed: p.elapsed, times: { ...p.times } }
     ready.current = true
     void sync() // 已登录时取回其他设备的记录（009）
   }, [unit.id, unit.version])
@@ -103,7 +115,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
     const t = setTimeout(() => {
       // 每次都重读本机：同步可能刚合并进别的设备的数据，不能用旧副本覆盖
       const { store } = load()
-      if (Object.keys(answers).length || Object.values(marks).some((l) => l.length)) setProgress(store, unit.id, unit.version, answers, marks)
+      if (Object.keys(answers).length || Object.values(marks).some((l) => l.length))
+        setProgress(store, unit.id, unit.version, answers, marks, toSaved(clock.current))
       else delete store.progress[unit.id]
       if (save(store)) schedulePush()
       else if (storageOk.current) {
@@ -112,6 +125,24 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       }
     }, 500)
     return () => clearTimeout(t)
+  }, [answers, marks, submitted, unit.id, unit.version])
+
+  // 离开页面 / 切到后台时补存一次用时（020 research R5）：只在已有作答时，规则同上
+  useEffect(() => {
+    if (submitted) return
+    const flush = (e: Event) => {
+      if (e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return
+      if (!touched.current || !Object.keys(answers).length) return
+      const { store } = load()
+      setProgress(store, unit.id, unit.version, answers, marks, toSaved(clock.current))
+      if (save(store)) schedulePush()
+    }
+    window.addEventListener('pagehide', flush)
+    document.addEventListener('visibilitychange', flush)
+    return () => {
+      window.removeEventListener('pagehide', flush)
+      document.removeEventListener('visibilitychange', flush)
+    }
   }, [answers, marks, submitted, unit.id, unit.version])
 
   const slots = useMemo<Slot[]>(
@@ -192,16 +223,20 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
     setSheetOpen(false)
     setCollapsed(false)
     setTranscriptHidden(false)
+    const saved = toSaved(clock.current)
+    const time = { duration: saved.elapsed, times: saved.times, ...(timerMode.current === 'down' ? { limit } : {}) }
+    setLastTime(time)
+    setSubmittedAt(Date.now())
     const { store } = load()
     addRecord(store, {
       unitId: unit.id,
       module: isL ? 'l' : 'r',
-      // eslint-disable-next-line react-hooks/purity -- doSubmit 只在点击交卷时调用；调用 showSource 后编译器误判为渲染期
       at: Date.now(),
       score: r.score,
       total: r.total,
       items: r.items,
       answers,
+      ...time,
     })
     save(store)
     schedulePush()
@@ -216,6 +251,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
 
   const restart = () => {
     touched.current = true
+    clock.current = { elapsed: 0, times: {} }
+    setLastTime(null)
     setAnswers({})
     setMarks({})
     setSubmitted(false)
@@ -231,6 +268,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   }
 
   const goTo = (s: ExplainStop) => {
+    if (!submitted) clock.current.current = s.anchor
     flushSync(() => {
       setSectionIndex(s.section)
       setPane('questions')
@@ -277,6 +315,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   const stopIndex = order.findIndex((o) => o.anchor === explainAt)
   const stop = order[stopIndex]
   const explained = stop && findQ(stop)
+  // 026：定位时在出处句里标出这题的同义替换原文说法（交卷后才有高亮，所以交卷前不会显示）
+  const phraseMarks = submitted && highlight ? explained?.q.paraphrases?.map((p) => p.s) : undefined
   const step = (d: number) => {
     const next = order[stopIndex + d]
     if (!next) return
@@ -311,6 +351,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   }
 
   const section = unit.sections[sectionIndex] ?? unit.sections[0]
+  // 022 磨耳朵入口：套题按当前 Part 号连播
+  const radioPart = Number(/\d+/.exec(section.label)?.[0] ?? 1)
 
   // —— 004 按句控制 ——
   const lines = useMemo(() => (isL ? timedLines(section.transcript) : []), [isL, section])
@@ -423,22 +465,65 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       onPrev={stopIndex > 0 ? () => step(-1) : undefined}
       onToggle={() => setCollapsed((c) => !c)}
       open={sheetOpen}
+      seconds={lastTime ? (lastTime.times[explained.q.number] ?? 0) : undefined}
       q={explained.q}
       ref={panelRef}
       unitId={unit.id}
     />
   )
 
-  const trackCurrent = (e: React.FocusEvent) => {
+  const spanOf = (anchor: number) => unit.sections.flatMap((s) => s.groups).flatMap((g) => g.questions).find((q) => q.number === anchor)?.span ?? 1
+
+  const onTimerMode = useCallback((m: TimerMode) => {
+    timerMode.current = m
+  }, [])
+
+  const trackCurrent = (e: React.SyntheticEvent) => {
     const q = (e.target as HTMLElement).closest<HTMLElement>('[data-q]')?.dataset.q
-    if (q) setCurrent(Number(q))
+    if (!q) return
+    setCurrent(Number(q))
+    // 020：每题用时算给"当前题"（点击、输入、聚焦，research R3）
+    if (!submitted) clock.current.current = anchorOf(unit, Number(q))
   }
 
   return (
-    <div id="main" ref={rootRef} style={{ '--audio-h': `${audioH}px`, '--panel-h': `${panelH}px` } as React.CSSProperties}>
+    <div ref={rootRef} style={{ '--audio-h': `${audioH}px`, '--panel-h': `${panelH}px` } as React.CSSProperties}>
       {(result || notice) && (
         <div className="mx-auto flex max-w-[77.5rem] flex-col gap-3 px-[clamp(1rem,4vw,2.5rem)] pt-5">
-          {result && <ResultBar band={band} listHref={isL ? '/listening' : '/reading'} onRetry={restart} score={result.score} total={result.total} />}
+          {result && (
+            <ResultBar
+              band={band}
+              listHref={isL ? '/listening' : '/reading'}
+              onPick={openExplain}
+              onRetry={restart}
+              onShare={() => setSharing(true)}
+              score={result.score}
+              time={
+                lastTime && {
+                  duration: lastTime.duration,
+                  limit: lastTime.limit,
+                  slow: topTimes(lastTime.times).map(([anchor, sec]) => ({ anchor, sec, span: spanOf(anchor) })),
+                }
+              }
+              total={result.total}
+            />
+          )}
+          {result && (
+            <ShareDialog
+              onClose={() => setSharing(false)}
+              open={sharing}
+              result={{
+                module: unit.module,
+                part: unit.whole ? (isL ? '整套听力' : '整套阅读') : unit.sections[0].label,
+                title: unit.title.replace(/ · (听力 |阅读 )?(Part|Passage) \d+.*$/, ''),
+                score: result.score,
+                total: result.total,
+                band,
+                duration: lastTime?.duration,
+                at: submittedAt,
+              }}
+            />
+          )}
           {notice && (
             <p
               className={cn(
@@ -488,6 +573,22 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
           {section.audioUrl ? (
             <AudioPlayer nav={nav} onPlayingChange={setPlaying} onTime={onTime} ref={player} src={section.audioUrl}>
               <ShortcutHelp ref={help} />
+              <Link
+                className="inline-flex min-h-11 items-center px-2 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
+                data-testid="radio-link"
+                href={`/listening/play?start=${unit.source === 'unit' ? `u${unit.docId}` : `t${unit.docId}-l${radioPart}`}`}
+              >
+                磨耳朵
+              </Link>
+              {submitted && unit.source === 'unit' && lines.length > 0 && (
+                <Link
+                  className="inline-flex min-h-11 items-center px-2 text-sm font-semibold underline underline-offset-4"
+                  data-testid="dictation-link"
+                  href={`/listening/dictation?u=u${unit.docId}`}
+                >
+                  精听 / 听写
+                </Link>
+              )}
             </AudioPlayer>
           ) : (
             <p className="container py-3 text-sm text-muted-foreground">这个 Part 暂无音频。</p>
@@ -523,6 +624,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
               <ListeningAside
                 current={submitted && (playing || time > 0) ? curLine?.n : undefined}
                 highlight={highlight}
+                marks={phraseMarks}
                 onPick={submitted && lines.length ? pick : undefined}
                 onResume={
                   followPaused && playing
@@ -538,7 +640,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
                 transcriptHidden={transcriptHidden}
               />
             ) : (
-              section.passage && <PassageView highlight={highlight} passage={section.passage} />
+              section.passage && <PassageView highlight={highlight} marks={phraseMarks} passage={section.passage} />
             )}
           </div>
           <div
@@ -549,6 +651,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
             data-hl="q"
             data-testid="questions-pane"
             onFocus={trackCurrent}
+            onInput={trackCurrent}
+            onPointerDown={trackCurrent}
           >
             {groups}
           </div>
@@ -595,6 +699,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
                 )
               })}
             </nav>
+            {!submitted && <Timer clock={clock} limit={limit} onMode={onTimerMode} running={!submitted} />}
             {!submitted && (
               <Button className="shrink-0" onClick={() => (left > 0 && !confirming ? setConfirming(true) : doSubmit())} type="button">
                 交卷

@@ -9,6 +9,8 @@ import * as migration_20261016_110413_012_password from './20261016_110413_012_p
 import * as migration_20261016_121936_013_dict from './20261016_121936_013_dict';
 import * as migration_20261017_115619_015_review from './20261017_115619_015_review';
 import * as migration_20261017_203040_016_signup_redeem from './20261017_203040_016_signup_redeem';
+import * as migration_20261019_183201_026_paraphrase from './20261019_183201_026_paraphrase';
+import * as migration_20261019_184315_027_jijing from './20261019_184315_027_jijing';
 
 export const migrations = [
   {
@@ -64,6 +66,16 @@ export const migrations = [
   {
     up: migration_20261017_203040_016_signup_redeem.up,
     down: migration_20261017_203040_016_signup_redeem.down,
-    name: '20261017_203040_016_signup_redeem'
+    name: '20261017_203040_016_signup_redeem',
+  },
+  {
+    up: migration_20261019_183201_026_paraphrase.up,
+    down: migration_20261019_183201_026_paraphrase.down,
+    name: '20261019_183201_026_paraphrase',
+  },
+  {
+    up: migration_20261019_184315_027_jijing.up,
+    down: migration_20261019_184315_027_jijing.down,
+    name: '20261019_184315_027_jijing'
   },
 ];

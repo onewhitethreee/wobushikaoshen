@@ -35,7 +35,7 @@ export const ThemeSelector: React.FC = () => {
 
   return (
     <Select onValueChange={onThemeChange} value={value}>
-      <SelectTrigger aria-label="切换主题" className="w-auto min-h-11 gap-2 border border-border bg-card px-3 hover:border-foreground">
+      <SelectTrigger aria-label="切换主题" className="w-auto min-h-11 gap-2 border border-input bg-card px-3 hover:border-foreground">
         <SelectValue placeholder="主题" />
       </SelectTrigger>
       <SelectContent>

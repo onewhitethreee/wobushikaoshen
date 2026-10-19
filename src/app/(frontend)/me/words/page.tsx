@@ -9,7 +9,7 @@ export const metadata: Metadata = { title: '单词本', robots: { index: false, 
 
 export default function Page() {
   return (
-    <main className="container py-10 md:py-14" id="main">
+    <div className="container py-10 md:py-14">
       <div className="mx-auto flex max-w-4xl flex-col gap-6">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div className="flex flex-col gap-2">
@@ -22,6 +22,6 @@ export default function Page() {
         </div>
         <WordBook />
       </div>
-    </main>
+    </div>
   )
 }

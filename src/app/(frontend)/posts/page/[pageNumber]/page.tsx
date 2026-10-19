@@ -31,6 +31,8 @@ export default async function Page({ params: paramsPromise }: Args) {
     limit: 12,
     page: sanitizedPageNumber,
     overrideAccess: false,
+    // 027：机经不进文章列表；旧文章没有栏目，按文章算
+    where: { or: [{ column: { not_equals: 'jijing' } }, { column: { exists: false } }] },
   })
 
   return (

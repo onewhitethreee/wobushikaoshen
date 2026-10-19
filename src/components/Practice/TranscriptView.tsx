@@ -3,16 +3,17 @@ import React from 'react'
 import type { TranscriptLine } from '@/exam/practice'
 import { cn } from '@/utilities/ui'
 
-import { sentenceRange } from './PassageView'
+import { Marked, sentenceRange } from './PassageView'
 
 /** "Speaker 2" → "说话人 3"；其他写法原样显示 */
 const speakerName = (s: string) => s.replace(/^Speaker (\d+)$/i, (_, n) => `说话人 ${Number(n) + 1}`)
 
 // 听力原文（导入的练习单元）：按句渲染（#s{n}），换说话人时另起一行；播报语用弱文字色。
 // highlight 为 "s{n}[-m]" 时高亮出处句（"在原文中定位"）；current 为正在播放的句子（004 跟随播放），onPick 点句从该句播放
-export const TranscriptView: React.FC<{ lines: TranscriptLine[]; highlight?: string; current?: number; onPick?: (n: number) => void }> = ({
+export const TranscriptView: React.FC<{ lines: TranscriptLine[]; highlight?: string; current?: number; onPick?: (n: number) => void; marks?: string[] }> = ({
   lines,
   highlight,
+  marks,
   current,
   onPick,
 }) => {
@@ -48,7 +49,7 @@ export const TranscriptView: React.FC<{ lines: TranscriptLine[]; highlight?: str
                   // 只响应点击：键盘用 ← → 按句跳转，不给几十句原文各一个 Tab 停靠点
                   {...(onPick && { title: '从这句开始播放', onClick: () => getSelection()?.isCollapsed !== false && onPick(l.n) })}
                 >
-                  {l.text}
+                  <Marked marks={on ? marks : undefined} text={l.text} />
                 </span>{' '}
               </React.Fragment>
             )

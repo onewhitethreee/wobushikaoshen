@@ -166,9 +166,9 @@ const Blank: React.FC<{
           autoCapitalize="off"
           autoComplete="off"
           className={cn(
-            'min-h-11 w-36 max-w-full min-w-0 scroll-mt-40 rounded-lg border px-2.5 font-sans text-[15px] outline-none focus:border-primary focus:ring-4 focus:ring-primary/15',
-            !submitted && (value ? 'border-primary/40 bg-primary-soft/40' : 'border-input bg-card'),
-            submitted && (correct ? 'border-success/60 bg-card' : 'border-error/50 bg-error-soft'),
+            'min-h-11 w-36 max-w-full min-w-0 scroll-mt-40 border px-2.5 font-sans text-[15px] outline-none focus:border-primary focus:ring-4 focus:ring-primary/15',
+            !submitted && (value ? 'border-foreground bg-primary-soft/40' : 'border-input bg-card'),
+            submitted && (correct ? 'border-success bg-card' : 'border-error bg-error-soft'),
           )}
           id={`q-${n}`}
           onChange={(e) => onAnswer(n, e.target.value)}

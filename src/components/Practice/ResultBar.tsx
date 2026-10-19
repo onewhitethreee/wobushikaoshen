@@ -1,21 +1,29 @@
-import { RotateCcw } from 'lucide-react'
+import { RotateCcw, Share2 } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
 import { Button } from '@/components/ui/button'
+import { fmt } from '@/practice/timer'
 import { cn } from '@/utilities/ui'
 
 // 交卷后页顶的成绩卡：得分环 + 答对 a / b；整套额外给 band（FR-041 ~ FR-043）
 const R = 30
 const C = 2 * Math.PI * R
 
-export const ResultBar: React.FC<{ score: number; total: number; band?: number | null; listHref: string; onRetry: () => void }> = ({
-  score,
-  total,
-  band,
-  listHref,
-  onRetry,
-}) => {
+type Time = { duration: number; limit?: number; slow: { anchor: number; span: number; sec: number }[] }
+
+export const ResultBar: React.FC<{
+  score: number
+  total: number
+  band?: number | null
+  listHref: string
+  onRetry: () => void
+  /** 020：本次用时；旧记录、没有计时时不传 */
+  time?: Time | null
+  onPick?: (anchor: number) => void
+  /** 025：打开分享成绩对话框 */
+  onShare?: () => void
+}> = ({ score, total, band, listHref, onRetry, time, onPick, onShare }) => {
   const ratio = total ? score / total : 0
   const good = ratio >= 0.8
   return (
@@ -54,7 +62,43 @@ export const ResultBar: React.FC<{ score: number; total: number; band?: number |
           <span className="text-[12px] text-primary-text/80">估算分数，仅供参考</span>
         </div>
       )}
+      {time && (
+        <div className="flex basis-full flex-col gap-2 text-[14px] text-muted-foreground">
+          <p className="tabular-nums" data-testid="result-time">
+            用时 <b className="font-semibold text-foreground">{fmt(time.duration)}</b>
+            {time.limit !== undefined && (
+              <>
+                {' · '}限时 {fmt(time.limit)}
+                {' · '}
+                {time.duration > time.limit ? <span className="text-warning">超时 {fmt(time.duration - time.limit)}</span> : `提前 ${fmt(time.limit - time.duration)}`}
+              </>
+            )}
+          </p>
+          {time.slow.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span>用时最长</span>
+              {time.slow.map((x) => (
+                <button
+                  className="inline-flex min-h-11 items-center border border-border bg-background px-3 text-foreground tabular-nums hover:border-foreground"
+                  data-testid="slow-q"
+                  key={x.anchor}
+                  onClick={() => onPick?.(x.anchor)}
+                  type="button"
+                >
+                  第 {x.span > 1 ? `${x.anchor}–${x.anchor + x.span - 1}` : x.anchor} 题 {fmt(x.sec)}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       <div className="ml-auto flex flex-wrap gap-2">
+        {onShare && (
+          <Button data-testid="share-open" onClick={onShare} type="button" variant="outline">
+            <Share2 aria-hidden="true" strokeWidth={2} />
+            分享成绩
+          </Button>
+        )}
         <Button onClick={onRetry} type="button" variant="outline">
           <RotateCcw aria-hidden="true" strokeWidth={2} />
           再做一遍

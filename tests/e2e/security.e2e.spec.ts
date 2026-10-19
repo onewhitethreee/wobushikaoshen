@@ -3,6 +3,7 @@ import { getPayload, type Payload } from 'payload'
 
 import config from '../../src/payload.config.js'
 import type { MailSetting } from '../../src/payload-types'
+import { login } from '../helpers/login'
 
 // 010 开源前的攻击测试（contracts/attack-matrix.md A7、A10、A12、A13）。发信走本机 Mailpit，测试邮箱以 e2e-sec- 开头
 const BASE = 'http://localhost:3000'
@@ -61,7 +62,7 @@ test.describe('攻击测试', () => {
 
   test('登录 cookie：脚本读不到、跨站不自动带（A13）', async ({ context }) => {
     await loginApi(context)
-    const token = (await context.cookies(BASE)).find((c) => c.name === 'payload-token')
+    const token = (await context.cookies(BASE)).find((c) => c.name === 'payload-member-token')
     expect(token?.httpOnly).toBe(true)
     expect(token?.sameSite).toBe('Lax')
   })
@@ -85,6 +86,28 @@ test.describe('攻击测试', () => {
     expect((await context.request.post(`${BASE}/api/import`, { data: {} })).status()).toBe(401)
     expect((await context.request.post(`${BASE}/api/mail-settings/test`, { data: {} })).status()).toBe(403)
     expect((await context.request.get(`${BASE}/api/globals/ai-settings`)).status()).toBe(403)
+  })
+
+  test('管理员与同邮箱考生同时登录，互不挤掉（2026-10-17 站长发现）', async ({ context, page }) => {
+    await payload.delete({ collection: 'users', where: { email: { equals: EMAIL } } })
+    await payload.create({ collection: 'users', data: { email: EMAIL, password: 'e2e-sec-admin' } })
+    try {
+      await login({ page, user: { email: EMAIL, password: 'e2e-sec-admin' } })
+      await loginApi(context)
+      const me = async (who: 'users' | 'members') =>
+        ((await (await context.request.get(`${BASE}/api/${who}/me`, { headers: { Origin: BASE } })).json()) as { user: { collection?: string } | null }).user
+      expect((await me('members'))?.collection).toBe('members')
+      await page.goto(`${BASE}/admin`)
+      await expect(page.locator('span[title="Dashboard"]').first()).toBeVisible()
+      // 考生退出不影响后台
+      expect((await context.request.post(`${BASE}/api/members/logout`, { headers: { Origin: BASE } })).status()).toBe(200)
+      expect(await me('members')).toBeNull()
+      expect((await me('users'))?.collection).toBe('users')
+      await page.goto(`${BASE}/admin`)
+      await expect(page.locator('span[title="Dashboard"]').first()).toBeVisible()
+    } finally {
+      await payload.delete({ collection: 'users', where: { email: { equals: EMAIL } } })
+    }
   })
 
   test('写作草稿里的 HTML 按原文显示，不执行（A10）', async ({ page }) => {

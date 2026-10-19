@@ -29,6 +29,8 @@ export type GroupView = {
     tip?: string
     /** 出处句号 "7" 或 "10-16"，对应 Section 里句子的 n */
     evidence?: string
+    /** 026 同义替换：题干说法 ↔ 原文说法（交卷后才显示） */
+    paraphrases?: { q: string; s: string }[]
   }[]
 }
 

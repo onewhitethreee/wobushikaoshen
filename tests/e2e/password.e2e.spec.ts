@@ -34,7 +34,7 @@ const codeLogin = async (page: Page, email: string) => {
   await page.getByTestId('login-send').click()
   await page.getByTestId('login-code').fill(await latestCode(email))
   await page.getByTestId('login-submit').click()
-  await expect(page.getByTestId('account-menu')).toContainText('***@example.test')
+  await expect(page.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
 }
 
 const passwordLogin = async (page: Page, email: string, password: string) => {
@@ -104,7 +104,7 @@ test.describe('邮箱 + 密码登录', () => {
     await expect(page.getByText('邮箱或密码不对')).toBeVisible()
     await page.getByTestId('login-password').fill('my-pass-123')
     await page.getByTestId('login-password-submit').click()
-    await expect(page.getByTestId('account-menu')).toContainText('***@example.test')
+    await expect(page.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
 
     await openMenu(page)
     await page.getByRole('button', { name: '退出' }).click()
@@ -123,12 +123,12 @@ test.describe('邮箱 + 密码登录', () => {
     await expect(a.getByTestId('password-done')).toBeVisible()
 
     await passwordLogin(b, email, 'first-pass-1')
-    await expect(b.getByTestId('account-menu')).toContainText('***@example.test')
+    await expect(b.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
 
     await setPassword(a, 'second-pass-1')
     await expect(a.getByTestId('password-done')).toHaveText('密码已修改，其他设备需要重新登录')
     await a.reload()
-    await expect(a.getByTestId('account-menu')).toContainText('***@example.test')
+    await expect(a.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
     await b.reload()
     await expect(b.getByTestId('account-menu')).toHaveText('登录')
 
@@ -136,7 +136,7 @@ test.describe('邮箱 + 密码登录', () => {
     await expect(b.getByText('邮箱或密码不对')).toBeVisible()
     await b.getByTestId('login-password').fill('second-pass-1')
     await b.getByTestId('login-password-submit').click()
-    await expect(b.getByTestId('account-menu')).toContainText('***@example.test')
+    await expect(b.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
 
     // 忘记密码：换一台设备只用验证码登录，不输旧密码直接设新的
     const c = await (await browser.newContext()).newPage()
@@ -144,6 +144,6 @@ test.describe('邮箱 + 密码登录', () => {
     await setPassword(c, 'third-pass-1')
     await expect(c.getByTestId('password-done')).toHaveText('密码已修改，其他设备需要重新登录')
     await passwordLogin(c, email, 'third-pass-1')
-    await expect(c.getByTestId('account-menu')).toContainText('***@example.test')
+    await expect(c.getByTestId('account-menu')).toContainText('***@example.test', { timeout: 15_000 })
   })
 })

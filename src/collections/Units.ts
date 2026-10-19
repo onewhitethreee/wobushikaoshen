@@ -4,6 +4,7 @@ import { APIError } from 'payload'
 import { authenticated } from '../access/authenticated'
 import { authenticatedOrPublished } from '../access/authenticatedOrPublished'
 import { unitSummary } from '../exam/groupStats'
+import { isParaphraseData } from '../exam/paraphrase'
 import { countPending, validateUnit, type UnitData } from '../exam/validate'
 import { sourceType } from '../fields/sourceType'
 import { questionGroupsField } from './Tests/questionGroup'
@@ -133,6 +134,22 @@ export const Units: CollectionConfig = {
       type: 'number',
       defaultValue: 0,
       admin: { position: 'sidebar', readOnly: true },
+    },
+    {
+      // 026 同义替换：scripts/paraphrase.ts 离线生成，站长可直接改 JSON
+      name: 'paraphrases',
+      label: '同义替换',
+      type: 'json',
+      validate: (v: unknown) => (isParaphraseData(v) ? true : '格式应为 { at, model, items: { 题号: [{ q, s }] } }，每题最多 3 对、每项不超过 200 字'),
+      admin: { position: 'sidebar', description: '交卷后在解析里显示；重新生成会取消"已核对"' },
+    },
+    {
+      name: 'paraphraseChecked',
+      label: '同义替换已核对',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: { position: 'sidebar' },
     },
   ],
 }

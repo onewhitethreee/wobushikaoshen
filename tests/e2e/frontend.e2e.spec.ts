@@ -24,4 +24,25 @@ test.describe('前台', () => {
       expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375)
     })
   }
+
+  test('可安装到主屏幕：清单、图标、主题色，没有 service worker（019）', async ({ page, request }) => {
+    await page.goto('http://localhost:3000/')
+    const href = await page.locator('link[rel="manifest"]').getAttribute('href')
+    const res = await request.get(`http://localhost:3000${href}`)
+    expect(res.status()).toBe(200)
+    const m = (await res.json()) as { name: string; icons: { src: string }[] }
+    expect(m.name).toBe('我不是考神')
+    for (const icon of m.icons) {
+      const r = await request.get(`http://localhost:3000${icon.src}`)
+      expect(r.status()).toBe(200)
+      expect(r.headers()['content-type']).toContain('image/png')
+    }
+    await expect(page.locator('meta[name="apple-mobile-web-app-title"]')).toHaveAttribute('content', '我不是考神')
+    const colors = await page.locator('meta[name="theme-color"]').evaluateAll((els) => els.map((e) => [e.getAttribute('media'), e.getAttribute('content')]))
+    expect(colors).toEqual([
+      ['(prefers-color-scheme: light)', '#fcf7ec'],
+      ['(prefers-color-scheme: dark)', '#13110e'],
+    ])
+    expect(await page.evaluate(async () => (await navigator.serviceWorker.getRegistrations()).length)).toBe(0)
+  })
 })

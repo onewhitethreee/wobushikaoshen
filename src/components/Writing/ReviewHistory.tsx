@@ -33,26 +33,41 @@ const LoginPrompt: React.FC<{ next: string; what: string }> = ({ next, what }) =
   </div>
 )
 
+// 请求失败（断网、服务出错）时给出重试，不再一直"加载中…"
+const LoadFailed: React.FC<{ retry: () => void }> = ({ retry }) => (
+  <div className="flex flex-col items-start gap-3 py-6" role="alert">
+    <p className="text-[15px] text-muted-foreground">没加载出来，检查网络后重试。</p>
+    <Button onClick={retry} variant="outline">
+      重试
+    </Button>
+  </div>
+)
+
 const useList = (task: number | undefined, page: number, refresh: unknown) => {
-  const [data, setData] = useState<{ docs: Row[]; totalPages: number } | null | 'guest'>(null)
+  const [data, setData] = useState<{ docs: Row[]; totalPages: number } | null | 'guest' | 'error'>(null)
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
     let alive = true
     fetch(`/api/me/writing-reviews?page=${page}${task ? `&task=${task}` : ''}`, { credentials: 'include' })
-      .then(async (r) => (r.status === 401 ? 'guest' : r.ok ? r.json() : null))
+      .then(async (r) => (r.status === 401 ? 'guest' : r.ok ? r.json() : 'error'))
+      .catch(() => 'error' as const)
       .then((d) => alive && setData(d))
-      .catch(() => {})
     return () => void (alive = false)
-  }, [task, page, refresh])
-  return data
+  }, [task, page, refresh, attempt])
+  const retry = () => {
+    setData(null)
+    setAttempt((n) => n + 1)
+  }
+  return [data, retry] as const
 }
 
 // 写作页批改区底部：本题历次批改，没有记录（或未登录）时不显示
 export const TaskReviews: React.FC<{ taskId: number; refresh: unknown }> = ({ taskId, refresh }) => {
-  const data = useList(taskId, 1, refresh)
-  if (!data || data === 'guest' || !data.docs.length) return null
+  const [data] = useList(taskId, 1, refresh)
+  if (!data || data === 'guest' || data === 'error' || !data.docs.length) return null
   return (
     <section className="flex flex-col gap-2" data-testid="task-reviews">
-      <h3 className="text-[18px] font-medium">批改记录</h3>
+      <h2 className="text-[18px] font-medium">批改记录</h2>
       <ul className="border-t border-border">
         {data.docs.map((r) => (
           <li className="border-b border-border" key={r.id}>
@@ -75,8 +90,9 @@ export const TaskReviews: React.FC<{ taskId: number; refresh: unknown }> = ({ ta
 // /me/reviews：全部批改
 export const ReviewList: React.FC = () => {
   const [page, setPage] = useState(1)
-  const data = useList(undefined, page, null)
+  const [data, retry] = useList(undefined, page, null)
   if (data === 'guest') return <LoginPrompt next="/me/reviews" what="批改记录" />
+  if (data === 'error') return <LoadFailed retry={retry} />
   if (!data) return <p className="text-muted-foreground">加载中…</p>
   if (!data.docs.length)
     return (
@@ -125,15 +141,35 @@ export const ReviewList: React.FC = () => {
 
 // /me/reviews/<id>：一次批改的全部内容，作文是提交时的快照
 export const ReviewDetail: React.FC<{ id: string }> = ({ id }) => {
-  const [data, setData] = useState<Detail | null | 'guest' | 'missing'>(null)
+  const [data, setData] = useState<Detail | null | 'guest' | 'missing' | 'error'>(null)
+  const [attempt, setAttempt] = useState(0)
   useEffect(() => {
+    let alive = true
     fetch(`/api/me/writing-reviews/${id}`, { credentials: 'include' })
-      .then(async (r) => (r.status === 401 ? 'guest' : r.ok ? r.json() : 'missing'))
-      .then(setData)
-      .catch(() => setData('missing'))
-  }, [id])
+      .then(async (r) => (r.status === 401 ? 'guest' : r.status === 404 ? 'missing' : r.ok ? r.json() : 'error'))
+      .catch(() => 'error' as const)
+      .then((d) => alive && setData(d))
+    return () => void (alive = false)
+  }, [id, attempt])
+
+  // 还在批改时每 5 秒再取一次，批改完自动显示结果
+  const pending = typeof data === 'object' && data?.status === 'pending'
+  useEffect(() => {
+    if (!pending) return
+    const t = setTimeout(() => setAttempt((n) => n + 1), 5000)
+    return () => clearTimeout(t)
+  }, [pending, data])
 
   if (data === 'guest') return <LoginPrompt next={`/me/reviews/${id}`} what="这次批改" />
+  if (data === 'error')
+    return (
+      <LoadFailed
+        retry={() => {
+          setData(null)
+          setAttempt((n) => n + 1)
+        }}
+      />
+    )
   if (data === 'missing') return <p className="text-[15px] text-muted-foreground" data-testid="review-missing">没有这条批改。</p>
   if (!data) return <p className="text-muted-foreground">加载中…</p>
   if (data.status === 'failed') return <p className="text-[15px] text-muted-foreground">这次批改没成功，额度已退回。</p>
@@ -163,7 +199,7 @@ export const ReviewDetail: React.FC<{ id: string }> = ({ id }) => {
           {data.essay}
         </p>
       </section>
-      {data.status === 'pending' ? <p className="text-[15px] text-muted-foreground">还在批改，稍后刷新这个页面。</p> : <ReviewResult review={data} />}
+      {data.status === 'pending' ? <p className="text-[15px] text-muted-foreground" role="status">还在批改，完成后会自动显示结果。</p> : <ReviewResult review={data} />}
     </div>
   )
 }

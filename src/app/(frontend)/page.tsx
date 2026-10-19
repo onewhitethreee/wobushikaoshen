@@ -10,6 +10,7 @@ import { CostMark } from '@/components/Journal/CostMark'
 import { HeroTiles } from '@/components/Journal/HeroTiles'
 import { MockBand } from '@/components/Journal/MockBand'
 import { StartForm } from '@/components/Journal/StartForm'
+import { TodayPlan } from '@/components/Plan/TodayPlan'
 import { getColumn } from '@/content/columns'
 import { home, type PracticeRow } from '@/sample'
 import { cn } from '@/utilities/ui'
@@ -44,9 +45,11 @@ export default async function HomePage() {
     ...home.subjects.map((s) => getColumn(s.slug)),
   ])
   const subjects = home.subjects.map((s, i) => ({ ...s, items: picks(cols[i]!.rows) }))
+  const units = (slug: string) => cols[home.subjects.findIndex((s) => s.slug === slug)]?.rows.filter((r) => r.facets.kind === 'unit').length ?? 0
+  const totals = { listening: units('listening'), reading: units('reading') }
 
   return (
-    <main className="container flex flex-col pt-8 pb-24 md:pt-10" id="main">
+    <div className="container flex flex-col pt-8 pb-24 md:pt-10">
       {/* 首屏：整块米色区，左标题 + 选科，右三块编号色块（006 FR-051） */}
       <section className="flex animate-rise flex-wrap gap-10 bg-muted p-[clamp(20px,4vw,48px)]">
         <div className="flex min-w-0 flex-[1_1_420px] flex-col gap-7">
@@ -62,6 +65,11 @@ export default async function HomePage() {
         </div>
         <HeroTiles className="min-w-0 flex-[1.2_1_520px]" />
       </section>
+
+      {/* 024 今日任务：考试倒计时、每日题量、背单词、打卡 */}
+      <div className="mt-8">
+        <TodayPlan totals={totals} />
+      </div>
 
       {/* 四科目录 | 额度说明，中间一条竖线（006 FR-052、FR-053） */}
       <div className="flex flex-wrap">
@@ -86,7 +94,7 @@ export default async function HomePage() {
               <div className="flex flex-wrap gap-x-10 gap-y-4">
                 <div className="min-w-0 flex-[1_1_200px]">
                   <div className="flex flex-wrap items-center gap-3">
-                    <Link className="text-2xl font-medium tracking-[-0.01em] hover:underline underline-offset-4" href={`/${s.slug}`}>
+                    <Link className="inline-flex min-h-11 items-center text-2xl font-medium tracking-[-0.01em] hover:underline underline-offset-4" href={`/${s.slug}`}>
                       {s.name}
                     </Link>
                     <CostMark cost={s.cost} label={s.costLabel} />
@@ -157,9 +165,14 @@ export default async function HomePage() {
         <section className="pt-16">
           <div className="mb-2 flex flex-wrap items-baseline justify-between gap-3">
             <h2 className="text-[30px] font-medium tracking-[-0.02em]">备考文章</h2>
-            <Link className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold hover:underline underline-offset-4" href="/posts">
-              全部文章 <ArrowUpRight aria-hidden="true" className="size-4" strokeWidth={2} />
-            </Link>
+            <span className="flex flex-wrap gap-x-6">
+              <Link className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold hover:underline underline-offset-4" data-testid="home-jijing" href="/jijing">
+                机经 <ArrowUpRight aria-hidden="true" className="size-4" strokeWidth={2} />
+              </Link>
+              <Link className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold hover:underline underline-offset-4" href="/posts">
+                全部文章 <ArrowUpRight aria-hidden="true" className="size-4" strokeWidth={2} />
+              </Link>
+            </span>
           </div>
           <ul>
             {posts.docs.map((p) => {
@@ -168,7 +181,7 @@ export default async function HomePage() {
                 <li className="border-t border-border" key={p.id}>
                   <Link className="group flex min-h-14 items-center gap-4 py-3" href={`/posts/${p.slug}`}>
                     <span className="shrink-0 bg-muted px-2 py-0.5 text-[13px] text-muted-foreground">
-                      {typeof cat === 'object' && cat?.title ? cat.title : '文章'}
+                      {p.column === 'jijing' ? '机经' : typeof cat === 'object' && cat?.title ? cat.title : '文章'}
                     </span>
                     <span className="min-w-0 font-medium group-hover:underline underline-offset-4">{p.title}</span>
                   </Link>
@@ -178,6 +191,6 @@ export default async function HomePage() {
           </ul>
         </section>
       )}
-    </main>
+    </div>
   )
 }

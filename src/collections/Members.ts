@@ -5,6 +5,7 @@ import { Forbidden } from 'payload'
 import { authenticated, isAdmin } from '../access/authenticated'
 import { balance } from '../account/credits'
 import { isAdminOrSelf } from '../access/isAdminOrSelf'
+import { memberCookieStrategy, memberLogout } from '../account/memberAuth'
 
 // 考生账号（009）。用邮箱验证码或密码登录（012），两种都由 src/endpoints/auth.ts 签发令牌；
 // 密码只能经 /api/me/password 设置（passwordSet = true）。建号时写入的随机密码无人知道，passwordSet 为 false 时密码登录不认它。
@@ -45,8 +46,13 @@ export const Members: CollectionConfig = {
     defaultColumns: ['email', 'passwordSet', 'lastLoginAt', 'createdAt'],
     useAsTitle: 'email',
   },
-  // 生产环境只走 HTTPS 时发 cookie
-  auth: { tokenExpiration: 60 * 60 * 24 * 30, cookies: { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' } },
+  // 生产环境只走 HTTPS 时发 cookie；考生用自己的 cookie，不和后台共用（src/account/memberAuth.ts）
+  auth: {
+    tokenExpiration: 60 * 60 * 24 * 30,
+    cookies: { sameSite: 'Lax', secure: process.env.NODE_ENV === 'production' },
+    strategies: [memberCookieStrategy],
+  },
+  endpoints: [memberLogout],
   hooks: {
     beforeOperation: [
       ({ operation, args }) => {

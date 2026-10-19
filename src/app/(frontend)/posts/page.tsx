@@ -19,6 +19,8 @@ export default async function Page() {
     depth: 1,
     limit: 12,
     overrideAccess: false,
+    // 027：机经不进文章列表；旧文章没有栏目，按文章算
+    where: { or: [{ column: { not_equals: 'jijing' } }, { column: { exists: false } }] },
     select: {
       title: true,
       slug: true,

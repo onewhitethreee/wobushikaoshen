@@ -55,7 +55,9 @@ export const AudioPlayer: React.FC<{
   nav?: AudioNav
   /** 控件行右侧的附加内容（004 的"快捷键"按钮放这里） */
   children?: React.ReactNode
-}> = ({ src, ref, onTime, onPlayingChange, nav, children }) => {
+  /** 022 连播：播完时接下一个 */
+  onEnded?: () => void
+}> = ({ src, ref, onTime, onPlayingChange, nav, children, onEnded }) => {
   const audio = useRef<HTMLAudioElement>(null)
   const [playing, setPlaying] = useState(false)
   const [time, setTime] = useState(0)
@@ -102,6 +104,7 @@ export const AudioPlayer: React.FC<{
           setDuration(0)
           setError(false)
         }}
+        onEnded={onEnded}
         onError={() => setError(true)}
         onLoadedMetadata={(e) => {
           e.currentTarget.playbackRate = rate

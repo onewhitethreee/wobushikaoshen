@@ -312,6 +312,15 @@ export interface Post {
     description?: string | null;
   };
   publishedAt?: string | null;
+  /**
+   * 机经的写作模板见 docs/jijing.md；机经列在 /jijing，不进 /posts
+   */
+  column?: ('article' | 'jijing') | null;
+  subjects?: ('listening' | 'reading' | 'writing' | 'speaking')[] | null;
+  /**
+   * 留空则按发布日期自动填
+   */
+  season?: string | null;
   authors?: (number | User)[] | null;
   populatedAuthors?:
     | {
@@ -1240,6 +1249,19 @@ export interface Unit {
     | boolean
     | null;
   pendingCount?: number | null;
+  /**
+   * 交卷后在解析里显示；重新生成会取消"已核对"
+   */
+  paraphrases?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  paraphraseChecked?: boolean | null;
   updatedAt: string;
   createdAt: string;
   _status?: ('draft' | 'published') | null;
@@ -1823,6 +1845,9 @@ export interface PostsSelect<T extends boolean = true> {
         description?: T;
       };
   publishedAt?: T;
+  column?: T;
+  subjects?: T;
+  season?: T;
   authors?: T;
   populatedAuthors?:
     | T
@@ -2295,6 +2320,8 @@ export interface UnitsSelect<T extends boolean = true> {
   sourceTag?: T;
   summary?: T;
   pendingCount?: T;
+  paraphrases?: T;
+  paraphraseChecked?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

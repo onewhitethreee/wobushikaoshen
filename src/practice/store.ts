@@ -3,13 +3,15 @@
 import type { Answers, ScoreItem, UnitId } from '@/exam/practice'
 import type { QuestionType } from '@/exam/scoring'
 import type { Marks } from '@/practice/marks'
+import type { Plan } from '@/practice/plan'
 
 export const KEY = 'ybz:practice:v1'
 export const WRITING_KEY = 'ybz:writing:v1'
 export const MAX_RECORDS = 500
 
 // marks：014 做题高亮，交卷前随进度保存（旧进度没有）
-export type Progress = { version: string; answers: Answers; savedAt: number; marks?: Marks }
+// elapsed / times：020 做题计时，已用秒数与每题秒数（键为题的首题号）
+export type Progress = { version: string; answers: Answers; savedAt: number; marks?: Marks; elapsed?: number; times?: Record<number, number> }
 // module：练习单元的网址 u{id} 看不出听力 / 阅读，记录里另存（旧记录没有，按网址判断）
 // answers：009 起交卷时一并保存，错题本显示"你的答案"（旧记录没有）
 export type PracticeRecord = {
@@ -20,20 +22,45 @@ export type PracticeRecord = {
   total: number
   items: ScoreItem[]
   answers?: Answers
+  /** 020：总用时、每题用时（秒），用了倒计时时的限时（秒） */
+  duration?: number
+  times?: Record<number, number>
+  limit?: number
 }
 // 收藏 / 错题本移除的下架题：取消也记一条带时间的 on: false，同步时不会被旧设备复活（009 research R6）
 export type Mark = { at: number; on: boolean }
+// 023 听写错句：键 u{id}#句号#模式（整句、挖空分开记，挖空写对不抵消整句的错）；有错记 wrong，之后同一模式全对改 mastered
+export type DictEntry = { at: number; unitId: string; n: number; text: string; input: string; mode: 'full' | 'blank'; state: 'wrong' | 'mastered' }
+export const MAX_DICTATION = 1000
+
 export type Store = {
   progress: Record<UnitId, Progress>
   records: PracticeRecord[]
   favorites: Record<string, Mark>
   dismissed: Record<string, Mark>
+  dictation: Record<string, DictEntry>
+  /** 024 备考计划；清除时 examDate 为 null（保留时间，同步时旧计划不会复活） */
+  plan?: Plan
   /** 已登录时：上次同步到的账号版本、上次同步的时间（只推这之后改动的条目） */
   syncedRev?: number
   syncedAt?: number
 }
 
-export const emptyStore = (): Store => ({ progress: {}, records: [], favorites: {}, dismissed: {} })
+export const emptyStore = (): Store => ({ progress: {}, records: [], favorites: {}, dismissed: {}, dictation: {} })
+
+export const isPlan = (p: unknown): p is Plan => {
+  const x = p as Plan | undefined
+  return (
+    !!x && typeof x === 'object' && typeof x.at === 'number' && Number.isFinite(x.at) &&
+    (x.examDate === null || (typeof x.examDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(x.examDate))) &&
+    typeof x.target === 'number' && x.target >= 4 && x.target <= 9 && Number.isInteger(x.target * 2)
+  )
+}
+
+/** 024：设置或清除（examDate = null）备考计划 */
+export const setPlan = (store: Store, examDate: string | null, target: number, now = Date.now()) => {
+  store.plan = { at: now, examDate, target }
+}
 
 const obj = <T,>(v: unknown): Record<string, T> => (v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, T>) : {})
 
@@ -51,6 +78,8 @@ export const load = (): { store: Store; ok: boolean } => {
         records: Array.isArray(s.records) ? s.records : [],
         favorites: obj(s.favorites),
         dismissed: obj(s.dismissed),
+        dictation: obj(s.dictation),
+        plan: isPlan(s.plan) ? s.plan : undefined,
         syncedRev: s.syncedRev,
         syncedAt: s.syncedAt,
       },
@@ -109,6 +138,21 @@ export const toggleFavorite = (store: Store, key: string) => {
   return store.favorites[key].on
 }
 
+/** 023：记一次听写检查。有错 → wrong（覆盖）；全对且已在错题本里 → mastered；全对且不在 → 不记 */
+export const recordDictation = (store: Store, e: Omit<DictEntry, 'state'>, allRight: boolean) => {
+  const key = `${e.unitId}#${e.n}#${e.mode}`
+  if (allRight && !store.dictation[key]) return
+  store.dictation[key] = { ...e, input: e.input.slice(0, 500), text: e.text.slice(0, 500), state: allRight ? 'mastered' : 'wrong' }
+  const keys = Object.keys(store.dictation)
+  if (keys.length <= MAX_DICTATION) return
+  // 超出上限：先删最早的已掌握，再删最早的
+  const order = keys.sort((a, b) => {
+    const [x, y] = [store.dictation[a], store.dictation[b]]
+    return Number(x.state === 'wrong') - Number(y.state === 'wrong') || x.at - y.at
+  })
+  for (const k of order.slice(0, keys.length - MAX_DICTATION)) delete store.dictation[k]
+}
+
 /** 错题本里移除一道（已下架的）题 */
 export const dismissMistake = (store: Store, key: string) => {
   store.dismissed[key] = { at: Date.now(), on: true }
@@ -125,9 +169,22 @@ export const getProgress = (store: Store, unitId: UnitId, version: string): Prog
   return p
 }
 
-export const setProgress = (store: Store, unitId: UnitId, version: string, answers: Answers, marks?: Marks) => {
+export const setProgress = (
+  store: Store,
+  unitId: UnitId,
+  version: string,
+  answers: Answers,
+  marks?: Marks,
+  time?: { elapsed: number; times: Record<number, number> },
+) => {
   const kept = marks && Object.fromEntries(Object.entries(marks).filter(([, l]) => l.length))
-  store.progress[unitId] = { version, answers, savedAt: Date.now(), ...(kept && Object.keys(kept).length ? { marks: kept } : {}) }
+  store.progress[unitId] = {
+    version,
+    answers,
+    savedAt: Date.now(),
+    ...(kept && Object.keys(kept).length ? { marks: kept } : {}),
+    ...(time ? { elapsed: time.elapsed, times: time.times } : {}),
+  }
 }
 
 export const addRecord = (store: Store, record: PracticeRecord) => {

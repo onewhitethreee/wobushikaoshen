@@ -1,8 +1,10 @@
-import { Hourglass } from 'lucide-react'
+import { ArrowUpRight, Hourglass } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
 import type { ColumnConfig } from '@/sample'
+
+import { ProgressPanel } from '@/components/Progress/ProgressPanel'
 
 import { CostMark } from './CostMark'
 import { PracticeBrowser } from './PracticeBrowser'
@@ -53,6 +55,12 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> 
           {notice}
         </p>
       )}
+      {config.slug === 'listening' && (
+        <Link className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-semibold underline-offset-4 hover:underline" data-testid="radio-entry" href="/listening/play">
+          磨耳朵：连着听一个题集 <ArrowUpRight aria-hidden="true" className="size-4" />
+        </Link>
+      )}
+      {(config.slug === 'listening' || config.slug === 'reading') && <ProgressPanel foldable module={config.slug} />}
     </div>
   )
 

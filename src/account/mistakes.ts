@@ -15,7 +15,7 @@ export type Mistake = {
   state: 'wrong' | 'mastered'
 }
 
-const moduleOf = (r: PracticeRecord, groupKey: string): 'l' | 'r' | undefined => {
+export const moduleOf = (r: PracticeRecord, groupKey: string): 'l' | 'r' | undefined => {
   if (r.module) return r.module
   const p = parseUnitId(groupKey) ?? parseUnitId(r.unitId)
   return p?.kind === 'test' ? p.module : undefined

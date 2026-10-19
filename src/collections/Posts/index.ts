@@ -15,6 +15,7 @@ import { Banner } from '../../blocks/Banner/config'
 import { Code } from '../../blocks/Code/config'
 import { MediaBlock } from '../../blocks/MediaBlock/config'
 import { generatePreviewPath } from '../../utilities/generatePreviewPath'
+import { isSeason, seasonOf, SUBJECTS } from '../../content/jijing'
 import { populateAuthors } from './hooks/populateAuthors'
 import { revalidateDelete, revalidatePost } from './hooks/revalidatePost'
 
@@ -182,6 +183,38 @@ export const Posts: CollectionConfig<'posts'> = {
         ],
       },
     },
+    // 027 机经栏目：栏目、科目、题季（YYYY-01 / -05 / -09，机经时为空则按发布日期自动填）
+    {
+      name: 'column',
+      label: '栏目',
+      type: 'select',
+      defaultValue: 'article',
+      index: true,
+      options: [
+        { label: '备考文章', value: 'article' },
+        { label: '机经', value: 'jijing' },
+      ],
+      admin: { position: 'sidebar', description: '机经的写作模板见 docs/jijing.md；机经列在 /jijing，不进 /posts' },
+    },
+    {
+      name: 'subjects',
+      label: '科目',
+      type: 'select',
+      hasMany: true,
+      options: SUBJECTS.map((x) => ({ ...x })),
+      admin: { position: 'sidebar' },
+    },
+    {
+      name: 'season',
+      label: '题季',
+      type: 'text',
+      validate: (v: unknown) => (v === null || v === undefined || v === '' || isSeason(v) ? true : '题季格式为 2026-01、2026-05 或 2026-09（每年 1、5、9 月换题）'),
+      admin: {
+        position: 'sidebar',
+        condition: (data) => data?.column === 'jijing',
+        description: '留空则按发布日期自动填',
+      },
+    },
     {
       name: 'authors',
       type: 'relationship',
@@ -218,6 +251,12 @@ export const Posts: CollectionConfig<'posts'> = {
     slugField(),
   ],
   hooks: {
+    beforeValidate: [
+      ({ data }) => {
+        if (data?.column === 'jijing' && !data.season) data.season = seasonOf(data.publishedAt ? new Date(data.publishedAt) : new Date())
+        return data
+      },
+    ],
     afterChange: [revalidatePost],
     afterRead: [populateAuthors],
     afterDelete: [revalidateDelete],

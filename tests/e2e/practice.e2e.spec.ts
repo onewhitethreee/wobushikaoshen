@@ -255,6 +255,112 @@ test.describe('US6 本地进度与记录', () => {
   })
 })
 
+test.describe('020 做题计时', () => {
+  // 示例套题阅读第 1 篇的题号数 → 倒计时时长（每题 1.5 分钟，向上取整到分钟）
+  const nums = pack.reading.passages[0].groups.flatMap((g) => g.questions).reduce((n, q) => n + (q.span ?? 1), 0)
+  const limit = Math.ceil(nums * 1.5) * 60
+  const fmt = (s: number) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`
+  const value = (page: Page) => page.getByTestId('timer-value')
+  // 时钟只随 runFor 走，不随真实时间走
+  const frozen = async (page: Page) => {
+    await page.clock.install({ time: new Date('2026-10-19T08:00:00') })
+    await page.clock.pauseAt(new Date('2026-10-19T08:00:01'))
+  }
+  // 时钟暂停时 React 的 effect 要等时钟走一下才跑，计时器这时才开始
+  const warm = async (page: Page) => {
+    await page.getByTestId('timer-value').waitFor()
+    await page.clock.runFor(100)
+  }
+  const choose = async (page: Page, name: string) => {
+    await page.getByTestId('timer').click()
+    await page.getByRole('button', { name, exact: false }).first().click()
+  }
+
+  test('正计时、倒计时、超时提示、暂停、后台不计、刷新续计', async ({ page }) => {
+    await frozen(page)
+    await page.goto(`${BASE}/practice/t${id}-r1`)
+    await warm(page)
+    await expect(value(page)).toHaveText('0:00')
+    await page.clock.runFor(65_000)
+    await expect(value(page)).toHaveText('1:05')
+
+    // 菜单按 Esc 关闭，焦点回到计时按钮（audit P2）
+    await page.getByTestId('timer').click()
+    await expect(page.getByRole('button', { name: /倒计时/ })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('button', { name: /倒计时/ })).toBeHidden()
+    await expect(page.getByTestId('timer')).toBeFocused()
+
+    await choose(page, '倒计时')
+    await expect(value(page)).toHaveText(fmt(limit - 65))
+    await page.clock.runFor((limit - 65 + 35) * 1000)
+    await expect(value(page)).toHaveText('超时 +0:35')
+    await expect(page.getByRole('status').filter({ hasText: '时间到了，可以继续做完再交卷' })).toHaveCount(1)
+
+    // 暂停期间不走
+    await choose(page, '暂停')
+    await expect(value(page)).toHaveText('已暂停')
+    await page.clock.runFor(30_000)
+    await choose(page, '继续')
+    await page.clock.runFor(1_000)
+    await expect(value(page)).toHaveText(/超时 \+0:3[67]/)
+
+    // 页面在后台时不计
+    await choose(page, '正计时')
+    const before = await value(page).textContent()
+    await page.evaluate(`Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'hidden' }); document.dispatchEvent(new Event('visibilitychange'))`)
+    await page.clock.runFor(60_000)
+    await page.evaluate(`Object.defineProperty(document, 'visibilityState', { configurable: true, value: 'visible' }); document.dispatchEvent(new Event('visibilitychange'))`)
+    await page.clock.runFor(1_000)
+    // 后台 60 秒不计；回到前台后从那一刻重新算，多出的不超过 1 秒
+    const sec = (t: string | null) => t!.split(':').map(Number).reduce((a, b) => a * 60 + b)
+    const after = sec(await value(page).textContent())
+    expect(after - sec(before)).toBeGreaterThanOrEqual(0)
+    expect(after - sec(before)).toBeLessThanOrEqual(1)
+
+    // 作答后刷新：接着计，模式记住
+    const box = page.getByRole('textbox').first()
+    if (await box.count()) await box.fill('x')
+    else await page.locator('[data-key]').first().click()
+    await page.clock.runFor(1_000)
+    const saved = await value(page).textContent()
+    // 刷新时让时钟照常走（暂停的时钟会卡住页面加载）
+    await page.clock.resume()
+    await page.reload()
+    await expect(value(page)).not.toHaveText('0:00')
+    const [m2, s2] = (await value(page).textContent())!.split(':').map(Number)
+    const [m1, s1] = saved!.split(':').map(Number)
+    expect(m2 * 60 + s2).toBeGreaterThanOrEqual(m1 * 60 + s1 - 2)
+  })
+
+  test('交卷后显示总用时、用时最长的题、解析里的本题用时，记录里有用时', async ({ page }) => {
+    await frozen(page)
+    await page.goto(`${BASE}/practice/t${id}-r1`)
+    await warm(page)
+    const q = (n: number) => page.locator(`[data-q="${n}"]`).first()
+    await q(1).click()
+    await page.clock.runFor(20_000)
+    await q(2).click()
+    await page.clock.runFor(3_000)
+    await submit(page)
+
+    await expect(page.getByTestId('result-time')).toHaveText(/^用时 0:2[34]$/)
+    const slow = page.getByTestId('slow-q')
+    await expect(slow).toHaveCount(1)
+    await expect(slow.first()).toHaveText('第 1 题 0:20')
+    await slow.first().click()
+    await expect(page.getByTestId('q-time').first()).toHaveText('本题用时 0:20')
+
+    const rec = await page.evaluate(() => {
+      const s = JSON.parse(localStorage.getItem('ybz:practice:v1') ?? '{}') as { records: { duration?: number; times?: Record<string, number>; limit?: number }[] }
+      return s.records[s.records.length - 1]
+    })
+    expect(rec.duration).toBeGreaterThanOrEqual(23)
+    expect(rec.times?.['1']).toBe(20)
+    expect(rec.limit).toBeUndefined()
+  })
+})
+
 test.describe('通用', () => {
   for (const unit of ['l1', 'r2', 'l']) {
     test(`t-${unit} 三种宽度无横向滚动、无商标、只请求本站`, async ({ page }) => {

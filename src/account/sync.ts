@@ -1,6 +1,7 @@
 // 本机与账号之间的数据合并（009 research R6）。纯函数，接口和浏览器共用。
 // 规则：记录取并集；其余按时间取新，取消 / 清空也是一条带时间的记录（删除标记），旧设备的数据不会复活
-import { MAX_RECORDS, type Draft, type Mark, type PracticeRecord, type Progress } from '@/practice/store'
+import type { Plan } from '@/practice/plan'
+import { isPlan, MAX_DICTATION, MAX_RECORDS, type DictEntry, type Draft, type Mark, type PracticeRecord, type Progress } from '@/practice/store'
 import { MAX_SRC, mergeVocab, mergeWords } from '@/vocab/merge'
 import type { VocabSettings, WordItem } from '@/vocab/store'
 
@@ -13,9 +14,13 @@ export type SyncData = {
   // 013 单词本与学习设置
   words?: Record<string, WordItem>
   vocab?: VocabSettings
+  // 023 听写错句
+  dictation?: Record<string, DictEntry>
+  // 024 备考计划
+  plan?: Plan
 }
 
-export const emptyData = (): SyncData => ({ records: [], progress: {}, drafts: {}, favorites: {}, dismissed: {}, words: {} })
+export const emptyData = (): SyncData => ({ records: [], progress: {}, drafts: {}, favorites: {}, dismissed: {}, words: {}, dictation: {} })
 
 const recordKey = (r: PracticeRecord) => `${r.unitId}@${r.at}`
 
@@ -56,6 +61,8 @@ export const mergeData = (a: Partial<SyncData>, b: Partial<SyncData>): SyncData 
     favorites: newest(a.favorites, b.favorites, (m) => m.at),
     dismissed: newest(a.dismissed, b.dismissed, (m) => m.at),
     words: mergeWords(a.words, b.words),
+    dictation: newest(a.dictation, b.dictation, (e) => e.at),
+    ...((a.plan ?? b.plan) ? { plan: a.plan && b.plan ? later(a.plan, b.plan, (p) => p.at) : (a.plan ?? b.plan) } : {}),
     ...((a.vocab ?? b.vocab) ? { vocab: mergeVocab(a.vocab, b.vocab) } : {}),
   }
 }
@@ -94,6 +101,11 @@ const isMarks = (m: unknown) =>
         l.every((s) => Array.isArray(s) && s.length === 2 && int(s[0]) && int(s[1]) && s[0] < s[1] && s[1] <= 200_000),
     ))
 
+// 020 做题计时：秒数为 0–86400 的整数；每题用时最多 200 个键
+const sec = (v: unknown) => v === undefined || (Number.isInteger(v) && (v as number) >= 0 && (v as number) <= 86400)
+const isTimes = (t: unknown) =>
+  t === undefined || (isObj(t) && Object.keys(t).length <= 200 && Object.entries(t).every(([k, v]) => str(k, 8) && v !== undefined && sec(v)))
+
 /** 接口收到的数据逐项校验形状，不合格整体拒收 */
 export const isSyncData = (d: unknown): d is Partial<SyncData> =>
   isObj(d) &&
@@ -103,13 +115,23 @@ export const isSyncData = (d: unknown): d is Partial<SyncData> =>
       d.records.every(
         (r) =>
           isObj(r) && str(r.unitId) && num(r.at) && num(r.score) && num(r.total) && Array.isArray(r.items) && r.items.length <= 200 &&
-          (r.module === undefined || r.module === 'l' || r.module === 'r') && (r.answers === undefined || isObj(r.answers)),
+          (r.module === undefined || r.module === 'l' || r.module === 'r') && (r.answers === undefined || isObj(r.answers)) &&
+          sec(r.duration) && sec(r.limit) && isTimes(r.times),
       ))) &&
-  every(d.progress, (p) => str(p.version) && isObj(p.answers) && num(p.savedAt) && isMarks(p.marks)) &&
+  every(d.progress, (p) => str(p.version) && isObj(p.answers) && num(p.savedAt) && isMarks(p.marks) && sec(p.elapsed) && isTimes(p.times)) &&
   every(d.drafts, (x) => str(x.text, 20_000) && num(x.at)) &&
   every(d.favorites, (m) => num(m.at) && typeof m.on === 'boolean') &&
   every(d.dismissed, (m) => num(m.at) && typeof m.on === 'boolean') &&
   every(d.words, isWord, MAX_WORDS, 64) &&
+  (d.plan === undefined || isPlan(d.plan)) &&
+  every(
+    d.dictation,
+    (e) =>
+      num(e.at) && str(e.unitId, 64) && Number.isInteger(e.n) && (e.n as number) >= 0 && str(e.text, 500) && str(e.input, 500) &&
+      (e.mode === 'full' || e.mode === 'blank') && (e.state === 'wrong' || e.state === 'mastered'),
+    MAX_DICTATION,
+    64,
+  ) &&
   (d.vocab === undefined ||
     (isObj(d.vocab) && num(d.vocab.at) && Number.isInteger(d.vocab.newPerDay) && (d.vocab.newPerDay as number) >= 0 &&
       (d.vocab.newPerDay as number) <= 100 && (d.vocab.accent === 'gb' || d.vocab.accent === 'us')))
