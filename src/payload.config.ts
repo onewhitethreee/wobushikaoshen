@@ -24,6 +24,7 @@ import { NoteSubmissions } from './collections/NoteSubmissions'
 import { CreditSettings } from './globals/CreditSettings'
 import { Tests } from './collections/Tests'
 import { Units } from './collections/Units'
+import { MockPapers } from './collections/MockPapers'
 import { WritingTasks } from './collections/WritingTasks'
 import { WritingReviews } from './collections/WritingReviews'
 import { AnswerExplanations } from './collections/AnswerExplanations'
@@ -97,7 +98,7 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URL || '',
     },
   }),
-  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, CreditEntries, RedeemCodes, NoteSubmissions, NoteScreenshots, Tests, Units, WritingTasks, WritingReviews, AnswerExplanations, ExplanationUnlocks, SpeakingQuestions, DictEntries],
+  collections: [Pages, Posts, Media, Categories, Users, Members, EmailSends, LoginCodes, MemberData, CreditEntries, RedeemCodes, NoteSubmissions, NoteScreenshots, Tests, Units, MockPapers, WritingTasks, WritingReviews, AnswerExplanations, ExplanationUnlocks, SpeakingQuestions, DictEntries],
   cors: [getServerSideURL()].filter(Boolean),
   // 只认本站来源的 cookie：别的网站带着考生 / 管理员 cookie 发来的请求按未登录处理（010 attack-matrix A12）
   csrf: [getServerSideURL()].filter(Boolean),

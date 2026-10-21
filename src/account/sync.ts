@@ -1,5 +1,6 @@
 // 本机与账号之间的数据合并（009 research R6）。纯函数，接口和浏览器共用。
 // 规则：记录取并集；其余按时间取新，取消 / 清空也是一条带时间的记录（删除标记），旧设备的数据不会复活
+import { MAX_MOCKS, STAGES, trimMocks, type MockAttempt } from '@/practice/mockAttempt'
 import type { Plan } from '@/practice/plan'
 import { isPlan, MAX_DICTATION, MAX_RECORDS, type DictEntry, type Draft, type Mark, type PracticeRecord, type Progress } from '@/practice/store'
 import { MAX_SRC, mergeVocab, mergeWords } from '@/vocab/merge'
@@ -18,9 +19,11 @@ export type SyncData = {
   dictation?: Record<string, DictEntry>
   // 024 备考计划
   plan?: Plan
+  // 028 模考
+  mocks?: Record<string, MockAttempt>
 }
 
-export const emptyData = (): SyncData => ({ records: [], progress: {}, drafts: {}, favorites: {}, dismissed: {}, words: {}, dictation: {} })
+export const emptyData = (): SyncData => ({ records: [], progress: {}, drafts: {}, favorites: {}, dismissed: {}, words: {}, dictation: {}, mocks: {} })
 
 const recordKey = (r: PracticeRecord) => `${r.unitId}@${r.at}`
 
@@ -62,6 +65,7 @@ export const mergeData = (a: Partial<SyncData>, b: Partial<SyncData>): SyncData 
     dismissed: newest(a.dismissed, b.dismissed, (m) => m.at),
     words: mergeWords(a.words, b.words),
     dictation: newest(a.dictation, b.dictation, (e) => e.at),
+    mocks: trimMocks(newest(a.mocks, b.mocks, (m) => m.at)),
     ...((a.plan ?? b.plan) ? { plan: a.plan && b.plan ? later(a.plan, b.plan, (p) => p.at) : (a.plan ?? b.plan) } : {}),
     ...((a.vocab ?? b.vocab) ? { vocab: mergeVocab(a.vocab, b.vocab) } : {}),
   }
@@ -106,6 +110,26 @@ const sec = (v: unknown) => v === undefined || (Number.isInteger(v) && (v as num
 const isTimes = (t: unknown) =>
   t === undefined || (isObj(t) && Object.keys(t).length <= 200 && Object.entries(t).every(([k, v]) => str(k, 8) && v !== undefined && sec(v)))
 
+// 028 模考（data-model「同步校验」）
+const intIn = (v: unknown, lo: number, hi: number) => Number.isInteger(v) && (v as number) >= lo && (v as number) <= hi
+const isSection = (s: unknown) =>
+  s === undefined ||
+  (isObj(s) &&
+    num(s.startedAt) && num(s.deadline) &&
+    (s.durations === undefined || (Array.isArray(s.durations) && s.durations.length <= 4 && s.durations.every((d) => num(d) && d >= 0 && d <= 3600))) &&
+    isObj(s.answers) && Object.keys(s.answers).length <= 40 &&
+    isMarks(s.marks) &&
+    (s.flags === undefined || (Array.isArray(s.flags) && s.flags.length <= 40 && s.flags.every((n) => intIn(n, 1, 40)))) &&
+    sec(s.elapsed) && isTimes(s.times) &&
+    (s.submittedAt === undefined || num(s.submittedAt)) &&
+    (s.score === undefined || intIn(s.score, 0, 40)) &&
+    (s.total === undefined || intIn(s.total, 0, 40)) &&
+    (s.band === undefined || s.band === null || (num(s.band) && (s.band as number) >= 0 && (s.band as number) <= 9)) &&
+    (s.auto === undefined || typeof s.auto === 'boolean'))
+const isAttempt = (a: Record<string, unknown>) =>
+  num(a.no) && num(a.at) && num(a.startedAt) && STAGES.includes(a.stage as MockAttempt['stage']) && str(a.version, 400) && isSection(a.l) && isSection(a.r) &&
+  (a.units === undefined || (Array.isArray(a.units) && a.units.length === 7 && a.units.every((n) => intIn(n, 1, 1e9))))
+
 /** 接口收到的数据逐项校验形状，不合格整体拒收 */
 export const isSyncData = (d: unknown): d is Partial<SyncData> =>
   isObj(d) &&
@@ -124,6 +148,7 @@ export const isSyncData = (d: unknown): d is Partial<SyncData> =>
   every(d.dismissed, (m) => num(m.at) && typeof m.on === 'boolean') &&
   every(d.words, isWord, MAX_WORDS, 64) &&
   (d.plan === undefined || isPlan(d.plan)) &&
+  every(d.mocks, isAttempt, MAX_MOCKS, 40) &&
   every(
     d.dictation,
     (e) =>

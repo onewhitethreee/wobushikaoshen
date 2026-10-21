@@ -11,6 +11,7 @@ import * as migration_20261017_115619_015_review from './20261017_115619_015_rev
 import * as migration_20261017_203040_016_signup_redeem from './20261017_203040_016_signup_redeem';
 import * as migration_20261019_183201_026_paraphrase from './20261019_183201_026_paraphrase';
 import * as migration_20261019_184315_027_jijing from './20261019_184315_027_jijing';
+import * as migration_20261020_123703_028_mock from './20261020_123703_028_mock';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20261019_184315_027_jijing.up,
     down: migration_20261019_184315_027_jijing.down,
-    name: '20261019_184315_027_jijing'
+    name: '20261019_184315_027_jijing',
+  },
+  {
+    up: migration_20261020_123703_028_mock.up,
+    down: migration_20261020_123703_028_mock.down,
+    name: '20261020_123703_028_mock'
   },
 ];

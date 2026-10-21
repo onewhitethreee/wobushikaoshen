@@ -8,7 +8,9 @@ import type { Action, ColumnConfig, PracticeRow } from '@/sample'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
 
+import { activeAttempt, lastDone, remaining, type MockAttempt } from '@/practice/mockAttempt'
 import { lastScore, load, favKeyFromHref } from '@/practice/store'
+import { fmt } from '@/practice/timer'
 import { STORE_EVENT, sync } from '@/practice/syncClient'
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
 
@@ -54,6 +56,8 @@ export const PracticeBrowser: React.FC<{
 
   // 真实数据的"上次成绩"读本机记录（FR-052）；示例数据保留示例 record
   const [local, setLocal] = useState<Record<string, { correct: number; total: number }>>({})
+  // 028 模考卷行（m{no}）：进行中 / 最近一次两科 Band
+  const [mocks, setMocks] = useState<Record<string, MockRow>>({})
   const [recordsReady, setRecordsReady] = useState(config.isSample)
   useEffect(() => {
     if (config.isSample) return
@@ -65,6 +69,7 @@ export const PracticeBrowser: React.FC<{
         if (s) records[r.id] = s
       }
       setLocal(records)
+      setMocks(mockRows(store.mocks, config.rows))
       return records
     }
     const records = read()
@@ -84,6 +89,8 @@ export const PracticeBrowser: React.FC<{
   const tab = config.tabs.find((t) => t.id === tabId) ?? config.tabs[0]
   const allRows = config.rows.map((r) => {
     if (config.isSample) return r
+    const m = mocks[r.id]
+    if (m) return { ...r, ...m }
     const s = local[r.id]
     return {
       ...r,
@@ -456,4 +463,39 @@ const ActionView: React.FC<{ action: Action; done: boolean }> = ({ action, done 
   }
 
   return link
+}
+
+type MockRow = Pick<PracticeRow, 'record' | 'score' | 'actions'>
+
+/** 028：模考卷行的状态。进行中 → "继续考试"；考过 → 两科 Band + 再考一次 + 查看成绩 */
+const mockRows = (mocks: Record<string, MockAttempt>, rows: PracticeRow[]): Record<string, MockRow> => {
+  const out: Record<string, MockRow> = {}
+  const act = activeAttempt(mocks)
+  for (const r of rows) {
+    const m = /^m(\d+)$/.exec(r.id)
+    if (!m) continue
+    const no = Number(m[1])
+    const base = r.actions[0]
+    if (act?.no === no) {
+      const sec = act.stage === 'reading' ? act.r : act.stage === 'listening' ? act.l : undefined
+      const left = sec ? `，剩 ${fmt(remaining(sec))}` : ''
+      out[r.id] = {
+        record: `进行中：${act.stage === 'listening' ? '听力' : '阅读'}${left}`,
+        actions: [{ ...base, label: '继续考试', doneLabel: '继续考试' }],
+      }
+      continue
+    }
+    const done = lastDone(mocks, no)
+    if (!done) continue
+    const items = [
+      { label: '听力', band: done.l?.band },
+      { label: '阅读', band: done.r?.band },
+    ].filter((x): x is { label: string; band: number } => typeof x.band === 'number')
+    out[r.id] = {
+      record: '已考',
+      score: items.length ? { kind: 'band', items } : undefined,
+      actions: [base, { ...base, label: '查看成绩', doneLabel: '查看成绩', href: `${base.href}?a=${done.startedAt}` }],
+    }
+  }
+  return out
 }

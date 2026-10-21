@@ -178,7 +178,9 @@ test.describe('栏目页', () => {
 
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto(BASE + '/mock')
-    await expect(page.getByTestId('practice-row').first().getByTestId('band-gauge')).toHaveCount(2)
+    // 两科 Band 来自示例数据的做题记录（028 起模考读真实卷子，模考成绩见 mock.e2e）
+    if (await page.getByText('示例数据').count())
+      await expect(page.getByTestId('practice-row').first().getByTestId('band-gauge')).toHaveCount(2)
 
     await page.goto(BASE + '/listening')
     // 正确率圆环来自示例数据的做题记录

@@ -133,7 +133,7 @@ describe('考生账号权限', () => {
 // 访问矩阵（010 research R5、attack-matrix A5）：遍历全部集合与全局，含插件和 Payload 内部集合。
 // 新增集合不在下表里会直接失败，必须先表态
 const PUBLIC_READ = [
-  'pages', 'posts', 'media', 'categories', 'tests', 'units', 'writing-tasks', 'speaking-questions', 'redirects', 'search',
+  'pages', 'posts', 'media', 'categories', 'tests', 'units', 'mock-papers', 'writing-tasks', 'speaking-questions', 'redirects', 'search',
   'header', 'footer', 'band-scales',
 ]
 const PRIVATE = [

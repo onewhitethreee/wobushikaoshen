@@ -22,8 +22,8 @@ export type Progress = {
   types: { label: string; correct: number; total: number }[]
 }
 
-/** 整套：套题整科（t{id}-l / t{id}-r，没有 Part 号）且 40 题 */
-export const isWhole = (r: PracticeRecord) => /^t\d+-[lr]$/.test(r.unitId) && r.total === 40
+/** 整套：套题整科（t{id}-l / t{id}-r，没有 Part 号）或 028 模考一科（m{no}-l / m{no}-r），且 40 题 */
+export const isWhole = (r: PracticeRecord) => /^[tm]\d+-[lr]$/.test(r.unitId) && r.total === 40
 
 const ratio = (list: PracticeRecord[]) => {
   const total = list.reduce((s, r) => s + r.total, 0)

@@ -94,6 +94,18 @@ docker compose run --rm -v "$PWD/public/media:/app/public/media:ro" migrate pnpm
 - 失败的题号会打印出来；`--only-failed` 只重跑失败的（失败清单在容器里，容器删掉后用 `--redo 4,12` 指定题号）。
 - 跑完在后台「写作题」随机抽查几道：对照图片看"图表数据"，没问题勾"图表数据已核对"，有错直接改。没有图表数据的 Task 1 不能批改，页面上按钮是灰的。
 
+### ③c 模考卷（全真模考用）
+
+从本机搬数据（②）时模考卷已经带过来了，跳过这一步。全新空站、或以后导入了新的练习单元时执行：
+
+```bash
+docker compose run --rm migrate pnpm mock:compose --dry-run   # 先看能组几张
+docker compose run --rm migrate pnpm mock:compose             # 建草稿卷
+```
+
+- 每张卷子 = 听力 Part 1–4 + 阅读 Passage 1–3，只用还没进过任何卷子的已发布单元，已有卷子不动，可以重复执行。
+- 建出来的是草稿。在后台「模考卷」抽看几张（可以换掉某个 Part / 篇），然后批量发布。卷子里有单元未发布时，这张卷子不会出现在 `/mock`。
+
 ### ④ 媒体目录权限、构建、启动
 
 ```bash

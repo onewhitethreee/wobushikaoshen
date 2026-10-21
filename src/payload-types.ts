@@ -83,6 +83,7 @@ export interface Config {
     'note-screenshots': NoteScreenshot;
     tests: Test;
     units: Unit;
+    'mock-papers': MockPaper;
     'writing-tasks': WritingTask;
     'writing-reviews': WritingReview;
     'answer-explanations': AnswerExplanation;
@@ -122,6 +123,7 @@ export interface Config {
     'note-screenshots': NoteScreenshotsSelect<false> | NoteScreenshotsSelect<true>;
     tests: TestsSelect<false> | TestsSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
+    'mock-papers': MockPapersSelect<false> | MockPapersSelect<true>;
     'writing-tasks': WritingTasksSelect<false> | WritingTasksSelect<true>;
     'writing-reviews': WritingReviewsSelect<false> | WritingReviewsSelect<true>;
     'answer-explanations': AnswerExplanationsSelect<false> | AnswerExplanationsSelect<true>;
@@ -1267,6 +1269,25 @@ export interface Unit {
   _status?: ('draft' | 'published') | null;
 }
 /**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mock-papers".
+ */
+export interface MockPaper {
+  id: number;
+  no: number;
+  title: string;
+  l1: number | Unit;
+  l2: number | Unit;
+  l3: number | Unit;
+  l4: number | Unit;
+  r1: number | Unit;
+  r2: number | Unit;
+  r3: number | Unit;
+  updatedAt: string;
+  createdAt: string;
+  _status?: ('draft' | 'published') | null;
+}
+/**
  * 考生的写作批改记录，只读。失败的记录考生看不到，失败原因和用量在详情里。
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1615,6 +1636,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'units';
         value: number | Unit;
+      } | null)
+    | ({
+        relationTo: 'mock-papers';
+        value: number | MockPaper;
       } | null)
     | ({
         relationTo: 'writing-tasks';
@@ -2322,6 +2347,24 @@ export interface UnitsSelect<T extends boolean = true> {
   pendingCount?: T;
   paraphrases?: T;
   paraphraseChecked?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  _status?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mock-papers_select".
+ */
+export interface MockPapersSelect<T extends boolean = true> {
+  no?: T;
+  title?: T;
+  l1?: T;
+  l2?: T;
+  l3?: T;
+  l4?: T;
+  r1?: T;
+  r2?: T;
+  r3?: T;
   updatedAt?: T;
   createdAt?: T;
   _status?: T;

@@ -3,6 +3,7 @@
 import type { Answers, ScoreItem, UnitId } from '@/exam/practice'
 import type { QuestionType } from '@/exam/scoring'
 import type { Marks } from '@/practice/marks'
+import { trimMocks, type MockAttempt } from '@/practice/mockAttempt'
 import type { Plan } from '@/practice/plan'
 
 export const KEY = 'ybz:practice:v1'
@@ -41,12 +42,14 @@ export type Store = {
   dictation: Record<string, DictEntry>
   /** 024 备考计划；清除时 examDate 为 null（保留时间，同步时旧计划不会复活） */
   plan?: Plan
+  /** 028 模考：每一场（进行中 / 已完成 / 已放弃），键 m{no}@{startedAt} */
+  mocks: Record<string, MockAttempt>
   /** 已登录时：上次同步到的账号版本、上次同步的时间（只推这之后改动的条目） */
   syncedRev?: number
   syncedAt?: number
 }
 
-export const emptyStore = (): Store => ({ progress: {}, records: [], favorites: {}, dismissed: {}, dictation: {} })
+export const emptyStore = (): Store => ({ progress: {}, records: [], favorites: {}, dismissed: {}, dictation: {}, mocks: {} })
 
 export const isPlan = (p: unknown): p is Plan => {
   const x = p as Plan | undefined
@@ -79,6 +82,7 @@ export const load = (): { store: Store; ok: boolean } => {
         favorites: obj(s.favorites),
         dismissed: obj(s.dismissed),
         dictation: obj(s.dictation),
+        mocks: obj(s.mocks),
         plan: isPlan(s.plan) ? s.plan : undefined,
         syncedRev: s.syncedRev,
         syncedAt: s.syncedAt,
@@ -151,6 +155,11 @@ export const recordDictation = (store: Store, e: Omit<DictEntry, 'state'>, allRi
     return Number(x.state === 'wrong') - Number(y.state === 'wrong') || x.at - y.at
   })
   for (const k of order.slice(0, keys.length - MAX_DICTATION)) delete store.dictation[k]
+}
+
+/** 028：写入一场模考（同一键覆盖），超出上限时裁剪 */
+export const saveAttempt = (store: Store, a: MockAttempt) => {
+  store.mocks = trimMocks({ ...store.mocks, [`m${a.no}@${a.startedAt}`]: a })
 }
 
 /** 错题本里移除一道（已下架的）题 */

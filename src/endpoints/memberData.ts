@@ -12,7 +12,7 @@ const MAX_BODY = 4 * 1024 * 1024
 const MAX_STORED = 12 * 1024 * 1024
 
 const isEmpty = (d: Partial<SyncData>) =>
-  !d.records?.length && !d.vocab && !d.plan && [d.progress, d.drafts, d.favorites, d.dismissed, d.words, d.dictation].every((o) => !o || !Object.keys(o).length)
+  !d.records?.length && !d.vocab && !d.plan && [d.progress, d.drafts, d.favorites, d.dismissed, d.words, d.dictation, d.mocks].every((o) => !o || !Object.keys(o).length)
 
 export const memberDataEndpoint: Endpoint = {
   path: '/me/data',

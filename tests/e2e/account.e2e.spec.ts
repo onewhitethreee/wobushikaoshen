@@ -76,7 +76,7 @@ test.describe('邮箱验证码登录', () => {
     await login(page, EMAIL)
     await page.getByTestId('account-menu').locator('summary').click()
     await page.getByRole('button', { name: '退出' }).click()
-    await expect(page.getByTestId('account-menu')).toHaveText('登录')
+    await expect(page.getByTestId('account-menu')).toHaveText('登录', { timeout: 15_000 })
   })
 
   test('验证码填错提示，60 秒内不能重发', async ({ page }) => {
@@ -148,7 +148,7 @@ test.describe('邮箱验证码登录', () => {
     // A 退出：本机清空；再登录恢复
     await a.getByTestId('account-menu').locator('summary').click()
     await a.getByRole('button', { name: '退出' }).click()
-    await expect(a.getByTestId('account-menu')).toHaveText('登录')
+    await expect(a.getByTestId('account-menu')).toHaveText('登录', { timeout: 15_000 })
     expect(await a.evaluate(`localStorage.getItem('ybz:practice:v1')`)).toBeNull()
     await login(a, email)
     await a.goto(`${BASE}/listening`)

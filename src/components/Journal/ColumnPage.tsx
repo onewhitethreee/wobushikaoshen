@@ -19,7 +19,6 @@ const pendingNotice = (config: ColumnConfig, q: ColumnQuery) => {
   if (!row) return null
   if (q.review) return 'AI 批改还没开放，这次不扣额度。'
   if (q.mock && config.slug === 'speaking') return '口语批改还没开放，这次不扣额度。'
-  if (config.slug === 'mock') return '模考还在制作中，做好后从这里进入。'
   return '这组题还不能练，先看看别的题。'
 }
 

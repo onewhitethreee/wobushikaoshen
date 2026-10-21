@@ -6,7 +6,9 @@ import { getPayload } from 'payload'
 import { groupStats, type GroupSummary } from '@/exam/groupStats'
 import { listeningType, readingType } from '@/exam/typeNames'
 import { categoryLabel, WRITING_CATEGORIES } from '@/exam/writingCategories'
-import type { SpeakingQuestion, Test, Unit, WritingTask } from '@/payload-types'
+import { getRandomPool } from '@/content/mockPaper'
+import { SLOTS } from '@/exam/mock'
+import type { MockPaper, SpeakingQuestion, Test, Unit, WritingTask } from '@/payload-types'
 import {
   columns as sample,
   type Action,
@@ -246,38 +248,50 @@ const speakingColumn = (qs: SpeakingQuestion[]): ColumnConfig | null => {
   }
 }
 
-const mockColumn = (tests: Test[]): ColumnConfig | null => {
-  if (!tests.length) return null
-  const rows: PracticeRow[] = tests.map((t) => {
-    const has = {
-      听力: Boolean(t.listening?.parts?.length),
-      阅读: Boolean(t.reading?.passages?.length),
-      写作: Boolean(t.writing?.task1 && t.writing?.task2),
-      口语: Boolean(t.speaking?.part2),
-    }
-    const modules = Object.entries(has)
-      .filter(([, v]) => v)
-      .map(([k]) => k)
-    const full = has.写作 || has.口语
-    return {
-      id: String(t.id),
-      lead: t.code,
-      title: `${t.title} · ${modules.join(' + ')}`,
-      meta: [full ? '听力阅读免费，写作口语批改用额度' : '免费'],
-      count: (has.听力 ? 40 : 0) + (has.阅读 ? 40 : 0) || undefined,
-      facets: { kind: 'set', scope: full ? '四科' : '听力阅读' },
-      actions: [
-        {
-          label: '进入模考',
-          doneLabel: '再考一次',
-          href: `/mock?start=${t.id}`,
-          cost: free,
-          desktopOnly: true,
-        },
-      ],
-    }
+// 028 模考卷：卷子已发布且 7 个单元都已发布才列出（FR-024）
+const mockColumn = async (): Promise<ColumnConfig | null> => {
+  const payload = await getPayload({ config: configPromise })
+  const res = await payload.find({
+    collection: 'mock-papers',
+    where: { _status: { equals: 'published' } },
+    depth: 1,
+    select: { no: true, title: true, l1: true, l2: true, l3: true, l4: true, r1: true, r2: true, r3: true },
+    populate: { units: { _status: true } },
+    sort: 'no',
+    pagination: false,
   })
-  return { ...sample.mock, rows }
+  const papers = (res.docs as MockPaper[]).filter((p) =>
+    SLOTS.every((s) => {
+      const u = p[s.key]
+      return typeof u === 'object' && u?._status === 'published'
+    }),
+  )
+  // 随机一场（站长 2026-10-20 追加）放第一行：每个位置都有可用单元才显示
+  const pool = await getRandomPool()
+  const random: PracticeRow[] = SLOTS.every((s) => pool[s.key].length)
+    ? [
+        {
+          id: 'm0',
+          lead: '随机',
+          title: '随机模考',
+          meta: ['每次随机抽 4 个 Part + 3 篇，优先没做过的', '约 2 小时', '免费'],
+          count: 80,
+          facets: { kind: 'set', scope: '听力阅读' },
+          actions: [{ label: '开始随机一场', doneLabel: '再随机一场', href: '/mock/random', cost: free, desktopOnly: true }],
+        },
+      ]
+    : []
+  if (!papers.length && !random.length) return null
+  const rows: PracticeRow[] = random.concat(papers.map((p) => ({
+    id: `m${p.no}`,
+    lead: String(p.no),
+    title: p.title,
+    meta: ['听力 4 Part + 阅读 3 篇', '约 2 小时', '免费'],
+    count: 80,
+    facets: { kind: 'set', scope: '听力阅读' },
+    actions: [{ label: '进入模考', doneLabel: '再考一次', href: `/mock/${p.no}`, cost: free, desktopOnly: true }],
+  })))
+  return { ...sample.mock, tabs: [{ id: 'all', label: '全部模考卷', match: { kind: 'set' }, filters: [status] }], rows }
 }
 
 export const getColumn = async (slug: ColumnSlug): Promise<ColumnConfig> => {
@@ -287,7 +301,7 @@ export const getColumn = async (slug: ColumnSlug): Promise<ColumnConfig> => {
   if (slug === 'writing') real = writingColumn(await published<WritingTask>('writing-tasks'))
   if (slug === 'speaking')
     real = speakingColumn(await published<SpeakingQuestion>('speaking-questions'))
-  if (slug === 'mock') real = mockColumn(await published<Test>('tests'))
+  if (slug === 'mock') real = await mockColumn()
   return real ?? { ...sample[slug], isSample: true }
 }
 

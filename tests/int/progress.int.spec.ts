@@ -22,6 +22,8 @@ describe('isWhole', () => {
     expect(isWhole(rec(1, 30, 40, { unitId: 't3-l2' }))).toBe(false)
     expect(isWhole(rec(1, 30, 39, { unitId: 't3-l' }))).toBe(false)
     expect(isWhole(rec(1, 30, 40, { unitId: 'u5' }))).toBe(false)
+    expect(isWhole(rec(1, 30, 40, { unitId: 'm3-l' }))).toBe(true)
+    expect(isWhole(rec(1, 30, 40, { unitId: 'm3' }))).toBe(false)
   })
 })
 

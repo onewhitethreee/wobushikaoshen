@@ -28,6 +28,7 @@ const localSince = (t: number): SyncData => {
     favorites: since(store.favorites, (m) => m.at, t),
     dismissed: since(store.dismissed, (m) => m.at, t),
     dictation: since(store.dictation, (e) => e.at, t),
+    mocks: since(store.mocks, (m) => m.at, t),
     ...(store.plan && store.plan.at >= t ? { plan: store.plan } : {}),
     ...localVocabSince(t),
   }
@@ -47,6 +48,7 @@ const apply = (server: SyncData | undefined, rev: number, at: number) => {
     store.favorites = m.favorites
     store.dismissed = m.dismissed
     store.dictation = m.dictation ?? {}
+    store.mocks = m.mocks ?? {}
     if (m.plan) store.plan = m.plan
     saveDrafts(m.drafts)
     // 单词本写回自己的键；这里不再触发推送（推送由本次同步完成）
@@ -87,6 +89,9 @@ export const sync = (full = false): Promise<void> => {
   chain = p
   return p
 }
+
+// 断网期间的改动只在本机；网络恢复时补推一次（028 断网续考）
+if (typeof window !== 'undefined') window.addEventListener('online', () => void sync())
 
 let timer: ReturnType<typeof setTimeout> | undefined
 /** 本机写入后调用：2 秒内的多次改动合成一次推送 */

@@ -51,6 +51,6 @@ describe('mergeData', () => {
   })
 
   it('缺少的部分按空处理', () => {
-    expect(mergeData({}, {})).toEqual({ records: [], progress: {}, drafts: {}, favorites: {}, dismissed: {}, words: {}, dictation: {} })
+    expect(mergeData({}, {})).toEqual({ records: [], progress: {}, drafts: {}, favorites: {}, dismissed: {}, words: {}, dictation: {}, mocks: {} })
   })
 })

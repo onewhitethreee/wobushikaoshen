@@ -1,11 +1,13 @@
 'use client'
 
+import { Flag } from 'lucide-react'
 import Link from 'next/link'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 
 import { Button } from '@/components/ui/button'
-import { bandFor, scoreUnit, type Answers, type PracticeUnit } from '@/exam/practice'
+import { ExamTimer } from '@/components/Mock/ExamTimer'
+import { bandFor, scoreUnit, type Answers, type PracticeUnit, type ScoreItem } from '@/exam/practice'
 import type { Marks } from '@/practice/marks'
 import { addRecord, getProgress, load, save, setProgress } from '@/practice/store'
 import { anchorOf, limitSeconds, toSaved, topTimes, type Clock, type TimerMode } from '@/practice/timer'
@@ -31,10 +33,26 @@ type Slot = { n: number; section: number; anchor: number; multi: boolean }
 
 const isDesktop = () => window.matchMedia('(min-width: 1024px)').matches
 
-export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
+// 028 模考：exam = 考试中（到点交卷、不显示答案、关查词、标记复查，状态交给模考保存）；review = 成绩单里看解析
+export type ExamState = { answers: Answers; marks: Marks; flags: number[]; elapsed: number; times: Record<number, number> }
+export type ExamResult = { score: number; total: number; items: ScoreItem[]; answers: Answers; elapsed: number; times: Record<number, number>; auto: boolean }
+export type ExamMode = {
+  deadline: number
+  initial: Partial<ExamState>
+  onChange: (s: ExamState) => void
+  onSubmit: (r: ExamResult) => void
+  /** 听力：考试播放器，替换练习用的音频条 */
+  audio?: React.ReactNode
+}
+
+export const PracticeView: React.FC<{ unit: PracticeUnit; exam?: ExamMode; review?: { answers: Answers; times?: Record<number, number> } }> = ({
+  unit,
+  exam,
+  review,
+}) => {
   const isL = unit.module === 'listening'
-  const [answers, setAnswers] = useState<Answers>({})
-  const [submitted, setSubmitted] = useState(false)
+  const [answers, setAnswers] = useState<Answers>(() => exam?.initial.answers ?? review?.answers ?? {})
+  const [submitted, setSubmitted] = useState(Boolean(review))
   const [sectionIndex, setSectionIndex] = useState(0)
   const [confirming, setConfirming] = useState(false)
   const [notice, setNotice] = useState<'restored' | 'unavailable' | null>(null)
@@ -48,13 +66,20 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   const [collapsed, setCollapsed] = useState(false)
   const [transcriptHidden, setTranscriptHidden] = useState(false)
   // 014 做题高亮：交卷前随作答进度保存，交卷后只在当前页面
-  const [marks, setMarks] = useState<Marks>({})
+  const [marks, setMarks] = useState<Marks>(() => exam?.initial.marks ?? {})
+  const [flags, setFlags] = useState<number[]>(() => exam?.initial.flags ?? [])
   // 020 做题计时：计时状态放 ref（每秒不重绘整页），交卷时的用时放 state 给成绩条和解析面板
-  const clock = useRef<Clock>({ elapsed: 0, times: {} })
+  const clock = useRef<Clock>({ elapsed: exam?.initial.elapsed ?? 0, times: { ...exam?.initial.times } })
   const timerMode = useRef<TimerMode>('up')
+  const toTimes = () => {
+    const t = toSaved(clock.current)
+    return { elapsed: t.elapsed, times: t.times }
+  }
   const [sharing, setSharing] = useState(false)
   const [submittedAt, setSubmittedAt] = useState(0)
-  const [lastTime, setLastTime] = useState<{ duration: number; limit?: number; times: Record<number, number> } | null>(null)
+  const [lastTime, setLastTime] = useState<{ duration: number; limit?: number; times: Record<number, number> } | null>(() =>
+    review?.times ? { duration: Object.values(review.times).reduce((a, b) => a + b, 0), times: review.times } : null,
+  )
   const limit = useMemo(() => limitSeconds(unit), [unit])
   const rootRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLElement>(null)
@@ -93,8 +118,12 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   const followPausedUntil = useRef(0)
   const followTimer = useRef<ReturnType<typeof setTimeout>>(undefined)
 
-  // 恢复本机进度（FR-050、FR-053）
+  // 恢复本机进度（FR-050、FR-053）；模考的作答由模考自己存
   useEffect(() => {
+    if (exam || review) {
+      ready.current = true
+      return
+    }
     const { store: s, ok } = load()
     storageOk.current = ok
     const p = getProgress(s, unit.id, unit.version)
@@ -107,11 +136,19 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
     if (p?.elapsed) clock.current = { elapsed: p.elapsed, times: { ...p.times } }
     ready.current = true
     void sync() // 已登录时取回其他设备的记录（009）
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- exam / review 只看打开时
   }, [unit.id, unit.version])
+
+  // 模考：作答、高亮、标记一变就交给模考（模考那边节流写本机）
+  const examChange = exam?.onChange
+  useEffect(() => {
+    if (!examChange || submitted || !touched.current) return
+    examChange({ answers, marks, flags, ...toTimes() })
+  }, [answers, marks, flags, submitted, examChange])
 
   // 作答变化 500ms 后写入本机
   useEffect(() => {
-    if (!ready.current || submitted || !touched.current) return
+    if (!ready.current || submitted || !touched.current || exam) return
     const t = setTimeout(() => {
       // 每次都重读本机：同步可能刚合并进别的设备的数据，不能用旧副本覆盖
       const { store } = load()
@@ -125,13 +162,14 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       }
     }, 500)
     return () => clearTimeout(t)
-  }, [answers, marks, submitted, unit.id, unit.version])
+  }, [answers, marks, submitted, unit.id, unit.version, exam])
 
   // 离开页面 / 切到后台时补存一次用时（020 research R5）：只在已有作答时，规则同上
   useEffect(() => {
     if (submitted) return
     const flush = (e: Event) => {
       if (e.type === 'visibilitychange' && document.visibilityState !== 'hidden') return
+      if (exam) return examChange?.({ answers, marks, flags, ...toTimes() })
       if (!touched.current || !Object.keys(answers).length) return
       const { store } = load()
       setProgress(store, unit.id, unit.version, answers, marks, toSaved(clock.current))
@@ -143,7 +181,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       window.removeEventListener('pagehide', flush)
       document.removeEventListener('visibilitychange', flush)
     }
-  }, [answers, marks, submitted, unit.id, unit.version])
+  }, [answers, marks, flags, submitted, unit.id, unit.version, exam, examChange])
 
   const slots = useMemo<Slot[]>(
     () =>
@@ -211,8 +249,13 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
     setMarks(m)
   }
 
-  const doSubmit = () => {
+  const doSubmit = (auto = false) => {
     const r = scoreUnit(unit, answers)
+    if (exam) {
+      setConfirming(false)
+      exam.onSubmit({ ...r, answers, ...toTimes(), auto })
+      return
+    }
     // 电脑端交卷后面板停在第一道错题，全对停在第一题（008 research R4）
     const wrong = order.find((o) => {
       const span = findQ(o)?.q.span ?? 1
@@ -416,7 +459,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
 
   // 快捷键（004 research R5）：输入框、组合键、输入法组字中一律不拦截；空格在按钮 / 选项上保留原生点按
   useEffect(() => {
-    if (!isL) return
+    if (!isL || exam) return
     const onKey = (e: KeyboardEvent) => {
       if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return
       const t = e.target as HTMLElement
@@ -468,15 +511,32 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       seconds={lastTime ? (lastTime.times[explained.q.number] ?? 0) : undefined}
       q={explained.q}
       ref={panelRef}
-      unitId={unit.id}
+      // 模考的题来自各个单元：AI 讲解按题所属的单元取题（题组键 u{id}-g{k} 去掉 -g{k}）
+      unitId={unit.source === 'mock' ? explained.group.key.replace(/-g\d+$/, '') : unit.id}
     />
   )
 
   const spanOf = (anchor: number) => unit.sections.flatMap((s) => s.groups).flatMap((g) => g.questions).find((q) => q.number === anchor)?.span ?? 1
 
+  // 到点自动交卷：ExamTimer 只回调一次，这里拿最新的作答
+  const submitRef = useRef(doSubmit)
+  useEffect(() => {
+    submitRef.current = doSubmit
+  })
+  const onExpire = useCallback(() => submitRef.current(true), [])
+
   const onTimerMode = useCallback((m: TimerMode) => {
     timerMode.current = m
   }, [])
+
+  // 028 标记复查：标记当前题（官方机考底栏的 Review），没选过题时标第一题
+  const flagTarget = current !== undefined ? (anchorOf(unit, current) ?? current) : slots[0]?.anchor
+  const toggleFlag = () => {
+    if (flagTarget === undefined) return
+    touched.current = true
+    setFlags((f) => (f.includes(flagTarget) ? f.filter((n) => n !== flagTarget) : [...f, flagTarget].sort((a, b) => a - b)))
+  }
+  const isFlagged = (s: Slot) => flags.includes(s.anchor)
 
   const trackCurrent = (e: React.SyntheticEvent) => {
     const q = (e.target as HTMLElement).closest<HTMLElement>('[data-q]')?.dataset.q
@@ -487,10 +547,14 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
   }
 
   return (
-    <div ref={rootRef} style={{ '--audio-h': `${audioH}px`, '--panel-h': `${panelH}px` } as React.CSSProperties}>
-      {(result || notice) && (
+    <div
+      data-no-lookup={exam ? '' : undefined}
+      ref={rootRef}
+      style={{ '--audio-h': `${audioH}px`, '--panel-h': `${panelH}px` } as React.CSSProperties}
+    >
+      {((result && !review) || notice) && (
         <div className="mx-auto flex max-w-[77.5rem] flex-col gap-3 px-[clamp(1rem,4vw,2.5rem)] pt-5">
-          {result && (
+          {result && !review && (
             <ResultBar
               band={band}
               listHref={isL ? '/listening' : '/reading'}
@@ -508,7 +572,7 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
               total={result.total}
             />
           )}
-          {result && (
+          {result && !review && (
             <ShareDialog
               onClose={() => setSharing(false)}
               open={sharing}
@@ -570,16 +634,18 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
       {/* 听力音频条固定在顶部（008 FR-011），高度写进 --audio-h 供切换栏和两栏高度使用 */}
       {isL && (
         <div className="sticky top-0 z-20 bg-background" ref={audioBar}>
-          {section.audioUrl ? (
+          {exam?.audio ? (
+            exam.audio
+          ) : section.audioUrl ? (
             <AudioPlayer nav={nav} onPlayingChange={setPlaying} onTime={onTime} ref={player} src={section.audioUrl}>
               <ShortcutHelp ref={help} />
-              <Link
+              {unit.source !== 'mock' && <Link
                 className="inline-flex min-h-11 items-center px-2 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
                 data-testid="radio-link"
                 href={`/listening/play?start=${unit.source === 'unit' ? `u${unit.docId}` : `t${unit.docId}-l${radioPart}`}`}
               >
                 磨耳朵
-              </Link>
+              </Link>}
               {submitted && unit.source === 'unit' && lines.length > 0 && (
                 <Link
                   className="inline-flex min-h-11 items-center px-2 text-sm font-semibold underline underline-offset-4"
@@ -670,17 +736,20 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
           </div>
         )}
         <div className="border-t border-border bg-background">
-          {confirming && !submitted && <SubmitConfirm left={left} onCancel={() => setConfirming(false)} onConfirm={doSubmit} />}
+          {confirming && !submitted && (
+            <SubmitConfirm flagged={flags.length} left={left} onCancel={() => setConfirming(false)} onConfirm={() => doSubmit()} />
+          )}
           <div className="container flex items-center gap-3 py-2">
             <nav aria-label="题号" className="-my-1 flex min-w-0 flex-1 gap-1 overflow-x-auto py-1">
               {slots.map((s) => {
                 const done = answered(s)
                 const wrong = submitted && !correct.get(s.n)
+                const flagged = !submitted && isFlagged(s)
                 return (
                   <button
-                    aria-label={`跳到第 ${s.n} 题${submitted ? (wrong ? '，错误' : '，正确') : done ? '，已答' : ''}`}
+                    aria-label={`跳到第 ${s.n} 题${submitted ? (wrong ? '，错误' : '，正确') : done ? '，已答' : ''}${flagged ? '，已标记' : ''}`}
                     className={cn(
-                      'min-h-11 min-w-11 shrink-0 rounded-lg border text-[13px] font-semibold tabular-nums',
+                      'relative min-h-11 min-w-11 shrink-0 rounded-lg border text-[13px] font-semibold tabular-nums',
                       submitted
                         ? wrong
                           ? 'border-error bg-error text-background'
@@ -695,13 +764,35 @@ export const PracticeView: React.FC<{ unit: PracticeUnit }> = ({ unit }) => {
                     type="button"
                   >
                     {s.n}
+                    {flagged && (
+                      <Flag aria-hidden="true" className="absolute -top-1 -right-1 size-3.5 fill-warning text-warning" data-testid={`flag-${s.n}`} strokeWidth={2.5} />
+                    )}
                   </button>
                 )
               })}
             </nav>
-            {!submitted && <Timer clock={clock} limit={limit} onMode={onTimerMode} running={!submitted} />}
+            {exam && !submitted && (
+              <Button
+                aria-pressed={flagTarget !== undefined && flags.includes(flagTarget)}
+                className="shrink-0"
+                data-testid="flag-toggle"
+                disabled={flagTarget === undefined}
+                onClick={toggleFlag}
+                type="button"
+                variant="outline"
+              >
+                <Flag aria-hidden="true" className="size-4" />
+                标记第 {flagTarget} 题
+              </Button>
+            )}
+            {exam && !submitted && <ExamTimer clock={clock} deadline={exam.deadline} onExpire={onExpire} />}
+            {!exam && !submitted && <Timer clock={clock} limit={limit} onMode={onTimerMode} running={!submitted} />}
             {!submitted && (
-              <Button className="shrink-0" onClick={() => (left > 0 && !confirming ? setConfirming(true) : doSubmit())} type="button">
+              <Button
+                className="shrink-0"
+                onClick={() => ((left > 0 || exam) && !confirming ? setConfirming(true) : doSubmit())}
+                type="button"
+              >
                 交卷
               </Button>
             )}
