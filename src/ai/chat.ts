@@ -16,14 +16,29 @@ export const loadAi = async (payload: Payload): Promise<Ai | null> => {
 
 export const chat = async (
   ai: Ai,
-  { model = ai.model, messages, json = false, timeoutMs, maxTokens }: { model?: string; messages: Message[]; json?: boolean; timeoutMs: number; maxTokens: number },
+  {
+    model = ai.model,
+    messages,
+    json = false,
+    timeoutMs,
+    maxTokens,
+    thinking,
+  }: { model?: string; messages: Message[]; json?: boolean; timeoutMs: number; maxTokens: number; thinking?: false },
 ): Promise<{ content: string; usage: Usage }> => {
   const t0 = Date.now()
   const res = await fetch(`${ai.baseUrl}/chat/completions`, {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${ai.apiKey}` },
-    // max_tokens 给单次输出封顶，防止输出失控刷成本
-    body: JSON.stringify({ model, temperature: 0, max_tokens: maxTokens, messages, ...(json ? { response_format: { type: 'json_object' } } : {}) }),
+    // max_tokens 给单次输出封顶，防止输出失控刷成本；思考 token 也算在 max_tokens 里
+    // thinking 只在调用方明确传 false 时才发（DeepSeek 认；别的 OpenAI 兼容接口不一定认）
+    body: JSON.stringify({
+      model,
+      temperature: 0,
+      max_tokens: maxTokens,
+      messages,
+      ...(json ? { response_format: { type: 'json_object' } } : {}),
+      ...(thinking === false ? { thinking: { type: 'disabled' } } : {}),
+    }),
     signal: AbortSignal.timeout(timeoutMs),
   })
   // 错误信息里只放状态码和响应开头，不带请求头（key）

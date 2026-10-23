@@ -82,6 +82,8 @@ const one = async (id: number) => {
         json: true,
         timeoutMs: TIMEOUT,
         maxTokens: 4000,
+        // 关掉思考：思考会把输出额度用光、content 为空；逐字找对应词组用不着思考
+        thinking: false,
         messages: [
           { role: 'system', content: PROMPT },
           { role: 'user', content: JSON.stringify({ title: unit.title, questions }) },
