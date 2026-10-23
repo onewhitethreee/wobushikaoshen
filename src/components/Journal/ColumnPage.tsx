@@ -68,7 +68,7 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> 
       aside={<Sidebar key="aside" modules={config.sidebar} slug={config.slug} />}
       config={config}
       header={header}
-      initial={{ tab: query.tab, filters, focus: query.focus, page: Math.max(1, Math.floor(Number(query.page))) || undefined }}
+      initial={{ tab: query.tab, filters, focus: query.focus, page: Math.max(1, Math.floor(Number(query.page))) || undefined, draw: query.draw === '1' }}
       mobileHint={mock?.kind === 'mock' ? `${mock.title}请用电脑打开` : undefined}
     />
   )

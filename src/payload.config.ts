@@ -22,6 +22,7 @@ import { RedeemCodes } from './collections/RedeemCodes'
 import { NoteScreenshots } from './collections/NoteScreenshots'
 import { NoteSubmissions } from './collections/NoteSubmissions'
 import { CreditSettings } from './globals/CreditSettings'
+import { ContentApiSettings } from './globals/ContentApiSettings'
 import { Tests } from './collections/Tests'
 import { Units } from './collections/Units'
 import { MockPapers } from './collections/MockPapers'
@@ -48,6 +49,7 @@ import { writingReviewEndpoints } from './endpoints/writingReviews'
 import { expireStale } from './review/writing'
 import { expireStaleExplains } from './review/explain'
 import { explanationEndpoints } from './endpoints/explanations'
+import { contentApiEndpoints } from './endpoints/contentApi'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
@@ -102,7 +104,7 @@ export default buildConfig({
   cors: [getServerSideURL()].filter(Boolean),
   // 只认本站来源的 cookie：别的网站带着考生 / 管理员 cookie 发来的请求按未登录处理（010 attack-matrix A12）
   csrf: [getServerSideURL()].filter(Boolean),
-  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, printEndpoint, playlistEndpoint, dictEndpoint, creditsEndpoint, redeemEndpoint, notesEndpoint, ...writingReviewEndpoints, ...explanationEndpoints],
+  endpoints: [importEndpoint, mailTestEndpoint, ...authEndpoints, passwordEndpoint, memberDataEndpoint, lookupEndpoint, printEndpoint, playlistEndpoint, dictEndpoint, creditsEndpoint, redeemEndpoint, notesEndpoint, ...writingReviewEndpoints, ...explanationEndpoints, ...contentApiEndpoints],
   // 进程重启会丢掉进行中的批改 / 讲解：启动时把超时的改为失败并退回（015 research R2、data-model）
   onInit: async (payload) => {
     await expireStale(payload).catch((e) => payload.logger.error(e, '启动扫描批改失败'))
@@ -110,7 +112,7 @@ export default buildConfig({
   },
   // 网站不用 GraphQL，关掉少一个对外接口（009 安全自查）
   graphQL: { disable: true },
-  globals: [Header, Footer, BandScales, AiSettings, MailSettings, CreditSettings],
+  globals: [Header, Footer, BandScales, AiSettings, MailSettings, CreditSettings, ContentApiSettings],
   plugins: [
     ...plugins,
     // 配置了 S3 时媒体放对象存储，浏览器直连 S3_PUBLIC_URL；未配置时存本地磁盘 public/media

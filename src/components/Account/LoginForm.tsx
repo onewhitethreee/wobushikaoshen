@@ -9,7 +9,8 @@ import { cn } from '@/utilities/ui'
 
 import { PasswordInput } from './PasswordForm'
 
-// 两种登录（012 contracts/ui.md）：验证码（009：填邮箱收验证码 → 填 6 位数字）或邮箱 + 密码；邮箱两边共用
+// 两种登录（012 contracts/ui.md）：验证码（009：填邮箱收验证码 → 填 6 位数字）或邮箱 + 密码；邮箱两边共用。
+// 验证码登录可填邀请码（新账号才算）：从邀请链接来的已预填；换了浏览器没带上的，可以手动填好友给的码
 const post = async (url: string, body: unknown) => {
   const res = await fetch(url, {
     method: 'POST',
@@ -54,8 +55,10 @@ const saveMethod = (m: Method) => {
   } catch {}
 }
 
-export const LoginForm: React.FC<{ next?: string }> = ({ next }) => {
+export const LoginForm: React.FC<{ next?: string; invite?: string }> = ({ next, invite }) => {
   const [method, setMethod] = useState<Method>('code')
+  const [inviteCode, setInviteCode] = useState(invite ?? '')
+  const [showInvite, setShowInvite] = useState(Boolean(invite))
   const [step, setStep] = useState<'email' | 'code'>('email')
   const [email, setEmail] = useState('')
   const [code, setCode] = useState('')
@@ -101,7 +104,7 @@ export const LoginForm: React.FC<{ next?: string }> = ({ next }) => {
     e.preventDefault()
     setBusy(true)
     setError('')
-    const r = await post('/api/auth/verify', { email, code }).catch(() => ({ ok: false, error: '网络不通，请稍后再试' }))
+    const r = await post('/api/auth/verify', { email, code, invite: inviteCode }).catch(() => ({ ok: false, error: '网络不通，请稍后再试' }))
     if (!r.ok) {
       setBusy(false)
       setError(r.error ?? '登录失败')
@@ -227,6 +230,32 @@ export const LoginForm: React.FC<{ next?: string }> = ({ next }) => {
         {tabs}
         <form className="flex flex-col gap-2" onSubmit={send}>
           {emailField}
+          {showInvite ? (
+            <>
+              <label className="mt-2 text-[13px] text-muted-foreground" htmlFor="login-invite">
+                邀请码（新用户选填）
+              </label>
+              <Input
+                autoCapitalize="characters"
+                autoComplete="off"
+                className="h-11 border-input uppercase tracking-[0.15em]"
+                data-testid="login-invite"
+                id="login-invite"
+                maxLength={16}
+                onChange={(e) => setInviteCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, ''))}
+                value={inviteCode}
+              />
+            </>
+          ) : (
+            <button
+              className="min-h-11 self-start text-[13px] text-muted-foreground hover:text-foreground"
+              data-testid="login-invite-toggle"
+              onClick={() => setShowInvite(true)}
+              type="button"
+            >
+              有好友的邀请码？
+            </button>
+          )}
           {errorLine}
           <Button data-testid="login-send" disabled={busy || wait > 0} type="submit">
             {busy ? '发送中…' : wait > 0 ? `请 ${wait} 秒后再发` : '发送验证码'}

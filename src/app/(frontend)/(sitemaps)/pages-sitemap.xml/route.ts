@@ -44,6 +44,10 @@ const getPagesSitemap = unstable_cache(
         loc: `${SITE_URL}/jijing`,
         lastmod: dateFallback,
       },
+      {
+        loc: `${SITE_URL}/help`,
+        lastmod: dateFallback,
+      },
     ]
 
     const sitemap = results.docs

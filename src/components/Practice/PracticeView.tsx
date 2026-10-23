@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { ExamTimer } from '@/components/Mock/ExamTimer'
 import { bandFor, scoreUnit, type Answers, type PracticeUnit, type ScoreItem } from '@/exam/practice'
 import type { Marks } from '@/practice/marks'
+import { drawHref, safeScope } from '@/practice/randomPick'
 import { addRecord, getProgress, load, save, setProgress } from '@/practice/store'
 import { anchorOf, limitSeconds, toSaved, topTimes, type Clock, type TimerMode } from '@/practice/timer'
 import { schedulePush, sync } from '@/practice/syncClient'
@@ -45,12 +46,15 @@ export type ExamMode = {
   audio?: React.ReactNode
 }
 
-export const PracticeView: React.FC<{ unit: PracticeUnit; exam?: ExamMode; review?: { answers: Answers; times?: Record<number, number> } }> = ({
-  unit,
-  exam,
-  review,
-}) => {
+export const PracticeView: React.FC<{
+  unit: PracticeUnit
+  exam?: ExamMode
+  review?: { answers: Answers; times?: Record<number, number> }
+  /** 030：网址里的 pick（从"随机一题"进来）；模考不用 */
+  pickScope?: string
+}> = ({ unit, exam, review, pickScope }) => {
   const isL = unit.module === 'listening'
+  const scope = exam ? null : safeScope(pickScope)
   const [answers, setAnswers] = useState<Answers>(() => exam?.initial.answers ?? review?.answers ?? {})
   const [submitted, setSubmitted] = useState(Boolean(review))
   const [sectionIndex, setSectionIndex] = useState(0)
@@ -557,7 +561,8 @@ export const PracticeView: React.FC<{ unit: PracticeUnit; exam?: ExamMode; revie
           {result && !review && (
             <ResultBar
               band={band}
-              listHref={isL ? '/listening' : '/reading'}
+              listHref={scope ?? (isL ? '/listening' : '/reading')}
+              pickAgainHref={scope ? drawHref(scope) : undefined}
               onPick={openExplain}
               onRetry={restart}
               onShare={() => setSharing(true)}

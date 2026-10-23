@@ -154,7 +154,9 @@ sudo certbot --nginx -d wobushikaoshen.com      # 自动改成 443 并续期
    - 点"发送测试邮件"确认能收到。
    - 本机带过来的配置指向 Mailpit，生产上不能用，必须改掉。
 3. 后台「AI 设置」：确认 DeepSeek key 已填好。写作批改和错题讲解都靠它；没填 key 时这两个按钮会提示暂时不可用，不扣额度。
-4. 用一个新邮箱走一遍完整流程：注册登录、做写作 / 阅读 / 听力各一套、收藏、错题本、退出。后台给这个账号加 2 额度，交一篇作文点 AI 批改、在一道错题上点 AI 讲解，确认都出结果、流水里各有一条 −1。
+4. 后台「页脚」：填"反馈与投诉邮箱"（会公开显示在页脚，用一个专门的地址；留空不显示）。
+5. 后台「内容接口」（需要的话）：生成密钥交给上传阅读的 AI，见 `docs/content-api.md`。
+6. 用一个新邮箱走一遍完整流程：注册登录、做写作 / 阅读 / 听力各一套、收藏、错题本、退出。后台给这个账号加 2 额度，交一篇作文点 AI 批改、在一道错题上点 AI 讲解，确认都出结果、流水里各有一条 −1。
 
 ## 6. 更新代码
 
@@ -183,6 +185,21 @@ rsync -a private/ <备份位置>/private/
 词典（`dict_entries` 表）可以随时从 ECDICT 重新导入，不必单独备份；整库备份里带着它也无妨（约 60 MB）。
 
 恢复整库：在空库上执行 `pg_restore -U postgres -d ielts --clean --if-exists <文件>`。这是整库备份，带表结构，不需要先跑 migrate。
+
+## 8. 定时任务：同义替换
+
+交卷后解析里的"题干 ↔ 原文"同义替换由 `pnpm paraphrase` 离线生成（花 DeepSeek 费用）。脚本默认**只处理已发布、还没有数据的单元**，重复运行不会重复生成，适合每天跑一次，给新发布的单元（比如内容接口传上来、复核后发布的）补上。
+
+```bash
+crontab -e
+# 每天凌晨 3 点；flock 保证上一次没跑完时这次跳过，不会两份同时调 AI
+0 3 * * * cd /path/to/site && flock -n /tmp/paraphrase.lock docker compose run --rm migrate pnpm paraphrase >> /var/log/paraphrase.log 2>&1
+```
+
+- 草稿不处理：发布之后的下一次运行才会补上。
+- 失败的单元仍算"没有数据"，下次会自动重试；失败的单元 id 打印在日志里（`paraphrase.failed.txt` 写在临时容器里，容器退出就没了）。
+- 已有数据的单元改了题或原文时，脚本不会重做：手动跑 `docker compose run --rm migrate pnpm paraphrase --redo <单元 id>`。
+- 想先看费用：`pnpm paraphrase --limit 20` 只处理 20 个，结束时打印 token 用量。
 
 ## 常见问题
 

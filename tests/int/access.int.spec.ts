@@ -138,7 +138,7 @@ const PUBLIC_READ = [
 ]
 const PRIVATE = [
   'users', 'members', 'email-sends', 'login-codes', 'member-data', 'ai-settings', 'mail-settings',
-  'credit-entries', 'redeem-codes', 'note-submissions', 'note-screenshots', 'credit-settings', 'writing-reviews', 'answer-explanations', 'explanation-unlocks',
+  'credit-entries', 'redeem-codes', 'note-submissions', 'note-screenshots', 'credit-settings', 'content-api-settings', 'writing-reviews', 'answer-explanations', 'explanation-unlocks',
   'payload-folders', 'payload-locked-documents', 'payload-preferences', 'payload-migrations', 'payload-kv', 'payload-jobs',
 ]
 // 谁都不能经 Payload 读写（管理员也不行）：013 词典只由 /api/dict 直接查表

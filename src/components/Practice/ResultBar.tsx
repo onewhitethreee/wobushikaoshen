@@ -1,4 +1,4 @@
-import { RotateCcw, Share2 } from 'lucide-react'
+import { RotateCcw, Share2, Shuffle } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
@@ -23,7 +23,9 @@ export const ResultBar: React.FC<{
   onPick?: (anchor: number) => void
   /** 025：打开分享成绩对话框 */
   onShare?: () => void
-}> = ({ score, total, band, listHref, onRetry, time, onPick, onShare }) => {
+  /** 030：从"随机一题"进来时，按原范围再抽一题 */
+  pickAgainHref?: string
+}> = ({ score, total, band, listHref, onRetry, time, onPick, onShare, pickAgainHref }) => {
   const ratio = total ? score / total : 0
   const good = ratio >= 0.8
   return (
@@ -97,6 +99,14 @@ export const ResultBar: React.FC<{
           <Button data-testid="share-open" onClick={onShare} type="button" variant="outline">
             <Share2 aria-hidden="true" strokeWidth={2} />
             分享成绩
+          </Button>
+        )}
+        {pickAgainHref && (
+          <Button asChild data-testid="pick-again">
+            <Link href={pickAgainHref}>
+              <Shuffle aria-hidden="true" strokeWidth={2} />
+              再抽一题
+            </Link>
           </Button>
         )}
         <Button onClick={onRetry} type="button" variant="outline">

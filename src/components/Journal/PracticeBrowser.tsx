@@ -1,7 +1,8 @@
 'use client'
 
-import { ArrowUpRight, Clock, Copy, ListOrdered } from 'lucide-react'
+import { ArrowUpRight, Clock, Copy, ListOrdered, Shuffle } from 'lucide-react'
 import Link from 'next/link'
+import { useRouter } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 
 import type { Action, ColumnConfig, PracticeRow } from '@/sample'
@@ -9,7 +10,8 @@ import { Button } from '@/components/ui/button'
 import { cn } from '@/utilities/ui'
 
 import { activeAttempt, lastDone, remaining, type MockAttempt } from '@/practice/mockAttempt'
-import { lastScore, load, favKeyFromHref } from '@/practice/store'
+import { lastScore, load, loadDrafts, favKeyFromHref, type Store } from '@/practice/store'
+import { addRound, clearRound, drawRow, PICK_COLUMNS, readRound, scopeOf, withPick } from '@/practice/randomPick'
 import { fmt } from '@/practice/timer'
 import { STORE_EVENT, sync } from '@/practice/syncClient'
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
@@ -23,7 +25,42 @@ export type BrowserInitial = {
   filters: Record<string, string>
   focus?: string
   page?: number
+  /** 030："再抽一题"回来时带 draw=1，打开后自动按当前范围抽 */
+  draw?: boolean
 }
+
+type Records = {
+  local: Record<string, { correct: number; total: number }>
+  mocks: Record<string, MockRow>
+  /** 030：写作题草稿里写过字的 id（写作没有成绩，按草稿算"做过"） */
+  written: Set<string>
+}
+
+const readRecords = (config: ColumnConfig, store: Store): Records => {
+  const local: Records['local'] = {}
+  for (const r of config.rows) {
+    const s = lastScore(store, r.id)
+    if (s) local[r.id] = s
+  }
+  const drafts = config.slug === 'writing' ? loadDrafts() : {}
+  const written = new Set(config.rows.filter((r) => drafts[r.id]?.text.trim()).map((r) => r.id))
+  return { local, mocks: mockRows(store.mocks, config.rows), written }
+}
+
+/** 列表行带上本机记录：上次成绩、模考状态、写作"写过" */
+const withRecords = (config: ColumnConfig, { local, mocks, written }: Records) =>
+  config.rows.map((r) => {
+    if (config.isSample) return r
+    const m = mocks[r.id]
+    if (m) return { ...r, ...m }
+    if (written.has(r.id)) return { ...r, record: '写过' }
+    const s = local[r.id]
+    return {
+      ...r,
+      record: s && `上次 ${s.correct}/${s.total}`,
+      score: s && { kind: 'ratio' as const, ...s },
+    }
+  })
 
 // 每页条数（007 R10）。ponytail: 全部行一次下发、浏览器内分页；单栏目行数过万或首屏变慢时改服务端分页
 const PAGE_SIZE = 20
@@ -54,50 +91,37 @@ export const PracticeBrowser: React.FC<{
   }
   const focusRef = useRef<HTMLLIElement>(null)
 
-  // 真实数据的"上次成绩"读本机记录（FR-052）；示例数据保留示例 record
-  const [local, setLocal] = useState<Record<string, { correct: number; total: number }>>({})
-  // 028 模考卷行（m{no}）：进行中 / 最近一次两科 Band
-  const [mocks, setMocks] = useState<Record<string, MockRow>>({})
+  // 真实数据的"上次成绩"读本机记录（FR-052）；示例数据保留示例 record。
+  // 028 模考卷行（m{no}）：进行中 / 最近一次两科 Band；030 写作按草稿算"写过"
+  const [records, setRecords] = useState<Records>({ local: {}, mocks: {}, written: new Set() })
   const [recordsReady, setRecordsReady] = useState(config.isSample)
   useEffect(() => {
     if (config.isSample) return
     const read = () => {
-      const { store } = load()
-      const records: Record<string, { correct: number; total: number }> = {}
-      for (const r of config.rows) {
-        const s = lastScore(store, r.id)
-        if (s) records[r.id] = s
-      }
-      setLocal(records)
-      setMocks(mockRows(store.mocks, config.rows))
-      return records
+      const recs = readRecords(config, load().store)
+      setRecords(recs)
+      return recs
     }
-    const records = read()
+    const recs = read()
     setRecordsReady(true)
     // 有 focus 时，带上本机记录再算它所在页（"已做 / 未做"筛选依赖记录，008 US3）
     if (initial.focus && !initial.page) {
-      const withRecords = config.rows.map((r) => ({ ...r, record: records[r.id] ? 'done' : undefined }))
-      setPage(focusPage(withRecords, startTab, initial.filters, initial.focus, PAGE_SIZE))
+      setPage(focusPage(withRecords(config, recs), startTab, initial.filters, initial.focus, PAGE_SIZE))
     }
-    // 已登录时取回其他设备的记录，取回后重读（009）
+    // 已登录时取回其他设备的记录，取回后重读（009）；写作草稿在别的标签页改了也重读
+    const onStorage = () => read()
     window.addEventListener(STORE_EVENT, read)
+    window.addEventListener('storage', onStorage)
     void sync()
-    return () => window.removeEventListener(STORE_EVENT, read)
+    return () => {
+      window.removeEventListener(STORE_EVENT, read)
+      window.removeEventListener('storage', onStorage)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps -- initial / startTab 只取首次打开时的值
   }, [config])
 
   const tab = config.tabs.find((t) => t.id === tabId) ?? config.tabs[0]
-  const allRows = config.rows.map((r) => {
-    if (config.isSample) return r
-    const m = mocks[r.id]
-    if (m) return { ...r, ...m }
-    const s = local[r.id]
-    return {
-      ...r,
-      record: s && `上次 ${s.correct}/${s.total}`,
-      score: s && { kind: 'ratio' as const, ...s },
-    }
-  })
+  const allRows = withRecords(config, records)
   const rows = allRows.filter((r) => visible(r, tab, filters))
   const statusFilter = tab.filters.find((f) => f.id === 'status')
   const otherFilters = tab.filters.filter((f) => f.id !== 'status')
@@ -105,6 +129,37 @@ export const PracticeBrowser: React.FC<{
   const current = Math.min(page, pages)
   const shown = rows.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
   const desktopOnly = rows.some((r) => r.actions.some((a) => a.desktopOnly))
+
+  // 030 随机一题：范围 = 当前标签页 + 筛选下的行；状态"全部"时优先没做过的
+  const router = useRouter()
+  const canPick = !config.isSample && (PICK_COLUMNS as readonly string[]).includes(config.slug)
+  const status = filters.status ?? ALL
+  const undone = status === ALL ? rows.filter((r) => !r.record).length : rows.length
+  // '' 空闲；click 点了按钮；draw 由 draw=1 自动抽；empty 自动抽时范围为空
+  const [picking, setPicking] = useState(initial.draw && canPick ? 'draw' : '')
+  const pick = async (auto = false) => {
+    setPicking(auto ? 'draw' : 'click')
+    // 先取回账号上的做题记录再判断做没做过（同 028 随机模考）
+    await sync().catch(() => undefined)
+    const fresh = withRecords(config, readRecords(config, load().store)).filter((r) => visible(r, tab, filters))
+    const scope = scopeOf(config.slug, window.location.search)
+    const got = drawRow(fresh, { status, round: readRound(scope) })
+    if (!got) return setPicking(auto ? 'empty' : '')
+    if (got.resetRound) clearRound(scope)
+    addRound(scope, got.row.id)
+    const href = withPick(got.row.actions[0].href, scope)
+    // 自动抽用 replace：返回键回到上一道题，而不是这个过渡页
+    if (auto) router.replace(href)
+    else router.push(href)
+  }
+  // "再抽一题"回来（draw=1）：记录读完后自动抽一次（开发模式 effect 跑两遍也只抽一次）
+  const drew = useRef(false)
+  useEffect(() => {
+    if (picking !== 'draw' || !recordsReady || drew.current) return
+    drew.current = true
+    void pick(true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- 只在记录读完后执行一次
+  }, [recordsReady])
 
   // 标签和筛选写进网址，刷新、返回、分享都能保留
   useEffect(() => {
@@ -224,6 +279,7 @@ export const PracticeBrowser: React.FC<{
       <div
         aria-labelledby={`tab-${tab.id}`}
         className="flex min-w-0 flex-[999_1_560px] flex-col gap-5 pt-8 lg:px-10 lg:pt-10"
+        data-records-ready={recordsReady ? '' : undefined}
         id="practice-list"
         role="tabpanel"
       >
@@ -258,15 +314,42 @@ export const PracticeBrowser: React.FC<{
           </div>
         ))}
 
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
+        {(picking === 'draw' || picking === 'empty') && (
+          <p className="bg-muted px-5 py-4 text-[15px]" data-testid="pick-status" role="status">
+            {picking === 'draw' ? '正在抽题…' : '当前筛选下没有题'}
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
           <p className="text-sm text-muted-foreground" data-testid="result-count">
             找到 <b className="text-foreground">{rows.length}</b> 组
             {config.isSample && '（示例数据）'}
           </p>
-          {mobileHint && (
-            <p className="text-[13px] text-muted-foreground lg:hidden">{mobileHint}</p>
+          {canPick && (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+              <span className="text-[13px] text-muted-foreground" data-testid="pick-count">
+                {!rows.length
+                  ? '当前筛选下没有题'
+                  : status !== ALL || undone === rows.length
+                    ? `从 ${rows.length} 个里抽`
+                    : undone
+                      ? `从 ${undone} 个没做过的里抽`
+                      : '这里的题都做过了，随机再练一道'}
+              </span>
+              <Button
+                data-testid="pick-random"
+                disabled={!recordsReady || !rows.length || Boolean(picking)}
+                onClick={() => void pick()}
+                type="button"
+                variant="outline"
+              >
+                <Shuffle aria-hidden="true" strokeWidth={2} />
+                {picking === 'click' ? '抽题中…' : '随机一题'}
+              </Button>
+            </div>
           )}
         </div>
+        {mobileHint && <p className="text-[13px] text-muted-foreground lg:hidden">{mobileHint}</p>}
 
         {desktopOnly && <DesktopNotice />}
 

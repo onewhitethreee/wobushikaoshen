@@ -64,6 +64,7 @@ export const creditsEndpoint: Endpoint = {
         note: r.reason === 'adjust' || (r.reason === 'refund' && !purposeOf(r.ref_key as string | null)) ? (r.note ?? undefined) : undefined,
       })),
       invite: {
+        code,
         link: `${getServerSideURL()}/i/${code}`,
         count: invited.totalDocs,
         earned: Number(totals.earned),

@@ -13,7 +13,7 @@ type Data = {
   balance: number
   totalPages: number
   entries: Entry[]
-  invite: { link: string; count: number; earned: number; cap: number; capped: boolean }
+  invite: { code: string; link: string; count: number; earned: number; cap: number; capped: boolean }
   submissions: Submission[]
 }
 
@@ -213,7 +213,13 @@ const Invite: React.FC<{ invite: Data['invite'] }> = ({ invite }) => {
   return (
     <section className="flex flex-col gap-3">
       <H2>邀请好友</H2>
-      <p className="text-[15px] text-muted-foreground">好友打开你的链接、用新邮箱注册后，你们都能得到额度。</p>
+      <p className="text-[15px] text-muted-foreground">
+        好友打开你的链接、用新邮箱注册后，你们都能得到额度。链接打不开或换了浏览器，好友注册时填邀请码{' '}
+        <span className="font-semibold tracking-[0.15em] text-foreground" data-testid="invite-code">
+          {invite.code}
+        </span>{' '}
+        也算。
+      </p>
       <div className="flex flex-wrap gap-2">
         <input
           aria-label="邀请链接"

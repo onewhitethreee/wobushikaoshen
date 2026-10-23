@@ -8,6 +8,7 @@ import { getPayload } from 'payload'
 import React, { cache } from 'react'
 
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
+import { PickAgain } from '@/components/Writing/PickAgain'
 import { ReviewPanel } from '@/components/Writing/ReviewPanel'
 import { categoryLabel } from '@/exam/writingCategories'
 import type { Media, WritingTask } from '@/payload-types'
@@ -25,16 +26,18 @@ const load = cache(async (id: string): Promise<WritingTask | null> => {
   return (res.docs[0] as WritingTask | undefined) ?? null
 })
 
-type Props = { params: Promise<{ id: string }> }
+type Props = { params: Promise<{ id: string }>; searchParams: Promise<{ pick?: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const task = await load((await params).id)
   return { title: task ? `${task.titleZh ?? task.title} · 写作` : '没找到这道题' }
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const task = await load((await params).id)
   if (!task) notFound()
+  // 030：从"随机一题"进来时带着抽题范围
+  const { pick } = await searchParams
 
   const t1 = task.taskType === 'task1'
   const image = typeof task.image === 'object' && task.image ? (task.image as Media) : null
@@ -67,6 +70,7 @@ export default async function Page({ params }: Props) {
           <FavoriteButton className="mt-1" favKey={`w:${task.id}`} />
         </div>
         {task.titleZh && <p className="text-[15px] text-muted-foreground">{task.titleZh}</p>}
+        <PickAgain pick={pick} />
       </header>
 
       <div className="flex flex-wrap gap-8">

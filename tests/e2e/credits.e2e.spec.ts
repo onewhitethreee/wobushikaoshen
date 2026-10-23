@@ -12,6 +12,7 @@ const MAILPIT = 'http://127.0.0.1:8025'
 const A = `e2e-credits-a-${Date.now()}@example.test`
 const B = `e2e-credits-b-${Date.now()}@example.test`
 const C = `e2e-credits-c-${Date.now()}@example.test`
+const D = `e2e-credits-d-${Date.now()}@example.test`
 const NOTE = 'https://www.xiaohongshu.com/explore/'
 
 let payload: Payload
@@ -31,11 +32,16 @@ const latestCode = async (to: string) => {
   throw new Error(`Mailpit 里没有发给 ${to} 的验证码`)
 }
 
-const login = async (page: Page, email: string) => {
+/** stay：已经在登录页（如邀请链接跳过来的），不再重新打开 */
+const login = async (page: Page, email: string, { stay = false, invite }: { stay?: boolean; invite?: string } = {}) => {
   await fetch(`${MAILPIT}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`, { method: 'DELETE' })
   await payload.delete({ collection: 'email-sends', where: { email: { equals: email } } })
-  await page.goto(`${BASE}/login`)
+  if (!stay) await page.goto(`${BASE}/login`)
   await page.getByTestId('login-email').fill(email)
+  if (invite) {
+    await page.getByTestId('login-invite-toggle').click()
+    await page.getByTestId('login-invite').fill(invite)
+  }
   await page.getByTestId('login-send').click()
   await expect(page.getByTestId('login-code')).toBeVisible()
   await page.getByTestId('login-code').fill(await latestCode(email))
@@ -103,9 +109,13 @@ test.describe('额度账户', () => {
     // B 在另一个浏览器打开链接，用新邮箱注册
     const ctxB = await browser.newContext()
     const pageB = await ctxB.newPage()
+    // 邀请链接直接进登录页：有邀请提示，邀请码已预填
+    const code = link.split('/i/')[1]
     await pageB.goto(link.replace(/^https?:\/\/[^/]+/, BASE))
-    await expect(pageB).toHaveURL(`${BASE}/`)
-    await login(pageB, B)
+    await expect(pageB).toHaveURL(`${BASE}/login?invite=${code}`)
+    await expect(pageB.getByTestId('invite-banner')).toContainText(`你得 ${s.signupReward + s.inviteeReward} 额度`)
+    await expect(pageB.getByTestId('login-invite')).toHaveValue(code)
+    await login(pageB, B, { stay: true })
     await expect(pageB).toHaveURL(/\/me\/credits/)
     await expect(pageB.getByTestId('invite-welcome')).toHaveText(
       g > 0
@@ -117,6 +127,17 @@ test.describe('额度账户', () => {
     await pageA.reload()
     await expect(pageA.getByTestId('credit-balance')).toHaveText(String(s.inviterReward + g))
     await expect(pageA.getByTestId('invite-stats')).toContainText('已邀请 1 人')
+    await expect(pageA.getByTestId('invite-code')).toHaveText(code)
+
+    // D 没打开过链接（换了浏览器，cookie 没带上），注册时手动填邀请码（小写也行）
+    const ctxD = await browser.newContext()
+    const pageD = await ctxD.newPage()
+    await login(pageD, D, { invite: code.toLowerCase() })
+    await expect(pageD).toHaveURL(/\/me\/credits/)
+    await expect(pageD.getByTestId('credit-balance')).toHaveText(String(s.inviteeReward + g))
+    await ctxD.close()
+    await pageA.reload()
+    await expect(pageA.getByTestId('invite-stats')).toContainText('已邀请 2 人')
 
     // B 提交笔记：没找到链接时提示；正常提交后显示审核中
     await uploadNote(pageB, '随便写点', png)

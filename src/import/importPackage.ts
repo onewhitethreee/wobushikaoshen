@@ -206,6 +206,8 @@ export const importPackage = async (
   req: PayloadRequest,
   manifestText: string,
   readFile: ReadFile,
+  /** reuseMedia: false 时同名图片一律重新上传（029 内容接口：同一个文件名的图可能换了内容） */
+  { reuseMedia = true }: { reuseMedia?: boolean } = {},
 ): Promise<ImportResult> => {
   const { payload } = req
   let parsed: { kind?: Kind; data?: Json; publish?: boolean }
@@ -240,7 +242,7 @@ export const importPackage = async (
   const sourceIds = (Array.isArray(data) ? data : [])
     .map((d) => (d as { sourceId?: unknown }).sourceId)
     .filter((id): id is string => typeof id === 'string' && id.length >= 4)
-  const reusable = (p: string) => (kind === 'unit' || kind === 'writing') && sourceIds.some((id) => p.includes(id))
+  const reusable = (p: string) => reuseMedia && (kind === 'unit' || kind === 'writing') && sourceIds.some((id) => p.includes(id))
   const created: (number | string)[] = []
   const ids = new Map<string, number | string>()
   try {

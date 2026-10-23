@@ -5,6 +5,7 @@ import { addSessionToUser, generatePayloadCookie } from 'payload/shared'
 
 import { grantInvite, grantSignup } from '../account/credits'
 import { MailUnavailable, sendMail } from '../account/mail'
+import { INVITE_COOKIE, normalizeInviteCode } from '../account/invite'
 import { expiredLegacyCookie, memberCookiePrefix } from '../account/memberAuth'
 import { checkRate, clientIp, isEmail, issue, normalizeEmail, verify } from '../account/codes'
 import { clearFailures, ipLimited, lockedFor, recordFailure, verifyHash } from '../account/password'
@@ -71,7 +72,6 @@ const sendCode: Endpoint = {
   },
 }
 
-const INVITE_COOKIE = 'ybz_invite'
 const readCookie = (req: PayloadRequest, name: string) =>
   req.headers
     .get('cookie')
@@ -117,18 +117,20 @@ const verifyCode: Endpoint = {
       }
     }
 
-    // 邀请（011 research R5）：只有这次新建了账号才算；发放失败不影响登录
-    const inviteCode = readCookie(req, INVITE_COOKIE)
+    // 邀请（011 research R5）：只有这次新建了账号才算；发放失败不影响登录。
+    // 登录页填的码优先；没填或填错（查不到邀请人），再用邀请链接留下的 cookie
+    const cookieCode = readCookie(req, INVITE_COOKIE)
+    const codes = [...new Set([normalizeInviteCode(body.invite), normalizeInviteCode(cookieCode)].filter(Boolean))]
     let invite: { amount: number; inviterRewarded: boolean } | null = null
-    if (created && inviteCode) {
+    if (created) {
       try {
-        invite = await grantInvite(payload, { inviteeId: id, code: decodeURIComponent(inviteCode) })
+        for (const code of codes) if (!invite) invite = await grantInvite(payload, { inviteeId: id, code })
       } catch (err) {
         payload.logger.error({ err, msg: '邀请奖励发放失败' })
       }
     }
 
-    if (inviteCode) headers.append('Set-Cookie', `${INVITE_COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
+    if (cookieCode) headers.append('Set-Cookie', `${INVITE_COOKIE}=; Max-Age=0; Path=/; HttpOnly; SameSite=Lax`)
     return Response.json(
       { ok: true, email: maskEmail(email), created, ...(signup ? { signup } : {}), ...(invite?.amount ? { invite } : {}) },
       { headers },

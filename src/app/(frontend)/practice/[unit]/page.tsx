@@ -14,15 +14,17 @@ import { getPracticeUnit, latestUnitId } from '@/content/practiceUnit'
 
 const load = cache(getPracticeUnit)
 
-type Props = { params: Promise<{ unit: string }> }
+type Props = { params: Promise<{ unit: string }>; searchParams: Promise<{ pick?: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const unit = await load((await params).unit)
   return { title: unit?.title ?? '没找到这组题' }
 }
 
-export default async function Page({ params }: Props) {
+export default async function Page({ params, searchParams }: Props) {
   const id = (await params).unit
+  // 030：从"随机一题"进来时带着抽题范围（PracticeView 里校验）
+  const { pick } = await searchParams
   const latest = /^latest-([lr])1$/.exec(id)
   if (latest) {
     const m = latest[1] as 'l' | 'r'
@@ -62,7 +64,7 @@ export default async function Page({ params }: Props) {
           </div>
         </div>
       </section>
-      <PracticeView unit={unit} />
+      <PracticeView pickScope={pick} unit={unit} />
     </>
   )
 }

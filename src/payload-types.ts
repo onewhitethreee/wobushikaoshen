@@ -150,6 +150,7 @@ export interface Config {
     'ai-settings': AiSetting;
     'mail-settings': MailSetting;
     'credit-settings': CreditSetting;
+    'content-api-settings': ContentApiSetting;
   };
   globalsSelect: {
     header: HeaderSelect<false> | HeaderSelect<true>;
@@ -158,6 +159,7 @@ export interface Config {
     'ai-settings': AiSettingsSelect<false> | AiSettingsSelect<true>;
     'mail-settings': MailSettingsSelect<false> | MailSettingsSelect<true>;
     'credit-settings': CreditSettingsSelect<false> | CreditSettingsSelect<true>;
+    'content-api-settings': ContentApiSettingsSelect<false> | ContentApiSettingsSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1240,7 +1242,9 @@ export interface Unit {
    * 完整题集名，多个用逗号分隔；只在后台可见
    */
   sourceSets?: string | null;
-  sourceTag?: ('9月高频' | '9月中频' | '10月高频' | '10月中频' | '全年高频' | '增补') | null;
+  sourceTag?: ('9月高频' | '9月中频' | '10月高频' | '10月中频' | '全年高频' | '增补' | '每日精选') | null;
+  sourceUrl?: string | null;
+  viaApi?: boolean | null;
   summary?:
     | {
         [k: string]: unknown;
@@ -2343,6 +2347,8 @@ export interface UnitsSelect<T extends boolean = true> {
   sourceId?: T;
   sourceSets?: T;
   sourceTag?: T;
+  sourceUrl?: T;
+  viaApi?: T;
   summary?: T;
   pendingCount?: T;
   paraphrases?: T;
@@ -2642,6 +2648,10 @@ export interface Header {
  */
 export interface Footer {
   id: number;
+  /**
+   * 显示在页脚，考生反馈题目错误、版权方投诉都发到这里；留空不显示
+   */
+  contactEmail?: string | null;
   navItems?:
     | {
         link: {
@@ -2782,6 +2792,23 @@ export interface CreditSetting {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "content-api-settings".
+ */
+export interface ContentApiSetting {
+  id: number;
+  keyHash?: string | null;
+  keyLast4?: string | null;
+  keyCreatedAt?: string | null;
+  lastUsedAt?: string | null;
+  /**
+   * 每天（北京时间）最多新建多少个单元；0 = 暂停接收。更新已有单元不计
+   */
+  dailyLimit: number;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
@@ -2808,6 +2835,7 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
+  contactEmail?: T;
   navItems?:
     | T
     | {
@@ -2915,6 +2943,20 @@ export interface CreditSettingsSelect<T extends boolean = true> {
   inviteeReward?: T;
   inviterCap?: T;
   noteDefault?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "content-api-settings_select".
+ */
+export interface ContentApiSettingsSelect<T extends boolean = true> {
+  keyHash?: T;
+  keyLast4?: T;
+  keyCreatedAt?: T;
+  lastUsedAt?: T;
+  dailyLimit?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -17,6 +17,8 @@ export const SOURCE_TAGS = [
   '10月中频',
   '全年高频',
   '增补',
+  // 029 内容接口上传的阅读（站长另一个 AI 每日取材改写）
+  '每日精选',
 ] as const
 
 const isListening = (data: Partial<UnitData> | undefined) => data?.module === 'listening'
@@ -121,6 +123,23 @@ export const Units: CollectionConfig = {
       type: 'select',
       options: SOURCE_TAGS.map((t) => ({ label: t, value: t })),
       admin: { position: 'sidebar' },
+    },
+    {
+      // 029：取材原文（宪章 III 来源可追溯）；接口上传时必填，其余单元可空
+      name: 'sourceUrl',
+      label: '原文链接',
+      type: 'text',
+      validate: (v: unknown) => !v || /^https?:\/\/\S+$/i.test(String(v)) || '原文链接必须是 http:// 或 https:// 开头的网址',
+      admin: { position: 'sidebar' },
+    },
+    {
+      // 029：由内容接口新建；接口只能更新这类单元
+      name: 'viaApi',
+      label: '来自接口',
+      type: 'checkbox',
+      defaultValue: false,
+      index: true,
+      admin: { position: 'sidebar', readOnly: true },
     },
     {
       // 栏目页用的题组摘要 [{ type, count, range }]，保存时由 groups 算出；栏目只读它，不读每道小题
