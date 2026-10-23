@@ -5,7 +5,7 @@ import { loadAi } from '../ai/chat'
 import { countWords } from '../exam/scoring'
 import type { WritingReview, WritingTask } from '../payload-types'
 import { charge } from '../review/charge'
-import { essayHash, expireStale, LIMITS, normalizeEssay, runReview } from '../review/writing'
+import { essayHash, expireStale, LIMITS, MAX_CHARS, normalizeEssay, runReview } from '../review/writing'
 
 // 写作批改（015 contracts/api.md）：只认考生登录；记录只能经这里读写
 const fail = (error: string, status: number, extra: object = {}) => Response.json({ error, ...extra }, { status })
@@ -42,6 +42,7 @@ const submit: Endpoint = {
       : undefined
     if (!task) return fail('题目不存在', 404)
     if (task.taskType === 'task1' && !task.chartData?.trim()) return fail('not_reviewable', 409)
+    if (essay.length > MAX_CHARS) return fail('too_long', 400, { max: MAX_CHARS })
     const words = countWords(essay)
     const { min, max } = LIMITS[task.taskType]
     if (words < min || words > max) return fail('words', 400, { min, max, words })

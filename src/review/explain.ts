@@ -17,6 +17,8 @@ export { answerKey, cacheKey, isWrong } from './explainKey'
 // 错题讲解（015 research R6）：服务端取题判错，按题 + 单元版本 + 错误答案缓存；每次扣 1，本人再看不扣
 const AI_TIMEOUT = 60_000
 const CONTEXT_MAX = 12_000
+// 作答原样进提示词和缓存键：不限长时，超长答案让唯一索引写入失败（btree 单行约 2.7KB），AI 已付费却走退回，可无限白嫖；真实作答远小于这个数
+export const ANSWER_MAX = 200
 
 type Question = GroupView['questions'][number]
 type Found = { section: Section; group: GroupView; q: Question }
@@ -130,6 +132,7 @@ export const explain = async (
   memberId: number,
   { unitId, number, answer }: { unitId: string; number: number; answer: Given | undefined },
 ): Promise<Out> => {
+  if (answerKey(answer).length > ANSWER_MAX) return { status: 400, json: { error: 'answer_too_long' } }
   const unit = await getPracticeUnit(unitId)
   const f = unit && findQuestion(unit, number)
   if (!unit || !f) return { status: 404, json: { error: '题目不存在' } }

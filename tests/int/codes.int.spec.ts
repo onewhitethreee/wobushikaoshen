@@ -3,7 +3,7 @@ import { getPayload, type Payload } from 'payload'
 import config from '@/payload.config'
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
-import { checkRate, hashCode, issue, MAX_ATTEMPTS, newCode, normalizeEmail, verify } from '@/account/codes'
+import { checkRate, hashCode, issue, MAX_ATTEMPTS, newCode, normalizeEmail, reserveSend, verify } from '@/account/codes'
 
 let payload: Payload
 const E = 'e2e-codes@example.test'
@@ -102,6 +102,11 @@ describe('限频', () => {
     for (let i = 0; i < 20; i++) await fakeSend(`e2e-codes-${i}@example.test`, '203.0.113.9', 120_000)
     expect(await checkRate(payload, 'e2e-codes-new@example.test', '203.0.113.9')).not.toBeNull()
     expect(await checkRate(payload, 'e2e-codes-new@example.test', '198.51.100.7')).toBeNull()
+  })
+
+  it('同一邮箱并发 10 个请求，只占到 1 个发信名额', async () => {
+    const r = await Promise.all(Array.from({ length: 10 }, () => reserveSend(payload, E, '198.51.100.1')))
+    expect(r.filter((x) => 'logId' in x)).toHaveLength(1)
   })
 
   // 放在这个文件里而不是 security.int.spec.ts：同一文件内按顺序执行，200 条刷信记录不会干扰别的限频测试（010 A4）

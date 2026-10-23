@@ -102,6 +102,7 @@ export const ReviewPanel: React.FC<{ taskId: number; taskType: 'task1' | 'task2'
     if (res?.status === 401) return window.location.assign(`/login?next=${encodeURIComponent(`/writing/${taskId}#review`)}`)
     if (d.error === 'balance') return setState({ kind: 'confirm', balance: 0 })
     if (d.error === 'words') return fail(`至少写 ${d.min} 词、最多 ${d.max} 词再批改（现在 ${d.words} 词）`, '')
+    if (d.error === 'too_long') return fail(`作文太长，最多 ${d.max} 个字符`, '')
     if (d.error === 'rate') return fail('操作太频繁，请稍后再试', '操作太频繁，请稍后再试')
     if (d.error === 'not_reviewable') return fail('这道题暂时不能批改', '这道题暂时不能批改')
     fail('批改暂时不可用，没有扣额度', '批改暂时不可用')

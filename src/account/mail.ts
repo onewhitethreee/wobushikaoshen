@@ -7,7 +7,8 @@ import type { MailSetting } from '@/payload-types'
 
 type Which = 'primary' | 'backup'
 type Smtp = NonNullable<MailSetting['primary']>
-export type Mail = { to: string; subject: string; text: string; kind: 'code' | 'test'; ip?: string }
+// logId：限频时已占好的发信记录（codes.ts 的 reserveSend），发完改写它，不另建
+export type Mail = { to: string; subject: string; text: string; kind: 'code' | 'test'; ip?: string; logId?: number }
 
 export class MailUnavailable extends Error {}
 
@@ -46,12 +47,12 @@ const recordFailure = (payload: Payload, which: Which, error: string) =>
     .updateGlobal({ slug: 'mail-settings', overrideAccess: true, data: { [which]: { lastError: error, lastErrorAt: new Date().toISOString() } } })
     .catch((e) => payload.logger.error({ err: e }, '记录发信失败原因时出错'))
 
-const log = (payload: Payload, mail: Mail, via: Which | 'none', error?: string) =>
-  payload.create({
-    collection: 'email-sends',
-    overrideAccess: true,
-    data: { email: mail.to, ip: mail.ip, kind: mail.kind, via, ok: via !== 'none', error },
-  })
+const log = (payload: Payload, mail: Mail, via: Which | 'none', error?: string) => {
+  const data = { email: mail.to, ip: mail.ip, kind: mail.kind, via, ok: via !== 'none', error }
+  return mail.logId
+    ? payload.update({ collection: 'email-sends', id: mail.logId, overrideAccess: true, data })
+    : payload.create({ collection: 'email-sends', overrideAccess: true, data })
+}
 
 /** 依次试已启用的主用、备用；都失败抛 MailUnavailable。返回实际发出的那一套 */
 export const sendMail = async (payload: Payload, mail: Mail): Promise<Which> => {

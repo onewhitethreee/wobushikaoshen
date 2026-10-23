@@ -7,7 +7,7 @@ import { grantInvite, grantSignup } from '../account/credits'
 import { MailUnavailable, sendMail } from '../account/mail'
 import { INVITE_COOKIE, normalizeInviteCode } from '../account/invite'
 import { expiredLegacyCookie, memberCookiePrefix } from '../account/memberAuth'
-import { checkRate, clientIp, isEmail, issue, normalizeEmail, verify } from '../account/codes'
+import { clientIp, isEmail, issue, normalizeEmail, reserveSend, verify } from '../account/codes'
 import { clearFailures, ipLimited, lockedFor, recordFailure, verifyHash } from '../account/password'
 
 // 邮箱验证码登录（009 contracts/api.md）与密码登录（012 contracts/api.md）。登录成功后用 Payload 自带的令牌与 cookie，
@@ -44,14 +44,15 @@ const sendCode: Endpoint = {
     const email = normalizeEmail((await json(req)).email)
     if (!isEmail(email)) return fail('邮箱格式不对', 400)
     const ip = clientIp(req)
-    const retryIn = await checkRate(req.payload, email, ip)
-    if (retryIn) return fail('操作太频繁，请稍后再试', 429, { retryIn })
+    const slot = await reserveSend(req.payload, email, ip)
+    if ('retryIn' in slot) return fail('操作太频繁，请稍后再试', 429, { retryIn: slot.retryIn })
 
     const code = await issue(req.payload, email)
     try {
       await sendMail(req.payload, {
         to: email,
         ip,
+        logId: slot.logId,
         kind: 'code',
         subject: `我不是考神 登录验证码：${code}`,
         text: [

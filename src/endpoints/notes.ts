@@ -3,12 +3,15 @@ import { addDataAndFileToRequest, type Endpoint } from 'payload'
 
 import { getSettings } from '../account/credits'
 import { parseNote } from '../account/xhs'
+import { serialQueue } from '../utilities/serial'
 
 // 提交小红书笔记（011 contracts/api.md、research R7）：链接 + 截图必填。
 // 考生不能直接写 note-submissions / note-screenshots（create 只给管理员），只能走这里
 const MAX_FILE = 5 * 1024 * 1024
 const MAX_PENDING = 3
 const TYPES: Record<string, string> = { 'image/jpeg': '.jpg', 'image/png': '.png', 'image/webp': '.webp' }
+
+const queue = serialQueue()
 
 const fail = (error: string, status: number) => Response.json({ error }, { status })
 
@@ -32,23 +35,26 @@ export const notesEndpoint: Endpoint = {
 
     const { payload } = req
     const memberId = user.id as number
-    const [pending, dup] = await Promise.all([
-      payload.count({ collection: 'note-submissions', overrideAccess: true, where: { member: { equals: memberId }, status: { equals: 'pending' } } }),
-      payload.count({ collection: 'note-submissions', overrideAccess: true, where: { noteKey: { equals: note.key }, status: { in: ['pending', 'approved'] } } }),
-    ])
-    if (pending.totalDocs >= MAX_PENDING) return fail(`还有 ${MAX_PENDING} 条在审核中，审核后再提交`, 429)
-    if (dup.totalDocs) return fail('这篇笔记已经提交过', 409)
+    // 查"待审数、是否重复"和写入排队执行：原来并发提交能同时通过检查，绕过 3 条上限、重复提交同一篇
+    return queue(async () => {
+      const [pending, dup] = await Promise.all([
+        payload.count({ collection: 'note-submissions', overrideAccess: true, where: { member: { equals: memberId }, status: { equals: 'pending' } } }),
+        payload.count({ collection: 'note-submissions', overrideAccess: true, where: { noteKey: { equals: note.key }, status: { in: ['pending', 'approved'] } } }),
+      ])
+      if (pending.totalDocs >= MAX_PENDING) return fail(`还有 ${MAX_PENDING} 条在审核中，审核后再提交`, 429)
+      if (dup.totalDocs) return fail('这篇笔记已经提交过', 409)
 
-    // 随机文件名：不把考生电脑上的原文件名带进来
-    file.name = randomBytes(12).toString('hex') + ext
-    const settings = await getSettings(payload)
-    const shot = await payload.create({ collection: 'note-screenshots', overrideAccess: true, req, data: { member: memberId }, file })
-    const doc = await payload.create({
-      collection: 'note-submissions',
-      overrideAccess: true,
-      req,
-      data: { member: memberId, url: note.url, noteKey: note.key, screenshot: shot.id, remark, status: 'pending', amount: settings.noteDefault },
+      // 随机文件名：不把考生电脑上的原文件名带进来
+      file.name = randomBytes(12).toString('hex') + ext
+      const settings = await getSettings(payload)
+      const shot = await payload.create({ collection: 'note-screenshots', overrideAccess: true, req, data: { member: memberId }, file })
+      const doc = await payload.create({
+        collection: 'note-submissions',
+        overrideAccess: true,
+        req,
+        data: { member: memberId, url: note.url, noteKey: note.key, screenshot: shot.id, remark, status: 'pending', amount: settings.noteDefault },
+      })
+      return Response.json({ ok: true, id: doc.id }, { status: 201 })
     })
-    return Response.json({ ok: true, id: doc.id }, { status: 201 })
   },
 }

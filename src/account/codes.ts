@@ -3,6 +3,8 @@ import { createHmac, randomInt, timingSafeEqual } from 'crypto'
 import { sql } from '@payloadcms/db-postgres'
 import type { Payload, PayloadRequest } from 'payload'
 
+import { serialQueue } from '../utilities/serial'
+
 export const CODE_TTL_MS = 10 * 60 * 1000
 export const MAX_ATTEMPTS = 5
 export const RESEND_MS = 60 * 1000
@@ -55,6 +57,20 @@ export const checkRate = async (payload: Payload, email: string, ip: string): Pr
   if ((await countSends(payload, null, '', 3600_000)) >= ALL_HOUR) return 600
   return null
 }
+
+const queue = serialQueue()
+
+/**
+ * 查限频并当场占一条发信记录，发信结果出来后由 mail.ts 改写这条。
+ * 原来发完才写记录，SMTP 那几秒里并发请求都按旧计数放行，所有上限都能一起打穿；现在排队查、查完就占位
+ */
+export const reserveSend = (payload: Payload, email: string, ip: string) =>
+  queue(async (): Promise<{ retryIn: number } | { logId: number }> => {
+    const retryIn = await checkRate(payload, email, ip)
+    if (retryIn) return { retryIn }
+    const doc = await payload.create({ collection: 'email-sends', overrideAccess: true, data: { email, ip, kind: 'code', via: 'none', ok: false } })
+    return { logId: doc.id as number }
+  })
 
 /** 作废同邮箱的旧码，存新码，顺手清理过期数据。返回验证码明文（只用于写进邮件） */
 export const issue = async (payload: Payload, email: string) => {

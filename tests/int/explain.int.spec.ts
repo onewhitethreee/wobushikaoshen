@@ -39,3 +39,11 @@ describe('explainOrder', () => {
     ])
   })
 })
+
+describe('explain 作答限长', () => {
+  it('超长作答在扣费、查题之前就拒绝', async () => {
+    const { explain, ANSWER_MAX } = await import('@/review/explain')
+    const r = await explain({} as never, 1, { unitId: 'x', number: 1, answer: 'a'.repeat(ANSWER_MAX + 1) })
+    expect(r).toEqual({ status: 400, json: { error: 'answer_too_long' } })
+  })
+})

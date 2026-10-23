@@ -74,16 +74,23 @@ export const purposeOf = (refKey: string | null | undefined) => {
   return m ? (m[1] as keyof typeof USES) : undefined
 }
 
-export type SpendResult = { ok: true; id: number } | { ok: false; reason: 'balance' | 'duplicate' }
+export type SpendResult = { ok: true; id: number } | { ok: false; reason: 'balance' | 'duplicate' | 'daily' }
 
-// 扣减：余额不足或 refKey 已用过都不写流水（宪章 I：先扣再调用 AI）。refKey 冲突 = 同一次请求重复到达（015 research R3）
+// 扣减：余额不足或 refKey 已用过都不写流水（宪章 I：先扣再调用 AI）。refKey 冲突 = 同一次请求重复到达（015 research R3）。
+// dailyMax：近 24 小时扣费条数上限，退回的也算，在锁内数，并发也不会超
 export const spend = async (
   payload: Payload,
-  { memberId, amount, refKey, note }: { memberId: number; amount: number; refKey?: string; note?: string },
+  { memberId, amount, refKey, note, dailyMax }: { memberId: number; amount: number; refKey?: string; note?: string; dailyMax?: number },
 ): Promise<SpendResult> => {
   if (!Number.isInteger(amount) || amount <= 0) throw new Error('扣减数必须是正整数')
   return drizzle(payload).transaction(async (tx) => {
     await lockMember(tx, memberId)
+    if (dailyMax) {
+      const { rows } = await tx.execute(sql`
+        SELECT COUNT(*) AS n FROM credit_entries
+        WHERE member_id = ${memberId} AND reason = 'spend' AND created_at > now() - interval '24 hours'`)
+      if (Number(rows[0].n) >= dailyMax) return { ok: false, reason: 'daily' }
+    }
     if ((await sumOf(tx, memberId)) < amount) return { ok: false, reason: 'balance' }
     const id = await insert(tx, { memberId, amount: -amount, reason: 'spend', refKey, note })
     return id ? { ok: true, id } : { ok: false, reason: 'duplicate' }

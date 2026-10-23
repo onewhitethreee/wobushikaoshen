@@ -5,7 +5,7 @@ import { getPayload, type Payload } from 'payload'
 import config from '@/payload.config'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { balance, grant, refund } from '@/account/credits'
+import { balance, grant, refund, spend } from '@/account/credits'
 import { charge } from '@/review/charge'
 import { essayHash, expireStale, overall, parseResult } from '@/review/writing'
 import { cacheKey, evidenceText, isWrong } from '@/review/explain'
@@ -71,6 +71,23 @@ describe('charge / refund', () => {
     expect(await charge(payload, { memberId: m.id, prefix: `t:${m.id}:r5` })).toMatchObject({ ok: false, reason: 'rate' })
     expect(await balance(payload, m.id)).toBe(5)
     expect(await sum(m.id)).toBe(5)
+  })
+
+  it('并发 10 次不同前缀：每分钟限频照样只放 5 次', async () => {
+    const m = await mk(10)
+    const rs = await Promise.all(Array.from({ length: 10 }, (_, i) => charge(payload, { memberId: m.id, prefix: `t:${m.id}:p${i}` })))
+    expect(rs.filter((r) => r.ok)).toHaveLength(5)
+    expect(await balance(payload, m.id)).toBe(5)
+  })
+
+  it('24 小时扣费条数到上限后拒绝，退回的也算；并发也不超', async () => {
+    const m = await mk(10)
+    const first = await spend(payload, { memberId: m.id, amount: 1, refKey: `t:${m.id}:d0`, dailyMax: 3 })
+    if (!first.ok) throw new Error('扣费失败')
+    await refund(payload, first.id)
+    const rs = await Promise.all([1, 2, 3].map((i) => spend(payload, { memberId: m.id, amount: 1, refKey: `t:${m.id}:d${i}`, dailyMax: 3 })))
+    expect(rs.filter((r) => r.ok)).toHaveLength(2)
+    expect(rs.filter((r) => !r.ok && r.reason === 'daily')).toHaveLength(1)
   })
 })
 

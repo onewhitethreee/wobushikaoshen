@@ -20,6 +20,8 @@ export type ReviewResult = {
 
 export const KEYS: Record<TaskType, string[]> = { task1: ['TA', 'CC', 'LR', 'GRA'], task2: ['TR', 'CC', 'LR', 'GRA'] }
 export const LIMITS: Record<TaskType, { min: number; max: number }> = { task1: { min: 50, max: 1000 }, task2: { min: 80, max: 1000 } }
+// 只限词数不够：一个"词"可以很长，1000 词能塞满模型上下文。正常写满 1000 词约 6–7k 字符
+export const MAX_CHARS = 12_000
 const AI_TIMEOUT = 120_000
 export const STALE_MS = 3 * 60_000
 

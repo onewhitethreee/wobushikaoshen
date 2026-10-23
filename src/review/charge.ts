@@ -8,6 +8,8 @@ import { spend, type SpendResult } from '@/account/credits'
 
 const WINDOW = 60_000
 const MAX_PER_WINDOW = 5
+// 每人每 24 小时最多扣几次（退回的也算）：失败就退回，只靠每分钟限频的话一点额度一天能调 7000 多次 AI
+export const DAILY_MAX = 100
 // ponytail: 计数在进程内存里，重启清零；单进程部署（宪章 V）够用，多进程时改查流水表
 const recent = new Map<number, number[]>()
 
@@ -17,7 +19,7 @@ export const rateLimited = (memberId: number, now = Date.now()) => {
   return hits.length >= MAX_PER_WINDOW
 }
 
-export type ChargeResult = (SpendResult | { ok: false; reason: 'rate' }) & { refKey: string }
+export type ChargeResult = (Exclude<SpendResult, { reason: 'daily' }> | { ok: false; reason: 'rate' }) & { refKey: string }
 
 export const charge = async (
   payload: Payload,
@@ -30,8 +32,13 @@ export const charge = async (
   })
   const refKey = `${prefix}:${n}`
   if (rateLimited(memberId)) return { ok: false, reason: 'rate', refKey }
-  const r = await spend(payload, { memberId, amount: 1, refKey, note })
+  // 先占位再 await：原来扣费成功后才记，并发请求都能通过上面的检查
+  const hits = recent.get(memberId)!
+  const t = Date.now()
+  hits.push(t)
+  const r = await spend(payload, { memberId, amount: 1, refKey, note, dailyMax: DAILY_MAX })
   // 只记成功扣费：连点产生的 duplicate、余额不足都不算，免得把自己锁住
-  if (r.ok) recent.get(memberId)!.push(Date.now())
-  return { ...r, refKey }
+  if (!r.ok) hits.splice(hits.indexOf(t), 1)
+  if (!r.ok && r.reason === 'daily') return { ok: false, reason: 'rate', refKey }
+  return { ...r, refKey } as ChargeResult
 }

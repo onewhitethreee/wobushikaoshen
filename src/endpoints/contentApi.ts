@@ -8,6 +8,7 @@ import { lastDays, quota } from '../contentApi/quota'
 import { checkRequest, decodeFiles, MAX_BODY } from '../contentApi/request'
 import { importPackage } from '../import/importPackage'
 import { getServerSideURL } from '../utilities/getURL'
+import { serialQueue } from '../utilities/serial'
 
 // 029 内容接口（specs/029-content-api/contracts/api.md）：站长另一个 AI 用密钥上传 / 查询阅读单元；
 // 后台三个接口只认管理员，用来生成 / 停用密钥和看统计。密钥只能调这里的接口，不是 Payload 账号
@@ -71,14 +72,8 @@ const publicState = (s: State) => {
   return rest
 }
 
-// 上传串行执行：查重、数每日额度、写入之间不会被另一个请求插队，并发时不会超额。
-// ponytail: 进程内的 Promise 链，只适用于单进程（宪章 V）；改多进程时换 Postgres advisory lock
-let chain: Promise<unknown> = Promise.resolve()
-const serial = <T>(fn: () => Promise<T>): Promise<T> => {
-  const run = chain.then(fn, fn)
-  chain = run.catch(() => undefined)
-  return run
-}
+// 上传串行执行：查重、数每日额度、写入之间不会被另一个请求插队，并发时不会超额
+const serial = serialQueue()
 
 const upload: Endpoint = {
   path: '/content-api/units',
