@@ -8,6 +8,7 @@ import { listeningType, readingType } from '@/exam/typeNames'
 import { categoryLabel, WRITING_CATEGORIES } from '@/exam/writingCategories'
 import { getRandomPool } from '@/content/mockPaper'
 import { SLOTS } from '@/exam/mock'
+import { API_TAG } from '@/contentApi/request'
 import type { MockPaper, SpeakingQuestion, Test, Unit, WritingTask } from '@/payload-types'
 import {
   columns as sample,
@@ -44,7 +45,7 @@ const published = async <T>(collection: keyof typeof SORT, module?: 'listening' 
     sort: SORT[collection],
     // 单元只取列表要用的字段：不读原文 / 文章，也不读题组小题（用保存时算好的 summary；读小题在开发模式下要 5 秒以上）
     ...(collection === 'units'
-      ? { select: { title: true, module: true, part: true, sourceTag: true, summary: true } }
+      ? { select: { title: true, module: true, part: true, sourceTag: true, summary: true, createdAt: true } }
       : {}),
     pagination: false,
   })
@@ -58,7 +59,11 @@ const testColumn = (slug: 'listening' | 'reading', tests: Test[], units: Unit[])
   const rows: PracticeRow[] = []
 
   // 练习单元（007）：每个题组一行 + 整篇 / 整个 Part 一行；题集只用中性标签 sourceTag
-  for (const u of units.filter((x) => x.module === slug)) {
+  // 每日精选（029）排最前、新的在上，其余照旧按标题
+  const daily = (u: Unit) => u.sourceTag === API_TAG
+  const mine = units.filter((x) => x.module === slug)
+  const ordered = [...mine.filter(daily).sort((a, b) => b.createdAt.localeCompare(a.createdAt)), ...mine.filter((u) => !daily(u))]
+  for (const u of ordered) {
     const label = `${isL ? 'Part' : 'Passage'} ${u.part}`
     const lead = `${isL ? 'P' : 'R'}${u.part}`
     const tag: Record<string, string> = u.sourceTag ? { tag: u.sourceTag } : {}

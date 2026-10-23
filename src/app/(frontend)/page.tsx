@@ -11,6 +11,7 @@ import { HeroTiles } from '@/components/Journal/HeroTiles'
 import { MockBand } from '@/components/Journal/MockBand'
 import { StartForm } from '@/components/Journal/StartForm'
 import { TodayPlan } from '@/components/Plan/TodayPlan'
+import { API_TAG } from '@/contentApi/request'
 import { getColumn } from '@/content/columns'
 import { home, type PracticeRow } from '@/sample'
 import { cn } from '@/utilities/ui'
@@ -34,7 +35,15 @@ const picks = (rows: PracticeRow[]) => {
 
 export default async function HomePage() {
   const payload = await getPayload({ config: configPromise })
-  const [posts, ...cols] = await Promise.all([
+  const [daily, posts, ...cols] = await Promise.all([
+    payload.find({
+      collection: 'units',
+      where: { _status: { equals: 'published' }, sourceTag: { equals: API_TAG } },
+      sort: '-createdAt',
+      limit: 3,
+      depth: 0,
+      select: { title: true, createdAt: true },
+    }),
     payload.find({
       collection: 'posts',
       where: { _status: { equals: 'published' } },
@@ -65,6 +74,37 @@ export default async function HomePage() {
         </div>
         <HeroTiles className="min-w-0 flex-[1.2_1_520px]" />
       </section>
+
+      {/* 029 每日精选：最新三篇，没有就不显示 */}
+      {daily.docs.length > 0 && (
+        <section aria-labelledby="daily-title" className="mt-8 border border-border p-[clamp(20px,3vw,32px)]" data-testid="daily">
+          <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+            <h2 className="text-2xl font-medium tracking-[-0.01em]" id="daily-title">
+              每日精选阅读
+            </h2>
+            <span className="text-sm text-muted-foreground">
+              每天更新新文章 · 最近更新{' '}
+              {new Date(daily.docs[0]!.createdAt).toLocaleDateString('zh-CN', { month: 'long', day: 'numeric', timeZone: 'Asia/Shanghai' })}
+            </span>
+          </div>
+          <ul className="mt-3 flex flex-col">
+            {daily.docs.map((u) => (
+              <li key={u.id}>
+                <Link className="group flex min-h-11 items-baseline justify-between gap-4 py-1.5" href={`/practice/u${u.id}`}>
+                  <span className="font-medium group-hover:underline underline-offset-4">{u.title}</span>
+                  <span className="shrink-0 text-[13px] text-muted-foreground">开始练习</span>
+                </Link>
+              </li>
+            ))}
+            <li>
+              <Link className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold hover:underline underline-offset-4" href={`/reading?tag=${encodeURIComponent(API_TAG)}`}>
+                看全部每日精选
+                <ArrowUpRight aria-hidden="true" className="size-4" strokeWidth={2} />
+              </Link>
+            </li>
+          </ul>
+        </section>
+      )}
 
       {/* 024 今日任务：考试倒计时、每日题量、背单词、打卡 */}
       <div className="mt-8">

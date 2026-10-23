@@ -3,6 +3,7 @@ import Link from 'next/link'
 import React from 'react'
 
 import type { ColumnConfig } from '@/sample'
+import { API_TAG } from '@/contentApi/request'
 
 import { ProgressPanel } from '@/components/Progress/ProgressPanel'
 
@@ -57,6 +58,11 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> 
       {config.slug === 'listening' && (
         <Link className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-semibold underline-offset-4 hover:underline" data-testid="radio-entry" href="/listening/play">
           磨耳朵：连着听一个题集 <ArrowUpRight aria-hidden="true" className="size-4" />
+        </Link>
+      )}
+      {config.slug === 'reading' && config.tabs.some((t) => t.filters.some((f) => f.id === 'tag' && f.options.includes(API_TAG))) && (
+        <Link className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-semibold underline-offset-4 hover:underline" data-testid="daily-entry" href={`/reading?tag=${encodeURIComponent(API_TAG)}`}>
+          每日精选：每天更新新文章 <ArrowUpRight aria-hidden="true" className="size-4" />
         </Link>
       )}
       {(config.slug === 'listening' || config.slug === 'reading') && <ProgressPanel foldable module={config.slug} />}
