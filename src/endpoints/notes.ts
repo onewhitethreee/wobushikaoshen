@@ -2,10 +2,11 @@ import { randomBytes } from 'crypto'
 import { addDataAndFileToRequest, type Endpoint } from 'payload'
 
 import { getSettings } from '../account/credits'
-import { parseNote } from '../account/xhs'
+import { platformName } from '../account/notePlatform'
+import { parseLink, parseNote } from '../account/xhs'
 import { serialQueue } from '../utilities/serial'
 
-// 提交小红书笔记（011 contracts/api.md、research R7）：链接 + 截图必填。
+// 提交笔记（011 contracts/api.md、research R7）：链接 + 截图必填。平台按「额度设置」（032）：关闭则拒绝，其他平台认任意 https 链接。
 // 考生不能直接写 note-submissions / note-screenshots（create 只给管理员），只能走这里
 const MAX_FILE = 5 * 1024 * 1024
 const MAX_PENDING = 3
@@ -21,10 +22,14 @@ export const notesEndpoint: Endpoint = {
   handler: async (req) => {
     const user = req.user
     if (user?.collection !== 'members') return fail('请先登录', 401)
+    const settings = await getSettings(req.payload)
+    const platform = platformName(settings)
+    if (!platform) return fail('暂不开放', 403)
     await addDataAndFileToRequest(req)
     const data = (req.data ?? {}) as Record<string, unknown>
-    const note = parseNote(data.text)
-    if (!note) return fail('没找到小红书笔记链接', 400)
+    const xhs = settings.noteMode === 'xhs'
+    const note = xhs ? parseNote(data.text) : parseLink(data.text)
+    if (!note) return fail(xhs ? '没找到小红书笔记链接' : '没找到链接', 400)
     const remark = typeof data.remark === 'string' ? data.remark.trim() : ''
     if (remark.length > 200) return fail('附言不能超过 200 字', 400)
     const file = req.file
@@ -46,13 +51,12 @@ export const notesEndpoint: Endpoint = {
 
       // 随机文件名：不把考生电脑上的原文件名带进来
       file.name = randomBytes(12).toString('hex') + ext
-      const settings = await getSettings(payload)
       const shot = await payload.create({ collection: 'note-screenshots', overrideAccess: true, req, data: { member: memberId }, file })
       const doc = await payload.create({
         collection: 'note-submissions',
         overrideAccess: true,
         req,
-        data: { member: memberId, url: note.url, noteKey: note.key, screenshot: shot.id, remark, status: 'pending', amount: settings.noteDefault },
+        data: { member: memberId, url: note.url, noteKey: note.key, platform, screenshot: shot.id, remark, status: 'pending', amount: settings.noteDefault },
       })
       return Response.json({ ok: true, id: doc.id }, { status: 201 })
     })

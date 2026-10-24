@@ -2,6 +2,7 @@ import { ArrowUpRight } from 'lucide-react'
 import Link from 'next/link'
 import React from 'react'
 
+import { noteText } from '@/account/notePlatform'
 import { listeningType, readingType } from '@/content/columns'
 import type { ColumnSlug, SidebarModule } from '@/sample'
 
@@ -11,7 +12,15 @@ import { QuotaBalance } from './QuotaBalance'
 // 右栏（006 FR-054）：模考 = 明黄卡，额度 / 提示 = 米色卡，正确率不加底
 const sand = 'bg-muted px-5 py-5'
 
-export const Sidebar: React.FC<{ modules: SidebarModule[]; slug: ColumnSlug }> = ({ modules, slug }) => (
+// 提示卡里提到发笔记的那句：平台关闭时去掉，否则换成当前平台名（032 contracts/ui.md）
+const noteBody = (body: string, platform: string | null) =>
+  platform ? noteText(body, platform) : body.replace('发小红书笔记、邀请好友都能领。', '邀请好友就能领。')
+
+export const Sidebar: React.FC<{ modules: SidebarModule[]; notePlatform?: string | null; slug: ColumnSlug }> = ({
+  modules,
+  notePlatform = '小红书',
+  slug,
+}) => (
   <>
     {modules.map((m, i) => {
       if (m.kind === 'mock') {
@@ -52,7 +61,9 @@ export const Sidebar: React.FC<{ modules: SidebarModule[]; slug: ColumnSlug }> =
             </div>
             <QuotaBalance />
             <ul className="flex flex-col text-sm text-muted-foreground">
-              <li className="flex items-center gap-2 border-t border-border py-2.5">发小红书备考笔记，审核通过后发放</li>
+              {notePlatform && (
+                <li className="flex items-center gap-2 border-t border-border py-2.5">{noteText('发小红书备考笔记，审核通过后发放', notePlatform)}</li>
+              )}
               <li className="flex items-center gap-2 border-t border-border py-2.5">邀请好友注册后发放</li>
               <li className="flex items-center gap-2 border-t border-border py-2.5">购买：即将开放</li>
             </ul>
@@ -63,7 +74,7 @@ export const Sidebar: React.FC<{ modules: SidebarModule[]; slug: ColumnSlug }> =
       return (
         <section className={`${sand} text-sm text-muted-foreground`} key={i}>
           <h2 className="mb-1.5 text-[17px] font-semibold text-foreground">{m.title}</h2>
-          <p>{m.body}</p>
+          <p>{noteBody(m.body, notePlatform)}</p>
           {m.link && (
             <Link className="mt-2 inline-flex min-h-11 items-center gap-1 font-semibold text-foreground underline underline-offset-4" href={m.link.href}>
               {m.link.label}

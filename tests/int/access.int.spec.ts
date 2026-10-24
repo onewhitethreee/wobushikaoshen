@@ -138,13 +138,13 @@ const PUBLIC_READ = [
 ]
 const PRIVATE = [
   'users', 'members', 'email-sends', 'login-codes', 'member-data', 'ai-settings', 'mail-settings',
-  'credit-entries', 'redeem-codes', 'note-submissions', 'note-screenshots', 'credit-settings', 'content-api-settings', 'writing-reviews', 'answer-explanations', 'explanation-unlocks',
+  'credit-entries', 'redeem-codes', 'note-submissions', 'note-screenshots', 'credit-settings', 'content-api-settings', 'writing-reviews', 'answer-explanations', 'explanation-unlocks', 'answer-reports',
   'payload-folders', 'payload-locked-documents', 'payload-preferences', 'payload-migrations', 'payload-kv', 'payload-jobs',
 ]
 // 谁都不能经 Payload 读写（管理员也不行）：013 词典只由 /api/dict 直接查表
 const DENY_ALL = ['dict-entries']
-// 考生能读的私有集合：都只限自己的（members 上面"考生列表只看得到自己"已测，011 的三个在 credits.int.spec.ts 测）
-const MEMBER_EXTRA_READ = ['members', 'credit-entries', 'note-submissions', 'note-screenshots']
+// 考生能读的私有集合：都只限自己的（members 上面"考生列表只看得到自己"已测，011 的三个在 credits.int.spec.ts 测，031 的在 answerReport.int.spec.ts 测）
+const MEMBER_EXTRA_READ = ['members', 'credit-entries', 'note-submissions', 'note-screenshots', 'answer-reports']
 
 describe('访问矩阵', () => {
   beforeAll(async () => {

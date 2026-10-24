@@ -10,6 +10,7 @@ import { cn } from '@/utilities/ui'
 
 import { AiExplain } from './AiExplain'
 import { locateLabel, resultOf, Verdict, type Question } from './QuestionGroup'
+import { ReportAnswer } from './ReportAnswer'
 
 // 交卷后的解析面板（008 contracts/result-panel.md）：一次一道题，上一题 / 下一题连续翻。
 // 放在页面底部的固定条里、题号条上方：电脑端（lg）常驻题目栏下方、可收起；手机端点开才出现、可关闭
@@ -132,6 +133,8 @@ export const ExplainPanel: React.FC<{
           </div>
         )}
         {!r.ok && <AiExplain answer={answer} key={q.number} number={q.number} unitId={unitId} />}
+        {/* 031：判对判错都能举报；模考时 unitId 已是题组所属单元 */}
+        <ReportAnswer answer={answer} answers={r.answer} key={`r${q.number}`} number={q.number} unitId={unitId} />
       </div>
     </section>
   )

@@ -4,9 +4,10 @@ import Link from 'next/link'
 import React, { useCallback, useEffect, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
+import { noteText } from '@/account/notePlatform'
 import { cn } from '@/utilities/ui'
 
-// 我的额度（011 contracts/ui.md、016）：余额、兑换码、邀请好友、小红书笔记换额度、流水
+// 我的额度（011 contracts/ui.md、016）：余额、兑换码、邀请好友、笔记换额度（平台按「额度设置」，032）、流水
 type Entry = { id: number; at: string; reason: string; amount: number; after: number; use?: 'review' | 'explain'; note?: string }
 type Submission = { id: number; at: string; url: string; screenshot?: string; status: 'pending' | 'approved' | 'rejected'; amount?: number; reason?: string }
 type Data = {
@@ -15,17 +16,31 @@ type Data = {
   entries: Entry[]
   invite: { code: string; link: string; count: number; earned: number; cap: number; capped: boolean }
   submissions: Submission[]
+  note: { platform: string | null }
+  reports: Report[]
+}
+type Report = {
+  id: number
+  at: string
+  number: number
+  title: string
+  href: string
+  answer: string
+  status: 'pending' | 'approved' | 'rejected'
+  amount?: number
+  reason?: string
 }
 
 const REASON: Record<string, string> = {
   invite: '邀请奖励',
   invitee: '被邀请奖励',
-  note: '小红书笔记奖励',
+  note: '笔记奖励',
   spend: '使用',
   refund: '退回',
   adjust: '站长调整',
   signup: '注册赠送',
   redeem: '兑换码',
+  report: '答案举报',
 }
 
 // 扣费 / 退回的用途，与 src/account/credits.ts 的 USES 一致（那边带服务端依赖，前端不能直接引）
@@ -102,12 +117,13 @@ export const CreditsView: React.FC = () => {
 
       <Redeem onRedeemed={() => load(page)} />
       <Invite invite={data.invite} />
-      <Notes onSubmitted={() => load(page)} submissions={data.submissions} />
+      {data.note.platform && <Notes onSubmitted={() => load(page)} platform={data.note.platform} submissions={data.submissions} />}
+      {data.reports.length > 0 && <Reports reports={data.reports} />}
 
       <section className="flex flex-col gap-4">
         <H2>额度明细</H2>
         {!data.entries.length ? (
-          <p className="text-[15px] text-muted-foreground">还没有额度。邀请好友、发小红书笔记或用兑换码都能领。</p>
+          <p className="text-[15px] text-muted-foreground">{data.note.platform ? `还没有额度。邀请好友、发${data.note.platform}笔记或用兑换码都能领。` : '还没有额度。邀请好友或用兑换码都能领。'}</p>
         ) : (
           <>
             <ul className="border-t border-border">
@@ -115,7 +131,7 @@ export const CreditsView: React.FC = () => {
                 <li className="flex items-start gap-x-6 border-b border-border py-3" data-testid="credit-entry" key={e.id}>
                   <span className="min-w-0 flex-1">
                     <span className="block text-[15px]">
-                      {REASON[e.reason] ?? e.reason}
+                      {e.reason === 'note' && data.note.platform === '小红书' ? '小红书笔记奖励' : (REASON[e.reason] ?? e.reason)}
                       {e.use && ` · ${USE[e.use]}`}
                     </span>
                     <span className="text-[13px] text-muted-foreground">
@@ -243,7 +259,7 @@ const Invite: React.FC<{ invite: Data['invite'] }> = ({ invite }) => {
 
 const STATUS = { pending: '审核中', approved: '已通过', rejected: '未通过' } as const
 
-const Notes: React.FC<{ submissions: Submission[]; onSubmitted: () => void }> = ({ submissions, onSubmitted }) => {
+const Notes: React.FC<{ platform: string; submissions: Submission[]; onSubmitted: () => void }> = ({ platform, submissions, onSubmitted }) => {
   const [text, setText] = useState('')
   const [remark, setRemark] = useState('')
   const [file, setFile] = useState<File | null>(null)
@@ -281,8 +297,8 @@ const Notes: React.FC<{ submissions: Submission[]; onSubmitted: () => void }> = 
 
   return (
     <section className="flex flex-col gap-3">
-      <H2>小红书笔记换额度</H2>
-      <p className="text-[15px] text-muted-foreground">在小红书发一篇介绍本站的笔记，提交链接和截图，审核通过后发放额度。</p>
+      <H2>{noteText('小红书笔记换额度', platform)}</H2>
+      <p className="text-[15px] text-muted-foreground">{noteText('在小红书发一篇介绍本站的笔记，提交链接和截图，审核通过后发放额度。', platform)}</p>
       <form className="flex flex-col gap-2" key={formKey} onSubmit={submit}>
         <label className="text-[13px] text-muted-foreground" htmlFor="note-text">
           笔记链接（可以直接粘贴 App 里复制的分享文字）
@@ -358,3 +374,34 @@ const Notes: React.FC<{ submissions: Submission[]; onSubmitted: () => void }> = 
     </section>
   )
 }
+
+// 031：我的答案举报（contracts/ui.md）；没有记录时整块不显示
+const Reports: React.FC<{ reports: Report[] }> = ({ reports }) => (
+  <section className="flex flex-col gap-3" data-testid="my-reports">
+    <H2>我的答案举报</H2>
+    <ul className="border-t border-border">
+      {reports.map((r) => (
+        <li className="flex flex-col gap-1 border-b border-border py-3" data-testid="report-row" key={r.id}>
+          <span className="min-w-0">
+            <Link className="block text-[15px] break-words underline underline-offset-4" href={r.href}>
+              {r.title} · 第 {r.number} 题
+            </Link>
+            <span className="text-[13px] break-words text-muted-foreground">
+              {when(r.at)} · 我的作答：{r.answer || '未作答'}
+            </span>
+          </span>
+          <span
+            className={cn(
+              'text-[13px] font-medium',
+              r.status === 'approved' ? 'text-success' : r.status === 'rejected' ? 'text-error' : 'text-muted-foreground',
+            )}
+          >
+            {STATUS[r.status]}
+            {r.status === 'approved' && r.amount ? ` +${r.amount}` : ''}
+            {r.status === 'rejected' ? `：${r.reason || '未通过'}` : ''}
+          </span>
+        </li>
+      ))}
+    </ul>
+  </section>
+)

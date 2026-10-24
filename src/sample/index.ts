@@ -56,6 +56,8 @@ export type ColumnConfig = {
   sidebar: SidebarModule[]
   /** 退回示例数据时为 true，页面上标"示例数据" */
   isSample?: boolean
+  /** 笔记换额度的平台名，null = 关闭（032）；不传按小红书 */
+  notePlatform?: string | null
 }
 
 export type HomeData = {
@@ -69,7 +71,7 @@ export type HomeData = {
     moreLabel: string
   }[]
   mock: { listening: string; reading: string; result: string }
-  quotaWays: { title: string; desc: string; disabled?: boolean }[]
+  quotaWays: { title: string; desc: string; disabled?: boolean; kind?: 'note' }[]
 }
 
 const free: Cost = { kind: 'free' }
@@ -443,7 +445,7 @@ export const home: HomeData = {
   ],
   mock: { listening: '40 题 · 约 30 分钟', reading: '40 题 · 60 分钟', result: '交卷即出分' },
   quotaWays: [
-    { title: '发一篇小红书备考笔记', desc: '审核通过后发放额度' },
+    { title: '发一篇小红书备考笔记', desc: '审核通过后发放额度', kind: 'note' },
     { title: '邀请好友注册', desc: '好友用你的链接注册后发放额度' },
     { title: '直接购买', desc: '即将开放', disabled: true },
   ],

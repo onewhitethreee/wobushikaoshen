@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 import React from 'react'
 
 import { getSettings } from '@/account/credits'
+import { noteText, platformName } from '@/account/notePlatform'
 
 // 使用说明与常见问题（页脚"帮助"入口）。浓缩自 docs/user-manual.md，功能变了两边一起改；额度数字读「额度设置」
 export const revalidate = 600
@@ -32,6 +33,8 @@ const Section: React.FC<{ id: string; title: string; children: React.ReactNode }
 
 export default async function Page() {
   const s = await getSettings(await getPayload({ config: configPromise }))
+  // 笔记换额度的平台（032）：关闭时不提笔记；不是小红书时邀请那条也不提小红书
+  const platform = platformName(s)
 
   const faq: [string, React.ReactNode][] = [
     ['要花钱吗？', '不用。题库浏览、听力、阅读、写作练习、全真模考都免费，也不用注册。只有写作 AI 批改、错题 AI 讲解会调用 AI，每次用 1 额度，额度靠下面几种方式领，不能花钱买。'],
@@ -43,11 +46,11 @@ export default async function Page() {
           邀请好友：好友用新邮箱注册，好友得 {s.inviteeReward}、你得 {s.inviterReward}（你最多得 {s.inviterCap} 次）。在
           <A href="/me/credits">「我的额度」</A>复制邀请链接，或者把邀请码发给好友。
         </li>
-        <li>发一篇小红书笔记，在「我的额度」提交链接和截图，审核通过后发额度。</li>
+        {platform && <li>{noteText('发一篇小红书笔记，在「我的额度」提交链接和截图，审核通过后发额度。', platform)}</li>}
         <li>兑换码：在「我的额度」兑换。兑换码不出售。</li>
       </ul>,
     ],
-    ['好友注册了，邀请却没算上？', '好友在微信 / 小红书里打开链接、换了浏览器注册，邀请会丢。让好友注册时在登录页点"有好友的邀请码？"，填上你「我的额度」里的 8 位邀请码，就算你的邀请。只有新注册的账号算。'],
+    ['好友注册了，邀请却没算上？', `好友在${platform === '小红书' ? '微信 / 小红书' : '微信等 App '}里打开链接、换了浏览器注册，邀请会丢。让好友注册时在登录页点"有好友的邀请码？"，填上你「我的额度」里的 8 位邀请码，就算你的邀请。只有新注册的账号算。`],
     ['验证码一直收不到', '先查垃圾邮件；还是没有就过几分钟再试，或者换一个邮箱。60 秒内只能发一次，一个邮箱一天最多 10 封。'],
     ['换了设备，记录不见了', '在新设备上登录同一个邮箱。未登录时的记录只存在原来那台设备上，登录后会合并进账号。'],
     ['页面提示"本机存储不可用"', '浏览器开了隐私模式或禁用了站点数据。题照常能做，只是记录不保存；登录后记录会存到账号里。'],
@@ -55,7 +58,7 @@ export default async function Page() {
     ['模考时不小心关了页面', '重新打开那场模考接着考；时间没有停，按真实时间算。'],
     ['交卷后找不到"精听 / 听写"', '这套题没有逐句时间（老套题都没有），用不了精听。'],
     ['AI 批改的分数准吗？', 'AI 按官方公开的评分标准给分，只供参考，和真实考试可能有出入。批改失败会自动退回额度；同一篇没改过再点批改，直接显示上次的结果，不扣额度。'],
-    ['发现题目或答案有错', '用页脚的"反馈与投诉"邮箱告诉我们，写上题目所在的页面链接和题号。'],
+    ['发现题目或答案有错', '答案判错了：交卷后在解析里点"答案有问题"举报，审核通过奖励额度。题目本身有错：用页脚的"反馈与投诉"邮箱告诉我们，写上题目所在的页面链接和题号。'],
   ]
 
   return (

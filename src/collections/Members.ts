@@ -66,6 +66,8 @@ export const Members: CollectionConfig = {
         // 011：流水、笔记提交和截图随账号一起删（流水本身不允许删，这里是唯一的例外）
         await req.payload.delete({ collection: 'credit-entries', overrideAccess: true, req, where: { member: { equals: id } } })
         await req.payload.delete({ collection: 'note-submissions', overrideAccess: true, req, where: { member: { equals: id } } })
+        // 031：答案举报（member 必填，不删会挡住删除考生）
+        await req.payload.delete({ collection: 'answer-reports', overrideAccess: true, req, where: { member: { equals: id } } })
         // 删上传文档时 Payload 会一并删掉磁盘上的文件
         await req.payload.delete({ collection: 'note-screenshots', overrideAccess: true, req, where: { member: { equals: id } } })
       },

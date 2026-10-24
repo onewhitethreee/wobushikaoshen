@@ -2,8 +2,10 @@ import { sql } from '@payloadcms/db-postgres'
 import type { Endpoint } from 'payload'
 
 import { getSettings, purposeOf, redeem } from '../account/credits'
+import { platformName } from '../account/notePlatform'
 import { ensureInviteCode } from '../collections/Members'
 import { rejectText } from '../collections/NoteSubmissions'
+import { parseUnitId } from '../exam/practice'
 import { formatCode } from '../collections/RedeemCodes'
 import { getServerSideURL } from '../utilities/getURL'
 
@@ -37,19 +39,40 @@ export const creditsEndpoint: Endpoint = {
         ) t ORDER BY created_at DESC, id DESC LIMIT ${PAGE} OFFSET ${(page - 1) * PAGE}`),
     ])
 
-    const [code, settings, invited, subs] = await Promise.all([
+    const settings = await getSettings(payload)
+    // 笔记平台关闭时不返回以前的提交（032 contracts/api.md）
+    const platform = platformName(settings)
+    const [code, invited, subs, reports] = await Promise.all([
       ensureInviteCode(payload, memberId),
-      getSettings(payload),
       payload.count({ collection: 'members', overrideAccess: true, where: { invitedBy: { equals: memberId } } }),
-      payload.find({
-        collection: 'note-submissions',
-        overrideAccess: true,
-        depth: 1,
-        limit: 100,
-        sort: '-createdAt',
-        where: { member: { equals: memberId } },
-      }),
+      platform
+        ? payload.find({
+            collection: 'note-submissions',
+            overrideAccess: true,
+            depth: 1,
+            limit: 100,
+            sort: '-createdAt',
+            where: { member: { equals: memberId } },
+          })
+        : { docs: [] },
+      payload.find({ collection: 'answer-reports', overrideAccess: true, depth: 0, limit: 100, sort: '-createdAt', where: { member: { equals: memberId } } }),
     ])
+    // 031：举报的题目标题，按单元 / 套题各查一次
+    const ids = { units: new Set<number>(), tests: new Set<number>() }
+    for (const r of reports.docs) {
+      const p = parseUnitId(r.unitKey)
+      if (p) ids[p.kind === 'unit' ? 'units' : 'tests'].add(p.docId)
+    }
+    const titles = new Map<string, string>()
+    for (const c of ['units', 'tests'] as const) {
+      if (!ids[c].size) continue
+      const res = await payload.find({ collection: c, overrideAccess: true, depth: 0, limit: ids[c].size, select: { title: true }, where: { id: { in: [...ids[c]] } } })
+      for (const d of res.docs) titles.set(`${c}:${d.id}`, (d as { title?: string }).title ?? '')
+    }
+    const titleOf = (unitKey: string) => {
+      const p = parseUnitId(unitKey)
+      return (p && titles.get(`${p.kind === 'unit' ? 'units' : 'tests'}:${p.docId}`)) || unitKey
+    }
 
     return Response.json({
       balance: Number(totals.balance),
@@ -71,6 +94,19 @@ export const creditsEndpoint: Endpoint = {
         cap: settings.inviterCap,
         capped: Number(totals.rewarded) >= settings.inviterCap,
       },
+      note: { platform },
+      reports: reports.docs.map((r) => ({
+        id: r.id,
+        at: r.createdAt,
+        unitKey: r.unitKey,
+        number: r.number,
+        title: titleOf(r.unitKey),
+        href: `/practice/${r.unitKey}`,
+        answer: r.answer ?? '',
+        status: r.status,
+        amount: r.status === 'approved' ? r.amount : undefined,
+        reason: r.status === 'rejected' ? rejectText(r) : undefined,
+      })),
       submissions: subs.docs.map((s) => ({
         id: s.id,
         at: s.createdAt,

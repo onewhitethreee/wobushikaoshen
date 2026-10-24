@@ -71,7 +71,7 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> 
 
   return (
     <PracticeBrowser
-      aside={<Sidebar key="aside" modules={config.sidebar} slug={config.slug} />}
+      aside={<Sidebar key="aside" modules={config.sidebar} notePlatform={config.notePlatform} slug={config.slug} />}
       config={config}
       header={header}
       initial={{ tab: query.tab, filters, focus: query.focus, page: Math.max(1, Math.floor(Number(query.page))) || undefined, draw: query.draw === '1' }}

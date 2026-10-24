@@ -21,6 +21,8 @@ import { FolderTableCell as FolderTableCell_f9c02e79a4aed9a3924487c0cd4cafb1 } f
 import { FolderField as FolderField_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { NoteScreenshotPreview as NoteScreenshotPreview_bd1270e13b4f8acb1432eab26c48dba8 } from '@/components/Account/NoteScreenshotPreview'
 import { NotesListFilter as NotesListFilter_c7863f45ba83d2bfe39095fa7178b7c7 } from '@/components/Account/NotesListFilter'
+import { ReportReview as ReportReview_da7a68a99bf3d08c49bf6aa2ac6a77ff } from '@/components/Account/ReportReview'
+import { ReportsListFilter as ReportsListFilter_616af3a554975a504b382fae811d4c0b } from '@/components/Account/ReportsListFilter'
 import { AnswerTrial as AnswerTrial_59faf93a3a932fe78e5a6a13651729bd } from '@/components/AnswerTrial'
 import { GroupRowLabel as GroupRowLabel_df959563b2e8ae22f12c526ba2cdd698 } from '@/collections/Tests/GroupRowLabel'
 import { ImportButton as ImportButton_f23ae46249ccae755f3d23295703bf17 } from '@/components/ImportButton'
@@ -59,6 +61,8 @@ export const importMap = {
   "@payloadcms/next/rsc#FolderField": FolderField_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@/components/Account/NoteScreenshotPreview#NoteScreenshotPreview": NoteScreenshotPreview_bd1270e13b4f8acb1432eab26c48dba8,
   "@/components/Account/NotesListFilter#NotesListFilter": NotesListFilter_c7863f45ba83d2bfe39095fa7178b7c7,
+  "@/components/Account/ReportReview#ReportReview": ReportReview_da7a68a99bf3d08c49bf6aa2ac6a77ff,
+  "@/components/Account/ReportsListFilter#ReportsListFilter": ReportsListFilter_616af3a554975a504b382fae811d4c0b,
   "@/components/AnswerTrial#AnswerTrial": AnswerTrial_59faf93a3a932fe78e5a6a13651729bd,
   "@/collections/Tests/GroupRowLabel#GroupRowLabel": GroupRowLabel_df959563b2e8ae22f12c526ba2cdd698,
   "@/components/ImportButton#ImportButton": ImportButton_f23ae46249ccae755f3d23295703bf17,

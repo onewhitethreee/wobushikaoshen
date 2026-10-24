@@ -11,6 +11,8 @@ import { HeroTiles } from '@/components/Journal/HeroTiles'
 import { MockBand } from '@/components/Journal/MockBand'
 import { StartForm } from '@/components/Journal/StartForm'
 import { TodayPlan } from '@/components/Plan/TodayPlan'
+import { getPlatform } from '@/account/credits'
+import { noteText } from '@/account/notePlatform'
 import { API_TAG } from '@/contentApi/request'
 import { getColumn } from '@/content/columns'
 import { home, type PracticeRow } from '@/sample'
@@ -35,6 +37,12 @@ const picks = (rows: PracticeRow[]) => {
 
 export default async function HomePage() {
   const payload = await getPayload({ config: configPromise })
+  // 领额度方式：笔记那项按平台设置换名或去掉（032），标签跟着同一项走
+  const platform = await getPlatform(payload)
+  const quotaWays = home.quotaWays
+    .map((w, i) => ({ ...w, tag: quotaTags[i] }))
+    .filter((w) => platform || w.kind !== 'note')
+    .map((w) => (platform ? { ...w, title: noteText(w.title, platform), desc: noteText(w.desc, platform) } : w))
   const [daily, posts, ...cols] = await Promise.all([
     payload.find({
       collection: 'units',
@@ -183,14 +191,14 @@ export default async function HomePage() {
           </p>
           <p className="mt-4 text-sm text-muted-foreground">怎么领</p>
           <ul className="flex flex-col gap-3">
-            {home.quotaWays.map((w, i) => (
+            {quotaWays.map((w) => (
               <li className={cn('flex flex-col gap-1.5 bg-muted px-5 py-4', w.disabled && 'text-muted-foreground')} key={w.title}>
                 <p className="text-[17px] font-semibold">{w.title}</p>
                 <p className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
                   <span>{w.desc}</span>
                   <span className="inline-flex items-center gap-1.5 bg-chip px-2 py-0.5 text-[13px] whitespace-nowrap text-foreground">
                     <span aria-hidden="true" className={cn('size-[7px] rounded-full', w.disabled ? 'bg-muted-foreground' : 'bg-sun')} />
-                    {quotaTags[i]}
+                    {w.tag}
                   </span>
                 </p>
               </li>

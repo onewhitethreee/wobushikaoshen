@@ -13,3 +13,21 @@ export const parseNote = (text: unknown): { url: string; key: string } | null =>
   const url = m[0].replace(/[.,;:!?'"]+$/, '')
   return { url, key: m === full ? `xhs:${m[1].toLowerCase()}` : `xhslink:${m[1].replace(/\/+$/, '')}` }
 }
+
+// 其他平台（032 research R3）：取第一个 https 链接；key 只看 host + path（小写、去末尾斜杠），分享参数不算
+const LINK = /https:\/\/[^\s，。！？、）)】]+/i
+
+export const parseLink = (text: unknown): { url: string; key: string } | null => {
+  if (typeof text !== 'string') return null
+  const m = LINK.exec(text)
+  if (!m) return null
+  const url = m[0].replace(/[.,;:!?'"]+$/, '')
+  let u: URL
+  try {
+    u = new URL(url)
+  } catch {
+    return null
+  }
+  if (u.protocol !== 'https:' || !u.host) return null
+  return { url, key: `link:${(u.host + u.pathname).toLowerCase().replace(/\/+$/, '')}` }
+}

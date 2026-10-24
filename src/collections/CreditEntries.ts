@@ -18,6 +18,7 @@ export const REASONS = [
   { label: '邀请奖励', value: 'invite' },
   { label: '被邀请奖励', value: 'invitee' },
   { label: '笔记奖励', value: 'note' },
+  { label: '答案举报', value: 'report' },
   { label: '功能消耗', value: 'spend' },
   { label: '失败退回', value: 'refund' },
   { label: '管理员调整', value: 'adjust' },

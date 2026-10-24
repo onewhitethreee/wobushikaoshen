@@ -3,6 +3,7 @@
 import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
+import { getPlatform } from '@/account/credits'
 import { groupStats, type GroupSummary } from '@/exam/groupStats'
 import { listeningType, readingType } from '@/exam/typeNames'
 import { categoryLabel, WRITING_CATEGORIES } from '@/exam/writingCategories'
@@ -307,7 +308,8 @@ export const getColumn = async (slug: ColumnSlug): Promise<ColumnConfig> => {
   if (slug === 'speaking')
     real = speakingColumn(await published<SpeakingQuestion>('speaking-questions'))
   if (slug === 'mock') real = await mockColumn()
-  return real ?? { ...sample[slug], isSample: true }
+  const notePlatform = await getPlatform(await getPayload({ config: configPromise }))
+  return { ...(real ?? { ...sample[slug], isSample: true }), notePlatform }
 }
 
 export { listeningType, readingType }

@@ -22,18 +22,20 @@ type State =
 const LIMITS = { task1: { min: 50, max: 1000 }, task2: { min: 80, max: 1000 } }
 const POLL_MS = 2000
 
-const creditsLink = (
+// 平台关闭时括号里不提笔记（032 contracts/ui.md）
+const creditsLink = (notePlatform: string | null) => (
   <Link className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href="/me/credits">
-    去「我的额度」领额度（邀请好友、发小红书笔记）
+    去「我的额度」领额度（{notePlatform ? `邀请好友、发${notePlatform}笔记` : '邀请好友、兑换码'}）
   </Link>
 )
 
-export const ReviewPanel: React.FC<{ taskId: number; taskType: 'task1' | 'task2'; minWords: number; reviewable: boolean }> = ({
-  taskId,
-  taskType,
-  minWords,
-  reviewable,
-}) => {
+export const ReviewPanel: React.FC<{
+  taskId: number
+  taskType: 'task1' | 'task2'
+  minWords: number
+  reviewable: boolean
+  notePlatform?: string | null
+}> = ({ taskId, taskType, minWords, reviewable, notePlatform = '小红书' }) => {
   // 只在点按钮时读，用 ref：打字不重渲染面板（用 state 时快速输入会触发 React 嵌套更新上限、丢字）
   const text = useRef('')
   const [state, setState] = useState<State>({ kind: 'idle' })
@@ -149,7 +151,7 @@ export const ReviewPanel: React.FC<{ taskId: number; taskType: 'task1' | 'task2'
             ) : (
               <>
                 <p className="font-semibold">额度不够</p>
-                {creditsLink}
+                {creditsLink(notePlatform)}
                 <Button className="ml-auto" onClick={() => setState({ kind: 'idle' })} type="button" variant="outline">
                   知道了
                 </Button>

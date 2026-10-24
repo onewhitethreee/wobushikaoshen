@@ -14,6 +14,8 @@ import * as migration_20261019_184315_027_jijing from './20261019_184315_027_jij
 import * as migration_20261020_123703_028_mock from './20261020_123703_028_mock';
 import * as migration_20261023_132325_footer_contact from './20261023_132325_footer_contact';
 import * as migration_20261023_140545_029_content_api from './20261023_140545_029_content_api';
+import * as migration_20261024_133706_032_note_platform from './20261024_133706_032_note_platform';
+import * as migration_20261024_141309_031_answer_report from './20261024_141309_031_answer_report';
 
 export const migrations = [
   {
@@ -94,6 +96,16 @@ export const migrations = [
   {
     up: migration_20261023_140545_029_content_api.up,
     down: migration_20261023_140545_029_content_api.down,
-    name: '20261023_140545_029_content_api'
+    name: '20261023_140545_029_content_api',
+  },
+  {
+    up: migration_20261024_133706_032_note_platform.up,
+    down: migration_20261024_133706_032_note_platform.down,
+    name: '20261024_133706_032_note_platform',
+  },
+  {
+    up: migration_20261024_141309_031_answer_report.up,
+    down: migration_20261024_141309_031_answer_report.down,
+    name: '20261024_141309_031_answer_report'
   },
 ];

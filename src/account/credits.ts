@@ -3,6 +3,8 @@ import { ValidationError, type Payload, type PayloadRequest } from 'payload'
 
 import type { CreditEntry } from '@/payload-types'
 
+import { platformName } from './notePlatform'
+
 // 额度记账（011 research R1–R3、R5）。余额永远是流水之和（宪章 II），不存余额字段。
 // 扣减、邀请人上限这类"先算再写"的操作，在事务里先锁住考生那一行，同一考生的请求按顺序执行，余额不会变负
 
@@ -17,6 +19,9 @@ export const INTERNAL = 'creditsInternal'
 
 export const getSettings = (payload: Payload) =>
   payload.findGlobal({ slug: 'credit-settings', overrideAccess: true })
+
+// 笔记换额度的当前平台名，关闭时为 null（032）
+export const getPlatform = async (payload: Payload) => platformName(await getSettings(payload))
 
 const sumOf = async (db: Tx, memberId: number) => {
   const { rows } = await db.execute(sql`SELECT COALESCE(SUM(amount), 0) AS b FROM credit_entries WHERE member_id = ${memberId}`)

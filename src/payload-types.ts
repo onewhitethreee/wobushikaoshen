@@ -81,6 +81,7 @@ export interface Config {
     'redeem-codes': RedeemCode;
     'note-submissions': NoteSubmission;
     'note-screenshots': NoteScreenshot;
+    'answer-reports': AnswerReport;
     tests: Test;
     units: Unit;
     'mock-papers': MockPaper;
@@ -121,6 +122,7 @@ export interface Config {
     'redeem-codes': RedeemCodesSelect<false> | RedeemCodesSelect<true>;
     'note-submissions': NoteSubmissionsSelect<false> | NoteSubmissionsSelect<true>;
     'note-screenshots': NoteScreenshotsSelect<false> | NoteScreenshotsSelect<true>;
+    'answer-reports': AnswerReportsSelect<false> | AnswerReportsSelect<true>;
     tests: TestsSelect<false> | TestsSelect<true>;
     units: UnitsSelect<false> | UnitsSelect<true>;
     'mock-papers': MockPapersSelect<false> | MockPapersSelect<true>;
@@ -699,7 +701,7 @@ export interface CreditEntry {
   id: number;
   member: number | Member;
   amount: number;
-  reason: 'signup' | 'redeem' | 'invite' | 'invitee' | 'note' | 'spend' | 'refund' | 'adjust';
+  reason: 'signup' | 'redeem' | 'invite' | 'invitee' | 'note' | 'report' | 'spend' | 'refund' | 'adjust';
   use?: string | null;
   /**
    * 防重复发放的唯一键
@@ -799,6 +801,10 @@ export interface NoteSubmission {
   id: number;
   member: number | Member;
   url: string;
+  /**
+   * 提交时的平台；空 = 小红书
+   */
+  platform?: string | null;
   noteKey?: string | null;
   screenshot: number | NoteScreenshot;
   remark?: string | null;
@@ -832,6 +838,38 @@ export interface NoteScreenshot {
   height?: number | null;
   focalX?: number | null;
   focalY?: number | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-reports".
+ */
+export interface AnswerReport {
+  id: number;
+  member: number | Member;
+  unitKey: string;
+  number: number;
+  module?: ('listening' | 'reading') | null;
+  sourceTag?: string | null;
+  kind: 'accept' | 'wrong' | 'other';
+  answer?: string | null;
+  answerKey?: string | null;
+  keySnapshot?: string | null;
+  qType?: string | null;
+  maxWords?: number | null;
+  numberAllowed?: boolean | null;
+  remark?: string | null;
+  pendingOnSame?: number | null;
+  status: 'pending' | 'approved' | 'rejected';
+  /**
+   * 通过时按这个数发放；已按「额度设置」预填，可修改
+   */
+  amount?: number | null;
+  rejectPreset?: ('判分正确' | '超出字数限制' | '拼写错误' | '重复举报' | '其他') | null;
+  rejectReason?: string | null;
+  reviewedBy?: (number | null) | User;
+  reviewedAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1634,6 +1672,10 @@ export interface PayloadLockedDocument {
         value: number | NoteScreenshot;
       } | null)
     | ({
+        relationTo: 'answer-reports';
+        value: number | AnswerReport;
+      } | null)
+    | ({
         relationTo: 'tests';
         value: number | Test;
       } | null)
@@ -2131,6 +2173,7 @@ export interface RedeemCodesSelect<T extends boolean = true> {
 export interface NoteSubmissionsSelect<T extends boolean = true> {
   member?: T;
   url?: T;
+  platform?: T;
   noteKey?: T;
   screenshot?: T;
   remark?: T;
@@ -2160,6 +2203,34 @@ export interface NoteScreenshotsSelect<T extends boolean = true> {
   height?: T;
   focalX?: T;
   focalY?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-reports_select".
+ */
+export interface AnswerReportsSelect<T extends boolean = true> {
+  member?: T;
+  unitKey?: T;
+  number?: T;
+  module?: T;
+  sourceTag?: T;
+  kind?: T;
+  answer?: T;
+  answerKey?: T;
+  keySnapshot?: T;
+  qType?: T;
+  maxWords?: T;
+  numberAllowed?: T;
+  remark?: T;
+  pendingOnSame?: T;
+  status?: T;
+  amount?: T;
+  rejectPreset?: T;
+  rejectReason?: T;
+  reviewedBy?: T;
+  reviewedAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2784,9 +2855,21 @@ export interface CreditSetting {
    */
   inviterCap: number;
   /**
-   * 审核小红书笔记时预填的额度，可逐篇修改
+   * 审核笔记时预填的额度，可逐篇修改
    */
   noteDefault: number;
+  /**
+   * 审核答案举报时预填的额度，可逐条修改
+   */
+  reportDefault: number;
+  /**
+   * 关闭后前台不再出现发笔记领额度；已在审核中的提交照常审核
+   */
+  noteMode: 'xhs' | 'other' | 'off';
+  /**
+   * 前台文案里的"小红书"都换成这个名称，如：抖音
+   */
+  notePlatform?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2943,6 +3026,9 @@ export interface CreditSettingsSelect<T extends boolean = true> {
   inviteeReward?: T;
   inviterCap?: T;
   noteDefault?: T;
+  reportDefault?: T;
+  noteMode?: T;
+  notePlatform?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

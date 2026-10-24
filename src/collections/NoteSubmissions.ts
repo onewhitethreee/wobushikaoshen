@@ -4,7 +4,7 @@ import { ValidationError } from 'payload'
 import { authenticated, isAdmin } from '../access/authenticated'
 import { grant } from '../account/credits'
 
-// 小红书笔记换额度（011 research R8）。考生经 /api/me/notes 提交；审核就在这个编辑页：
+// 笔记换额度（011 research R8；032 起平台可在「额度设置」里换）。考生经 /api/me/notes 提交；审核就在这个编辑页：
 // 选"已通过"（额度已预填，可改）→ 保存，同一事务里写入笔记奖励流水；结论定了以后不能再改
 const adminOrOwner: Access = ({ req: { user } }) => {
   if (isAdmin(user)) return true
@@ -17,10 +17,10 @@ const LOCKED = ['status', 'amount', 'rejectPreset', 'rejectReason'] as const
 
 export const NoteSubmissions: CollectionConfig = {
   slug: 'note-submissions',
-  labels: { singular: '小红书笔记', plural: '小红书笔记' },
+  labels: { singular: '笔记换额度', plural: '笔记换额度' },
   access: { read: adminOrOwner, create: authenticated, update: authenticated, delete: authenticated },
   admin: {
-    defaultColumns: ['createdAt', 'member', 'url', 'status', 'amount'],
+    defaultColumns: ['createdAt', 'member', 'url', 'platform', 'status', 'amount'],
     useAsTitle: 'url',
     components: { beforeList: ['@/components/Account/NotesListFilter#NotesListFilter'] },
   },
@@ -52,7 +52,7 @@ export const NoteSubmissions: CollectionConfig = {
       async ({ doc, previousDoc, operation, req }) => {
         if (operation !== 'update' || previousDoc?.status !== 'pending' || doc.status !== 'approved') return doc
         const memberId = typeof doc.member === 'object' ? doc.member.id : doc.member
-        const e = await grant(req.payload, { memberId, amount: doc.amount, reason: 'note', refKey: `note:${doc.id}`, note: '小红书笔记', req })
+        const e = await grant(req.payload, { memberId, amount: doc.amount, reason: 'note', refKey: `note:${doc.id}`, note: `${doc.platform || '小红书'}笔记`, req })
         if (!e) throw new Error('这条提交已经发放过额度')
         return doc
       },
@@ -61,6 +61,7 @@ export const NoteSubmissions: CollectionConfig = {
   fields: [
     { name: 'member', label: '考生', type: 'relationship', relationTo: 'members', required: true, admin: { readOnly: true } },
     { name: 'url', label: '笔记链接', type: 'text', required: true, admin: { readOnly: true } },
+    { name: 'platform', label: '平台', type: 'text', admin: { readOnly: true, description: '提交时的平台；空 = 小红书' } },
     { name: 'noteKey', type: 'text', index: true, admin: { hidden: true } },
     { name: 'screenshot', label: '截图', type: 'upload', relationTo: 'note-screenshots', required: true, admin: { readOnly: true } },
     { name: 'screenshotPreview', type: 'ui', admin: { components: { Field: '@/components/Account/NoteScreenshotPreview#NoteScreenshotPreview' } } },

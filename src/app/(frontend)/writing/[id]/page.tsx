@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation'
 import { getPayload } from 'payload'
 import React, { cache } from 'react'
 
+import { getPlatform } from '@/account/credits'
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
 import { PickAgain } from '@/components/Writing/PickAgain'
 import { ReviewPanel } from '@/components/Writing/ReviewPanel'
@@ -38,6 +39,7 @@ export default async function Page({ params, searchParams }: Props) {
   if (!task) notFound()
   // 030：从"随机一题"进来时带着抽题范围
   const { pick } = await searchParams
+  const notePlatform = await getPlatform(await getPayload({ config: configPromise }))
 
   const t1 = task.taskType === 'task1'
   const image = typeof task.image === 'object' && task.image ? (task.image as Media) : null
@@ -108,6 +110,7 @@ export default async function Page({ params, searchParams }: Props) {
         <section aria-label="作答" className="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
           <ReviewPanel
             minWords={minWords}
+            notePlatform={notePlatform}
             reviewable={!t1 || Boolean(task.chartData?.trim())}
             taskId={task.id}
             taskType={task.taskType}
