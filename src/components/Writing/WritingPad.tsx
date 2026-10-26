@@ -8,10 +8,12 @@ import { STORE_EVENT, schedulePush, sync } from '@/practice/syncClient'
 import { cn } from '@/utilities/ui'
 
 // 写作框：实时字数，草稿存本机（隐私模式、配额满时照常写，只是不保存）；已登录时草稿随账号同步（009）。
-// onText 把当前文字交给批改面板（015），批改中 readOnly
-export const WritingPad: React.FC<{ taskId: string; minWords: number; onText?: (text: string) => void; readOnly?: boolean }> = ({
+// onText 把当前文字交给批改面板（015），批改中 readOnly。
+// 033：四 / 六级可能没有字数下限（翻译）或有上限；minWords 为 0 时只显示词数
+export const WritingPad: React.FC<{ taskId: string; minWords: number; maxWords?: number; onText?: (text: string) => void; readOnly?: boolean }> = ({
   taskId,
   minWords,
+  maxWords,
   onText,
   readOnly,
 }) => {
@@ -45,6 +47,7 @@ export const WritingPad: React.FC<{ taskId: string; minWords: number; onText?: (
 
   const words = countWords(text)
   const short = words < minWords
+  const long = Boolean(maxWords && words > maxWords)
 
   return (
     <div className="flex flex-col gap-2">
@@ -64,10 +67,11 @@ export const WritingPad: React.FC<{ taskId: string; minWords: number; onText?: (
       />
       <p className="flex flex-wrap items-center justify-between gap-2 text-sm" aria-live="polite">
         <span
-          className={cn('tabular-nums', short ? 'font-semibold text-warning' : 'text-success')}
+          className={cn('tabular-nums', short || long ? 'font-semibold text-warning' : minWords ? 'text-success' : 'text-muted-foreground')}
           data-testid="word-count"
         >
-          {words} 词{short ? ` · 还差 ${minWords - words} 词` : ' · 已达字数要求'}
+          {words} 词
+          {short ? ` · 还差 ${minWords - words} 词` : long ? ` · 超过 ${maxWords} 词` : minWords ? ' · 已达字数要求' : ''}
         </span>
         <span className="text-muted-foreground">{saved ? '已保存' : '保存中…'}</span>
       </p>

@@ -3,6 +3,7 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
 import { listeningDefaults, readingDefaults } from '@/exam/bandScaleDefaults'
+import { IELTS } from '@/exam/cet'
 import { checkPaper, fitsSlot, SLOTS, type Pool } from '@/exam/mock'
 import { groupNumbers, type PracticeUnit } from '@/exam/practice'
 import { RANDOM_NO } from '@/practice/mockAttempt'
@@ -73,7 +74,8 @@ export const getRandomPool = async (): Promise<Pool> => {
   const payload = await getPayload({ config: configPromise })
   const res = await payload.find({
     collection: 'units',
-    where: { _status: { equals: 'published' } },
+    // 033：四 / 六级阅读 Part 1–3 题数合规时也会落进位置，必须排除
+    where: { and: [{ _status: { equals: 'published' } }, IELTS] },
     select: { module: true, part: true, summary: true },
     depth: 0,
     pagination: false,

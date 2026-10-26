@@ -1,7 +1,7 @@
 // 栏目页数据：读已发布内容，生成 sample/index.ts 里同样形状的 ColumnConfig。
 // 某个栏目还没有任何已发布内容时，退回示例数据（页面上标着"示例数据"），开发阶段不会是空页。
 import configPromise from '@payload-config'
-import { getPayload } from 'payload'
+import { getPayload, type Where } from 'payload'
 
 import { getPlatform } from '@/account/credits'
 import { groupStats, type GroupSummary } from '@/exam/groupStats'
@@ -10,6 +10,7 @@ import { categoryLabel, WRITING_CATEGORIES } from '@/exam/writingCategories'
 import { getRandomPool } from '@/content/mockPaper'
 import { SLOTS } from '@/exam/mock'
 import { API_TAG } from '@/contentApi/request'
+import { cetPartName, IELTS, paperLabel, type Cet } from '@/exam/cet'
 import type { MockPaper, SpeakingQuestion, Test, Unit, WritingTask } from '@/payload-types'
 import {
   columns as sample,
@@ -41,7 +42,12 @@ const published = async <T>(collection: keyof typeof SORT, module?: 'listening' 
   const payload = await getPayload({ config: configPromise })
   const res = await payload.find({
     collection,
-    where: { _status: { equals: 'published' }, ...(module ? { module: { equals: module } } : {}) },
+    // 033：单元、写作题只取雅思；四 / 六级走 cetColumn
+    where: {
+      _status: { equals: 'published' },
+      ...(module ? { module: { equals: module } } : {}),
+      ...(collection === 'units' || collection === 'writing-tasks' ? IELTS : {}),
+    },
     depth: 0,
     sort: SORT[collection],
     // 单元只取列表要用的字段：不读原文 / 文章，也不读题组小题（用保存时算好的 summary；读小题在开发模式下要 5 秒以上）
@@ -300,8 +306,111 @@ const mockColumn = async (): Promise<ColumnConfig | null> => {
   return { ...sample.mock, tabs: [{ id: 'all', label: '全部模考卷', match: { kind: 'set' }, filters: [status] }], rows }
 }
 
+// 033 四 / 六级：按试卷分组（research R4）。每个单元、每道写作 / 翻译题一行；试卷新的在上，同套 听力 → 阅读 → 写作 → 翻译
+const SUBJECT_ORDER = ['听力', '阅读', '写作', '翻译']
+const cetColumn = async (exam: Cet): Promise<ColumnConfig | null> => {
+  const payload = await getPayload({ config: configPromise })
+  const where: Where = { and: [{ _status: { equals: 'published' } }, { exam: { equals: exam } }] }
+  const [units, tasks] = await Promise.all([
+    payload.find({
+      collection: 'units',
+      where,
+      depth: 0,
+      select: { title: true, module: true, part: true, paper: true, summary: true },
+      pagination: false,
+    }),
+    payload.find({
+      collection: 'writing-tasks',
+      where,
+      depth: 0,
+      select: { title: true, titleZh: true, taskType: true, paper: true, minWords: true, maxWords: true, suggestedMinutes: true },
+      pagination: false,
+    }),
+  ])
+  type Item = { row: PracticeRow; paper: string; subject: string; part: number }
+  const items: Item[] = []
+  for (const u of units.docs as Unit[]) {
+    const isL = u.module === 'listening'
+    const subject = isL ? '听力' : '阅读'
+    const name = cetPartName(u.module, u.part)
+    const type = name.replace(/^Section [A-C] /, '').replace(/ \d$/, '')
+    const count = ((u.summary ?? []) as GroupSummary[]).reduce((n, g) => n + g.count, 0)
+    const paper = u.paper ?? ''
+    items.push({
+      paper,
+      subject,
+      part: u.part,
+      row: {
+        id: `u${u.id}`,
+        lead: isL ? 'ABC'[u.part - 1] ?? String(u.part) : `R${u.part}`,
+        title: isL ? name : u.title,
+        meta: isL ? [] : [name],
+        count,
+        group: paperLabel(paper),
+        facets: { kind: 'unit', subject, type, year: paper.slice(0, 4) },
+        actions: [practice(`u${u.id}`)],
+      },
+    })
+  }
+  for (const w of tasks.docs as WritingTask[]) {
+    const subject = w.taskType === 'cet_translation' ? '翻译' : '写作'
+    const words = [w.minWords, w.maxWords].filter(Boolean).join('–')
+    const paper = w.paper ?? ''
+    items.push({
+      paper,
+      subject,
+      part: 0,
+      row: {
+        id: String(w.id),
+        lead: subject === '翻译' ? 'T' : 'W',
+        leadSub: words && subject === '写作' ? `${words} 词` : undefined,
+        title: w.titleZh ?? w.title,
+        meta: [subject],
+        minutes: w.suggestedMinutes ?? undefined,
+        group: paperLabel(paper),
+        facets: { kind: 'unit', subject, type: subject, year: paper.slice(0, 4) },
+        actions: [
+          { label: subject === '翻译' ? '开始翻译' : '开始写', doneLabel: '再写一遍', href: `/writing/${w.id}`, cost: free },
+          // 034：四 / 六级写作、翻译也能 AI 批改
+          { label: 'AI 批改', href: `/writing/${w.id}#review`, cost: quota1 },
+        ],
+      },
+    })
+  }
+  if (!items.length) return null
+  // paper 是 YYYY-MM-N，字符串倒序即新的在上
+  items.sort(
+    (a, b) =>
+      b.paper.localeCompare(a.paper) || SUBJECT_ORDER.indexOf(a.subject) - SUBJECT_ORDER.indexOf(b.subject) || a.part - b.part,
+  )
+  const rows = items.map((x) => x.row)
+  const opts = (key: string, order?: string[]) => {
+    const have = new Set(rows.map((r) => r.facets[key]))
+    return ['全部', ...(order ? order.filter((o) => have.has(o)) : [...have].sort().reverse())]
+  }
+  const types = distinct(rows.map((r) => r.facets.type))
+  return {
+    ...sample[exam],
+    tabs: [
+      {
+        id: 'paper',
+        label: '按试卷',
+        match: { kind: 'unit' },
+        filters: [
+          { id: 'subject', label: '科目', options: opts('subject', SUBJECT_ORDER) },
+          { id: 'type', label: '题型', options: types },
+          { id: 'year', label: '年份', options: opts('year') },
+          status,
+        ],
+      },
+    ],
+    rows,
+  }
+}
+
 export const getColumn = async (slug: ColumnSlug): Promise<ColumnConfig> => {
   let real: ColumnConfig | null = null
+  if (slug === 'cet4' || slug === 'cet6') real = await cetColumn(slug)
   if (slug === 'listening' || slug === 'reading')
     real = testColumn(slug, ...(await Promise.all([published<Test>('tests'), published<Unit>('units', slug)])))
   if (slug === 'writing') real = writingColumn(await published<WritingTask>('writing-tasks'))

@@ -1,0 +1,685 @@
+{
+ "kind": "unit",
+ "publish": false,
+ "data": [
+  {
+   "exam": "cet4",
+   "paper": "2024-06-1",
+   "sourceType": "original",
+   "sourceSets": "fixture 四级原创",
+   "module": "reading",
+   "part": 1,
+   "title": "Our school garden club keeps a detailed record…",
+   "sourceId": "fixture-cet4-2024-06-1-a",
+   "passage": [
+    {
+     "label": "",
+     "sentences": [
+      {
+       "n": 0,
+       "text": "Our school garden club keeps a (26)____ record of every plant it grows."
+      },
+      {
+       "n": 1,
+       "text": "Watering the beds each morning has become a (27)____ for many members."
+      },
+      {
+       "n": 2,
+       "text": "Over the term, the bare ground (28)____ turned green."
+      },
+      {
+       "n": 3,
+       "text": "Students say they (29)____ from time spent outdoors, and (30)____ families have (31)____ in on weekends."
+      },
+      {
+       "n": 4,
+       "text": "Teachers (32)____ that pupils who garden (33)____ their focus and stay (34)____ in class."
+      },
+      {
+       "n": 5,
+       "text": "The club now sells (35)____ vegetables at the school gate."
+      }
+     ],
+     "translation": "我们学校的园艺社把种下的每一株植物都详细记录下来。每天早上浇水已经成了许多社员的习惯。"
+    }
+   ],
+   "groups": [
+    {
+     "type": "completion",
+     "instructions": "Select one word for each blank from the word bank. You may not use any word more than once.",
+     "options": [
+      {
+       "key": "A",
+       "text": "actively"
+      },
+      {
+       "key": "I",
+       "text": "improve"
+      },
+      {
+       "key": "B",
+       "text": "benefit"
+      },
+      {
+       "key": "J",
+       "text": "joined"
+      },
+      {
+       "key": "C",
+       "text": "calm"
+      },
+      {
+       "key": "K",
+       "text": "kindly"
+      },
+      {
+       "key": "D",
+       "text": "detailed"
+      },
+      {
+       "key": "L",
+       "text": "local"
+      },
+      {
+       "key": "E",
+       "text": "effort"
+      },
+      {
+       "key": "M",
+       "text": "mostly"
+      },
+      {
+       "key": "F",
+       "text": "fresh"
+      },
+      {
+       "key": "N",
+       "text": "noticed"
+      },
+      {
+       "key": "G",
+       "text": "gradually"
+      },
+      {
+       "key": "O",
+       "text": "often"
+      },
+      {
+       "key": "H",
+       "text": "habit"
+      }
+     ],
+     "content": "Our school garden club keeps a {{26}} record of every plant it grows. Watering the beds each morning has become a {{27}} for many members. Over the term, the bare ground {{28}} turned green. Students say they {{29}} from time spent outdoors, and {{30}} families have {{31}} in on weekends. Teachers {{32}} that pupils who garden {{33}} their focus and stay {{34}} in class. The club now sells {{35}} vegetables at the school gate.",
+     "questions": [
+      {
+       "number": 26,
+       "span": 1,
+       "answers": "D",
+       "explanation": "**答案** D) detailed\n根据上下文选 detailed。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 27,
+       "span": 1,
+       "answers": "H",
+       "explanation": "**答案** H) habit\n根据上下文选 habit。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 28,
+       "span": 1,
+       "answers": "G",
+       "explanation": "**答案** G) gradually\n根据上下文选 gradually。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 29,
+       "span": 1,
+       "answers": "B",
+       "explanation": "**答案** B) benefit\n根据上下文选 benefit。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 30,
+       "span": 1,
+       "answers": "L",
+       "explanation": "**答案** L) local\n根据上下文选 local。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 31,
+       "span": 1,
+       "answers": "J",
+       "explanation": "**答案** J) joined\n根据上下文选 joined。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 32,
+       "span": 1,
+       "answers": "N",
+       "explanation": "**答案** N) noticed\n根据上下文选 noticed。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 33,
+       "span": 1,
+       "answers": "I",
+       "explanation": "**答案** I) improve\n根据上下文选 improve。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 34,
+       "span": 1,
+       "answers": "C",
+       "explanation": "**答案** C) calm\n根据上下文选 calm。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 35,
+       "span": 1,
+       "answers": "F",
+       "explanation": "**答案** F) fresh\n根据上下文选 fresh。",
+       "answerStatus": "confirmed"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "exam": "cet4",
+   "paper": "2024-06-1",
+   "sourceType": "original",
+   "sourceSets": "fixture 四级原创",
+   "module": "reading",
+   "part": 2,
+   "title": "Why Cities Need Small Parks",
+   "sourceId": "fixture-cet4-2024-06-1-b",
+   "passage": [
+    {
+     "label": "A",
+     "sentences": [
+      {
+       "n": 0,
+       "text": "City parks were once seen as simple green spaces."
+      },
+      {
+       "n": 1,
+       "text": "Today planners treat them as part of public health."
+      }
+     ]
+    },
+    {
+     "label": "B",
+     "sentences": [
+      {
+       "n": 2,
+       "text": "A walk among trees lowers stress for many people."
+      },
+      {
+       "n": 3,
+       "text": "Doctors in some cities now suggest park visits to patients."
+      }
+     ]
+    },
+    {
+     "label": "C",
+     "sentences": [
+      {
+       "n": 4,
+       "text": "Parks also cool neighbourhoods on hot summer days."
+      },
+      {
+       "n": 5,
+       "text": "Shade from large trees can reduce street temperatures."
+      }
+     ]
+    },
+    {
+     "label": "D",
+     "sentences": [
+      {
+       "n": 6,
+       "text": "Keeping parks safe and clean costs money every year."
+      },
+      {
+       "n": 7,
+       "text": "Some towns ask volunteers to help with the work."
+      }
+     ]
+    },
+    {
+     "label": "E",
+     "sentences": [
+      {
+       "n": 8,
+       "text": "Planners say small parks close to homes matter most."
+      },
+      {
+       "n": 9,
+       "text": "People visit them more often than large distant ones."
+      }
+     ]
+    }
+   ],
+   "groups": [
+    {
+     "type": "matching_information",
+     "instructions": "Identify the paragraph from which the information is derived.",
+     "options": [],
+     "questions": [
+      {
+       "number": 36,
+       "span": 1,
+       "prompt": "Doctors may recommend time in parks.",
+       "answers": "B",
+       "explanation": "**答案** B 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 37,
+       "span": 1,
+       "prompt": "Trees can make streets cooler.",
+       "answers": "C",
+       "explanation": "**答案** C 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 38,
+       "span": 1,
+       "prompt": "Parks used to be viewed as just green areas.",
+       "answers": "A",
+       "explanation": "**答案** A 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 39,
+       "span": 1,
+       "prompt": "Volunteers sometimes help maintain parks.",
+       "answers": "D",
+       "explanation": "**答案** D 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 40,
+       "span": 1,
+       "prompt": "Nearby small parks get more visitors.",
+       "answers": "E",
+       "explanation": "**答案** E 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 41,
+       "span": 1,
+       "prompt": "Green spaces can reduce stress.",
+       "answers": "B",
+       "explanation": "**答案** B 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 42,
+       "span": 1,
+       "prompt": "Park upkeep is an ongoing expense.",
+       "answers": "D",
+       "explanation": "**答案** D 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 43,
+       "span": 1,
+       "prompt": "Parks are now linked to public health.",
+       "answers": "A",
+       "explanation": "**答案** A 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 44,
+       "span": 1,
+       "prompt": "Shade matters in summer heat.",
+       "answers": "C",
+       "explanation": "**答案** C 段",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 45,
+       "span": 1,
+       "prompt": "Distance affects how often people visit parks.",
+       "answers": "E",
+       "explanation": "**答案** E 段",
+       "answerStatus": "confirmed"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "exam": "cet4",
+   "paper": "2024-06-1",
+   "sourceType": "original",
+   "sourceSets": "fixture 四级原创",
+   "module": "reading",
+   "part": 3,
+   "title": "Many students now learn a second languag…",
+   "sourceId": "fixture-cet4-2024-06-1-c1",
+   "passage": [
+    {
+     "label": "",
+     "sentences": [
+      {
+       "n": 0,
+       "text": "Many students now learn a second language online."
+      },
+      {
+       "n": 1,
+       "text": "Short daily practice works better than long weekly lessons."
+      }
+     ],
+     "translation": "（原创测试短文的译文）"
+    }
+   ],
+   "groups": [
+    {
+     "type": "single_choice",
+     "instructions": "Choose the best answer.",
+     "options": [],
+     "questions": [
+      {
+       "number": 46,
+       "span": 1,
+       "prompt": "What helps students most?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What helps students  option A"
+        },
+        {
+         "key": "B",
+         "text": "What helps students  option B"
+        },
+        {
+         "key": "C",
+         "text": "What helps students  option C"
+        },
+        {
+         "key": "D",
+         "text": "What helps students  option D"
+        }
+       ],
+       "answers": "B",
+       "explanation": "**答案** B\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 47,
+       "span": 1,
+       "prompt": "How do many students learn?",
+       "options": [
+        {
+         "key": "A",
+         "text": "How do many students option A"
+        },
+        {
+         "key": "B",
+         "text": "How do many students option B"
+        },
+        {
+         "key": "C",
+         "text": "How do many students option C"
+        },
+        {
+         "key": "D",
+         "text": "How do many students option D"
+        }
+       ],
+       "answers": "A",
+       "explanation": "**答案** A\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 48,
+       "span": 1,
+       "prompt": "What is less effective?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What is less effecti option A"
+        },
+        {
+         "key": "B",
+         "text": "What is less effecti option B"
+        },
+        {
+         "key": "C",
+         "text": "What is less effecti option C"
+        },
+        {
+         "key": "D",
+         "text": "What is less effecti option D"
+        }
+       ],
+       "answers": "C",
+       "explanation": "**答案** C\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 49,
+       "span": 1,
+       "prompt": "What does the writer suggest?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What does the writer option A"
+        },
+        {
+         "key": "B",
+         "text": "What does the writer option B"
+        },
+        {
+         "key": "C",
+         "text": "What does the writer option C"
+        },
+        {
+         "key": "D",
+         "text": "What does the writer option D"
+        }
+       ],
+       "answers": "D",
+       "explanation": "**答案** D\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 50,
+       "span": 1,
+       "prompt": "What is the main idea?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What is the main ide option A"
+        },
+        {
+         "key": "B",
+         "text": "What is the main ide option B"
+        },
+        {
+         "key": "C",
+         "text": "What is the main ide option C"
+        },
+        {
+         "key": "D",
+         "text": "What is the main ide option D"
+        }
+       ],
+       "answers": "A",
+       "explanation": "**答案** A\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "exam": "cet4",
+   "paper": "2024-06-1",
+   "sourceType": "original",
+   "sourceSets": "fixture 四级原创",
+   "module": "reading",
+   "part": 4,
+   "title": "Libraries are changing into community ce…",
+   "sourceId": "fixture-cet4-2024-06-1-c2",
+   "passage": [
+    {
+     "label": "",
+     "sentences": [
+      {
+       "n": 0,
+       "text": "Libraries are changing into community centres."
+      },
+      {
+       "n": 1,
+       "text": "They now host classes, clubs and job fairs."
+      }
+     ],
+     "translation": "（原创测试短文的译文）"
+    }
+   ],
+   "groups": [
+    {
+     "type": "single_choice",
+     "instructions": "Choose the best answer.",
+     "options": [],
+     "questions": [
+      {
+       "number": 51,
+       "span": 1,
+       "prompt": "What are libraries becoming?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What are libraries b option A"
+        },
+        {
+         "key": "B",
+         "text": "What are libraries b option B"
+        },
+        {
+         "key": "C",
+         "text": "What are libraries b option C"
+        },
+        {
+         "key": "D",
+         "text": "What are libraries b option D"
+        }
+       ],
+       "answers": "C",
+       "explanation": "**答案** C\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 52,
+       "span": 1,
+       "prompt": "What do they host?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What do they host? option A"
+        },
+        {
+         "key": "B",
+         "text": "What do they host? option B"
+        },
+        {
+         "key": "C",
+         "text": "What do they host? option C"
+        },
+        {
+         "key": "D",
+         "text": "What do they host? option D"
+        }
+       ],
+       "answers": "B",
+       "explanation": "**答案** B\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 53,
+       "span": 1,
+       "prompt": "Who benefits most?",
+       "options": [
+        {
+         "key": "A",
+         "text": "Who benefits most? option A"
+        },
+        {
+         "key": "B",
+         "text": "Who benefits most? option B"
+        },
+        {
+         "key": "C",
+         "text": "Who benefits most? option C"
+        },
+        {
+         "key": "D",
+         "text": "Who benefits most? option D"
+        }
+       ],
+       "answers": "D",
+       "explanation": "**答案** D\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 54,
+       "span": 1,
+       "prompt": "What has changed?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What has changed? option A"
+        },
+        {
+         "key": "B",
+         "text": "What has changed? option B"
+        },
+        {
+         "key": "C",
+         "text": "What has changed? option C"
+        },
+        {
+         "key": "D",
+         "text": "What has changed? option D"
+        }
+       ],
+       "answers": "A",
+       "explanation": "**答案** A\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 55,
+       "span": 1,
+       "prompt": "What is the tone?",
+       "options": [
+        {
+         "key": "A",
+         "text": "What is the tone? option A"
+        },
+        {
+         "key": "B",
+         "text": "What is the tone? option B"
+        },
+        {
+         "key": "C",
+         "text": "What is the tone? option C"
+        },
+        {
+         "key": "D",
+         "text": "What is the tone? option D"
+        }
+       ],
+       "answers": "B",
+       "explanation": "**答案** B\n**题目译文**\n测试题。",
+       "answerStatus": "confirmed"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

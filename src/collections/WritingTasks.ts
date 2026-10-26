@@ -6,6 +6,7 @@ import { authenticatedOrPublished } from '../access/authenticatedOrPublished'
 import { preventReferencedDelete } from '../exam/preventReferencedDelete'
 import { validateWritingTask } from '../exam/validate'
 import { WRITING_CATEGORIES } from '../exam/writingCategories'
+import { examField, paperField } from '../fields/exam'
 import { sourceType } from '../fields/sourceType'
 
 // 写作题：可独立存在，也可被套题引用（FR-030 / FR-031）
@@ -21,14 +22,15 @@ export const WritingTasks: CollectionConfig = {
   versions: { drafts: true },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'taskType', 'category', 'chartChecked', 'sourceType', '_status'],
+    defaultColumns: ['title', 'exam', 'taskType', 'category', 'chartChecked', 'sourceType', '_status'],
     listSearchableFields: ['title', 'titleZh', 'sourceId'],
     components: { beforeListTable: ['@/components/ImportButton#ImportButton'] },
   },
   hooks: {
     beforeValidate: [
       ({ data }) => {
-        if (!data) return data
+        // 四 / 六级的字数要求可以为空，不补雅思默认值（033）
+        if (!data || (data.taskType !== 'task1' && data.taskType !== 'task2')) return data
         const t1 = data.taskType === 'task1'
         data.minWords ??= t1 ? 150 : 250
         data.suggestedMinutes ??= t1 ? 20 : 40
@@ -59,14 +61,21 @@ export const WritingTasks: CollectionConfig = {
       options: [
         { label: 'Task 1（图表）', value: 'task1' },
         { label: 'Task 2（议论文）', value: 'task2' },
+        { label: '四六级写作', value: 'cet_writing' },
+        { label: '四六级翻译', value: 'cet_translation' },
       ],
     },
+    examField,
+    paperField,
     {
       name: 'category',
       label: '分类',
       type: 'select',
       options: [...WRITING_CATEGORIES.task1, ...WRITING_CATEGORIES.task2].map((c) => ({ ...c })),
-      admin: { description: 'Task 1：数据图 / 地图 / 流程图 / 示意图；Task 2：观点 / 讨论 / 报告 / 混搭 / 比较 / 好坏' },
+      admin: {
+        condition: (_d, sibling) => sibling?.taskType === 'task1' || sibling?.taskType === 'task2',
+        description: 'Task 1：数据图 / 地图 / 流程图 / 示意图；Task 2：观点 / 讨论 / 报告 / 混搭 / 比较 / 好坏',
+      },
     },
     { name: 'title', label: '标题', type: 'text', required: true, admin: { description: '列表里显示，如"三国家庭能源消耗对比"' } },
     { name: 'titleZh', label: '中文标题', type: 'text' },
@@ -76,7 +85,7 @@ export const WritingTasks: CollectionConfig = {
       label: '图表图片',
       type: 'upload',
       relationTo: 'media',
-      admin: { condition: (_d, sibling) => sibling?.taskType === 'task1', description: 'Task 1 发布时必填' },
+      admin: { condition: (_d, sibling) => sibling?.taskType === 'task1' || sibling?.taskType === 'cet_writing', description: 'Task 1 发布时必填' },
     },
     {
       name: 'chartData',
@@ -107,10 +116,13 @@ export const WritingTasks: CollectionConfig = {
       type: 'row',
       fields: [
         { name: 'minWords', label: '最低字数', type: 'number', min: 1 },
+        { name: 'maxWords', label: '最高字数', type: 'number', min: 1 },
         { name: 'suggestedMinutes', label: '建议用时（分钟）', type: 'number', min: 1 },
       ],
     },
     { name: 'sampleAnswer', label: '范文', type: 'textarea' },
+    { name: 'modelAnswerZh', label: '范文译文', type: 'textarea' },
+    { name: 'analysis', label: '解析', type: 'textarea', admin: { description: '支持 **粗体**、"## " 小标题和换行' } },
     sourceType,
     {
       name: 'sourceId',

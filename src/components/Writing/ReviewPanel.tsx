@@ -7,6 +7,7 @@ import { CostMark } from '@/components/Journal/CostMark'
 import { Button } from '@/components/ui/button'
 import { countWords } from '@/exam/scoring'
 
+import { CetReviewResult, type CetReviewView } from './CetReviewResult'
 import { TaskReviews } from './ReviewHistory'
 import { ReviewResult, type Review } from './ReviewResult'
 import { WritingPad } from './WritingPad'
@@ -16,10 +17,13 @@ type State =
   | { kind: 'idle'; note?: React.ReactNode }
   | { kind: 'confirm'; balance: number }
   | { kind: 'pending'; id: number }
-  | { kind: 'done'; review: Review; reused: boolean }
+  | { kind: 'done'; review: Review | CetReviewView; reused: boolean }
 
-// 与 src/review/writing.ts 的 LIMITS 一致（那边带服务端依赖，前端不能直接引）
-const LIMITS = { task1: { min: 50, max: 1000 }, task2: { min: 80, max: 1000 } }
+// 与 src/review/writing.ts 的 LIMITS、src/review/cet.ts 的 CET_LIMITS 一致（writing.ts 带服务端依赖，前端不能直接引）
+const LIMITS = { task1: { min: 50, max: 1000 }, task2: { min: 80, max: 1000 }, cet_writing: { min: 50, max: 1000 }, cet_translation: { min: 20, max: 1000 } }
+type TaskType = keyof typeof LIMITS
+// 034：四 / 六级结果带 score，雅思带 overall
+const isCet = (r: Review | CetReviewView): r is CetReviewView => typeof (r as CetReviewView).score === 'number'
 const POLL_MS = 2000
 
 // 平台关闭时括号里不提笔记（032 contracts/ui.md）
@@ -31,11 +35,12 @@ const creditsLink = (notePlatform: string | null) => (
 
 export const ReviewPanel: React.FC<{
   taskId: number
-  taskType: 'task1' | 'task2'
+  taskType: TaskType
   minWords: number
+  maxWords?: number
   reviewable: boolean
   notePlatform?: string | null
-}> = ({ taskId, taskType, minWords, reviewable, notePlatform = '小红书' }) => {
+}> = ({ taskId, taskType, minWords, maxWords, reviewable, notePlatform = '小红书' }) => {
   // 只在点按钮时读，用 ref：打字不重渲染面板（用 state 时快速输入会触发 React 嵌套更新上限、丢字）
   const text = useRef('')
   const [state, setState] = useState<State>({ kind: 'idle' })
@@ -62,7 +67,7 @@ export const ReviewPanel: React.FC<{
       const d = res?.ok ? await res.json() : null
       if (d?.status === 'done') {
         setState({ kind: 'done', review: d, reused: false })
-        setLive(`批改完成，总分 ${d.overall}`)
+        setLive(isCet(d) ? `批改完成，${d.score} 分` : `批改完成，总分 ${d.overall}`)
       } else if (d?.status === 'failed') fail('批改没成功，额度已退回', '批改没成功，额度已退回')
       else timer = setTimeout(tick, POLL_MS)
     }
@@ -74,7 +79,7 @@ export const ReviewPanel: React.FC<{
     const words = countWords(text.current)
     const { min, max } = LIMITS[taskType]
     if (words < min) return fail(`至少写 ${min} 词再批改（现在 ${words} 词）`, '')
-    if (words > max) return fail(`作文超过 ${max} 词，删减后再批改（现在 ${words} 词）`, '')
+    if (words > max) return fail(`超过 ${max} 词，删减后再批改（现在 ${words} 词）`, '')
     const res = await fetch('/api/me/credits', { credentials: 'include' }).catch(() => null)
     if (res?.status === 401) {
       // 草稿已存在本机，登录回来还在
@@ -114,7 +119,7 @@ export const ReviewPanel: React.FC<{
 
   return (
     <>
-      <WritingPad minWords={minWords} onText={(t) => void (text.current = t)} readOnly={pending} taskId={String(taskId)} />
+      <WritingPad maxWords={maxWords} minWords={minWords} onText={(t) => void (text.current = t)} readOnly={pending} taskId={String(taskId)} />
       <div className="flex scroll-mt-24 flex-col gap-4 border-t border-border pt-4" id="review">
         <p aria-live="polite" className="sr-only">
           {live}
@@ -138,7 +143,9 @@ export const ReviewPanel: React.FC<{
           <div className="flex flex-wrap items-center gap-x-4 gap-y-2 bg-warning-soft px-4 py-2.5" data-testid="review-confirm" role="alert">
             {state.balance > 0 ? (
               <>
-                <p className="font-semibold tabular-nums">批改这篇作文要用 1 额度，你现在有 {state.balance} 额度</p>
+                <p className="font-semibold tabular-nums">
+                  批改这篇{taskType === 'cet_translation' ? '译文' : '作文'}要用 1 额度，你现在有 {state.balance} 额度
+                </p>
                 <div className="ml-auto flex gap-2">
                   <Button onClick={() => setState({ kind: 'idle' })} type="button" variant="outline">
                     再改改
@@ -163,7 +170,7 @@ export const ReviewPanel: React.FC<{
         {state.kind === 'done' && (
           <>
             {state.reused && <p className="text-sm text-muted-foreground">这篇和上次批改的一样，下面是上次的结果，没有扣额度</p>}
-            <ReviewResult review={state.review} />
+            {isCet(state.review) ? <CetReviewResult review={state.review} /> : <ReviewResult review={state.review} />}
           </>
         )}
 

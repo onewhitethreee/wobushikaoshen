@@ -9,6 +9,7 @@ import { BookOpen, Headphones } from 'lucide-react'
 import { CostMark } from '@/components/Journal/CostMark'
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
 import { PracticeView } from '@/components/Practice/PracticeView'
+import { EXAM_NAME } from '@/exam/cet'
 import { groupNumbers } from '@/exam/practice'
 import { getPracticeUnit, latestUnitId } from '@/content/practiceUnit'
 
@@ -36,7 +37,11 @@ export default async function Page({ params, searchParams }: Props) {
   if (!unit) notFound()
 
   const isL = unit.module === 'listening'
-  const column = isL ? { href: '/listening', name: '听力' } : { href: '/reading', name: '阅读' }
+  const column = unit.exam
+    ? { href: `/${unit.exam}`, name: `${EXAM_NAME[unit.exam]}真题` }
+    : isL
+      ? { href: '/listening', name: '听力' }
+      : { href: '/reading', name: '阅读' }
   const count = unit.sections.flatMap((s) => s.groups.flatMap(groupNumbers)).length
 
   return (

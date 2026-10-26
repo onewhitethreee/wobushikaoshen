@@ -10,7 +10,9 @@ import React, { cache } from 'react'
 import { getPlatform } from '@/account/credits'
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
 import { PickAgain } from '@/components/Writing/PickAgain'
+import { ModelAnswer } from '@/components/Writing/ModelAnswer'
 import { ReviewPanel } from '@/components/Writing/ReviewPanel'
+import { EXAM_NAME, isCet, paperLabel } from '@/exam/cet'
 import { categoryLabel } from '@/exam/writingCategories'
 import type { Media, WritingTask } from '@/payload-types'
 
@@ -42,6 +44,10 @@ export default async function Page({ params, searchParams }: Props) {
   const notePlatform = await getPlatform(await getPayload({ config: configPromise }))
 
   const t1 = task.taskType === 'task1'
+  // 033 四 / 六级写作、翻译：回四 / 六级栏目，不接批改，下面放范文和解析
+  const cet = isCet(task.exam) ? task.exam : null
+  const translation = task.taskType === 'cet_translation'
+  const words = [task.minWords, task.maxWords].filter(Boolean).join('–')
   const image = typeof task.image === 'object' && task.image ? (task.image as Media) : null
   const minWords = task.minWords ?? (t1 ? 150 : 250)
   const minutes = task.suggestedMinutes ?? (t1 ? 20 : 40)
@@ -53,25 +59,33 @@ export default async function Page({ params, searchParams }: Props) {
           首页
         </Link>{' '}
         /{' '}
-        <Link className="inline-flex min-h-11 items-center hover:text-foreground" href="/writing">
-          写作
+        <Link className="inline-flex min-h-11 items-center hover:text-foreground" href={cet ? `/${cet}` : '/writing'}>
+          {cet ? `${EXAM_NAME[cet]}真题` : '写作'}
         </Link>{' '}
         / {task.titleZh ?? task.title}
       </nav>
 
       <header className="flex flex-col gap-2">
-        <p className="text-sm text-muted-foreground">
-          {t1 ? 'Task 1' : 'Task 2'}
-          {task.category && ` · ${categoryLabel[task.category]}`} · 至少 {minWords} 词 · 建议{' '}
-          {minutes} 分钟
-        </p>
+        {cet ? (
+          <p className="text-sm text-muted-foreground">
+            {EXAM_NAME[cet]} · {paperLabel(task.paper)} · {translation ? '翻译' : '写作'}
+            {!translation && words && ` · ${words} 词`}
+            {task.suggestedMinutes && ` · 建议 ${task.suggestedMinutes} 分钟`}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground">
+            {t1 ? 'Task 1' : 'Task 2'}
+            {task.category && ` · ${categoryLabel[task.category]}`} · 至少 {minWords} 词 · 建议{' '}
+            {minutes} 分钟
+          </p>
+        )}
         <div className="flex items-start gap-2">
           <h1 className="min-w-0 text-[clamp(28px,3.4vw,44px)] leading-tight font-medium tracking-[-0.02em]">
             {task.title}
           </h1>
           <FavoriteButton className="mt-1" favKey={`w:${task.id}`} />
         </div>
-        {task.titleZh && <p className="text-[15px] text-muted-foreground">{task.titleZh}</p>}
+        {task.titleZh && task.titleZh !== task.title && <p className="text-[15px] text-muted-foreground">{task.titleZh}</p>}
         <PickAgain pick={pick} />
       </header>
 
@@ -108,13 +122,28 @@ export default async function Page({ params, searchParams }: Props) {
         </section>
 
         <section aria-label="作答" className="flex min-w-0 flex-[1_1_420px] flex-col gap-4">
-          <ReviewPanel
-            minWords={minWords}
-            notePlatform={notePlatform}
-            reviewable={!t1 || Boolean(task.chartData?.trim())}
-            taskId={task.id}
-            taskType={task.taskType}
-          />
+          {cet ? (
+            <>
+              {/* 034：四 / 六级写作、翻译也接 AI 批改 */}
+              <ReviewPanel
+                maxWords={translation ? undefined : (task.maxWords ?? undefined)}
+                minWords={translation ? 0 : (task.minWords ?? 0)}
+                notePlatform={notePlatform}
+                reviewable
+                taskId={task.id}
+                taskType={task.taskType}
+              />
+              <ModelAnswer analysis={task.analysis} answer={task.sampleAnswer} answerZh={task.modelAnswerZh} />
+            </>
+          ) : (
+            <ReviewPanel
+              minWords={minWords}
+              notePlatform={notePlatform}
+              reviewable={!t1 || Boolean(task.chartData?.trim())}
+              taskId={task.id}
+              taskType={task.taskType as 'task1' | 'task2'}
+            />
+          )}
         </section>
       </div>
     </div>

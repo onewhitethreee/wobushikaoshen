@@ -6,20 +6,40 @@ import React, { useEffect, useState } from 'react'
 import { when } from '@/components/Account/CreditsView'
 import { Button } from '@/components/ui/button'
 
+import { levelOf } from '@/review/cet'
+
+import { CetReviewResult, type CetReviewView } from './CetReviewResult'
 import { ReviewResult, type Review } from './ReviewResult'
 
 // 批改记录（015 contracts/ui.md）：写作页底部的本题记录、「写作批改」列表页、详情页
-type Row = { id: number; taskId: number | null; taskTitle: string; taskType: 'task1' | 'task2' | null; status: 'pending' | 'done'; overall: number | null; createdAt: string }
-type Detail = Review & {
-  status: 'pending' | 'done' | 'failed'
+type TaskType = keyof typeof TASK
+type Exam = 'ielts' | 'cet4' | 'cet6' | null
+type Row = {
+  id: number
+  taskId: number | null
+  taskTitle: string
+  taskType: TaskType | null
+  exam?: Exam
+  status: 'pending' | 'done'
+  overall: number | null
+  score?: number | null
   createdAt: string
-  essay: string
-  words: number
-  task: { id: number | null; title: string; taskType: 'task1' | 'task2' | null; removed: boolean }
 }
+type Detail = Review &
+  Partial<CetReviewView> & {
+    status: 'pending' | 'done' | 'failed'
+    createdAt: string
+    essay: string
+    words: number
+    task: { id: number | null; title: string; taskType: TaskType | null; exam?: Exam; removed: boolean }
+  }
 
-const TASK = { task1: 'Task 1', task2: 'Task 2' }
-const score = (r: Row) => (r.status === 'pending' ? '批改中' : (r.overall ?? 0).toFixed(1))
+const TASK = { task1: 'Task 1', task2: 'Task 2', cet_writing: '写作', cet_translation: '翻译' }
+const EXAM: Record<string, string> = { cet4: '四级 · ', cet6: '六级 · ' }
+// 034：四 / 六级显示"11 分 · 第 4 档"，雅思显示 Band
+const score = (r: Row) =>
+  r.status === 'pending' ? '批改中' : typeof r.score === 'number' ? `${r.score} 分 · 第 ${levelOf(r.score)} 档` : (r.overall ?? 0).toFixed(1)
+const kind = (exam: Exam | undefined, t: TaskType | null) => `${(exam && EXAM[exam]) ?? ''}${t ? `${TASK[t]} · ` : ''}`
 
 const LoginPrompt: React.FC<{ next: string; what: string }> = ({ next, what }) => (
   <div className="flex flex-col items-start gap-3 py-6">
@@ -113,7 +133,7 @@ export const ReviewList: React.FC = () => {
               <span className="min-w-0 flex-1">
                 <span className="block text-[15px] break-words">{r.taskTitle || '原题已下架'}</span>
                 <span className="text-[13px] text-muted-foreground">
-                  {r.taskType ? `${TASK[r.taskType]} · ` : ''}
+                  {kind(r.exam, r.taskType)}
                   {when(r.createdAt)}
                 </span>
               </span>
@@ -189,17 +209,21 @@ export const ReviewDetail: React.FC<{ id: string }> = ({ id }) => {
           )}
         </h1>
         <p className="text-[13px] text-muted-foreground">
-          {data.task.taskType ? `${TASK[data.task.taskType]} · ` : ''}
+          {kind(data.task.exam, data.task.taskType)}
           {when(data.createdAt)} 提交 · {data.words} 词
         </p>
       </div>
       <section className="flex flex-col gap-3">
-        <h2 className="text-[18px] font-medium">作文</h2>
+        <h2 className="text-[18px] font-medium">{data.task.taskType === 'cet_translation' ? '译文' : '作文'}</h2>
         <p className="border-l-2 border-border pl-4 text-[15px] leading-7 break-words whitespace-pre-wrap" data-testid="review-essay">
           {data.essay}
         </p>
       </section>
-      {data.status === 'pending' ? <p className="text-[15px] text-muted-foreground" role="status">还在批改，完成后会自动显示结果。</p> : <ReviewResult review={data} />}
+      {data.status === 'pending' ? <p className="text-[15px] text-muted-foreground" role="status">还在批改，完成后会自动显示结果。</p> : typeof data.score === 'number' && data.cet ? (
+        <CetReviewResult review={data as CetReviewView} />
+      ) : (
+        <ReviewResult review={data} />
+      )}
     </div>
   )
 }

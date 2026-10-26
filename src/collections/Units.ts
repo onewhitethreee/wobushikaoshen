@@ -6,6 +6,7 @@ import { authenticatedOrPublished } from '../access/authenticatedOrPublished'
 import { unitSummary } from '../exam/groupStats'
 import { isParaphraseData } from '../exam/paraphrase'
 import { countPending, validateUnit, type UnitData } from '../exam/validate'
+import { examField, paperField } from '../fields/exam'
 import { sourceType } from '../fields/sourceType'
 import { questionGroupsField } from './Tests/questionGroup'
 
@@ -36,8 +37,8 @@ export const Units: CollectionConfig = {
   versions: { drafts: true },
   admin: {
     useAsTitle: 'title',
-    defaultColumns: ['title', 'module', 'part', 'sourceTag', '_status'],
-    listSearchableFields: ['title', 'sourceId', 'sourceSets'],
+    defaultColumns: ['title', 'exam', 'module', 'part', 'paper', 'sourceTag', '_status'],
+    listSearchableFields: ['title', 'sourceId', 'sourceSets', 'paper'],
     components: { beforeListTable: ['@/components/ImportButton#ImportButton'] },
   },
   hooks: {
@@ -72,6 +73,8 @@ export const Units: CollectionConfig = {
         { name: 'part', label: 'Part / Passage', type: 'number', required: true, min: 1, max: 4 },
       ],
     },
+    examField,
+    paperField,
     { name: 'title', label: '标题', type: 'text', required: true },
     {
       name: 'audio',
@@ -89,6 +92,13 @@ export const Units: CollectionConfig = {
         description:
           '[{ n, speaker, start, end, text, announce }]，导入时生成；start / end 为秒，供字幕使用',
       },
+    },
+    {
+      // 033 四 / 六级：每段原文的中文翻译；阅读段落译文在 passage[].translation 里
+      name: 'transcriptTranslations',
+      label: '原文译文（按段）',
+      type: 'json',
+      admin: { condition: isListening, description: '["第 0 段译文", …]，下标对应原文行的 p' },
     },
     {
       name: 'passage',

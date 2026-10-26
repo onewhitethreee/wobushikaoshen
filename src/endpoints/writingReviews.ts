@@ -4,6 +4,7 @@ import { balance, refund } from '../account/credits'
 import { loadAi } from '../ai/chat'
 import { countWords } from '../exam/scoring'
 import type { WritingReview, WritingTask } from '../payload-types'
+import { CET_LIMITS, isCetTask } from '../review/cet'
 import { charge } from '../review/charge'
 import { essayHash, expireStale, LIMITS, MAX_CHARS, normalizeEssay, runReview } from '../review/writing'
 
@@ -41,10 +42,13 @@ const submit: Endpoint = {
         ).docs[0] as WritingTask | undefined)
       : undefined
     if (!task) return fail('题目不存在', 404)
+    // 034：四 / 六级写作、翻译也能批改，字数上下限另算
+    const cet = isCetTask(task.taskType)
+    if (!cet && task.taskType !== 'task1' && task.taskType !== 'task2') return fail('not_reviewable', 409)
     if (task.taskType === 'task1' && !task.chartData?.trim()) return fail('not_reviewable', 409)
     if (essay.length > MAX_CHARS) return fail('too_long', 400, { max: MAX_CHARS })
     const words = countWords(essay)
-    const { min, max } = LIMITS[task.taskType]
+    const { min, max } = isCetTask(task.taskType) ? CET_LIMITS[task.taskType] : LIMITS[task.taskType as 'task1' | 'task2']
     if (words < min || words > max) return fail('words', 400, { min, max, words })
     if (!(await loadAi(payload))) return fail('ai_unavailable', 503)
 
@@ -89,8 +93,8 @@ export const reviewView = (r: WritingReview) => {
     status: r.status,
     createdAt: r.createdAt,
     task: t
-      ? { id: t.id, title: t.title, taskType: t.taskType, minWords: t.minWords, removed: t._status !== 'published' }
-      : { id: null, title: '', taskType: null, minWords: null, removed: true },
+      ? { id: t.id, title: t.title, taskType: t.taskType, exam: t.exam, minWords: t.minWords, removed: t._status !== 'published' }
+      : { id: null, title: '', taskType: null, exam: null, minWords: null, removed: true },
     essay: r.essay,
     words: r.words,
     overall: r.overall,
@@ -98,6 +102,9 @@ export const reviewView = (r: WritingReview) => {
     paragraphs: r.paragraphs,
     rewrites: r.rewrites,
     lengthNote: r.lengthNote ?? '',
+    // 034 四 / 六级：原始分和结果主体；雅思为 null
+    score: r.score ?? null,
+    cet: r.cet ?? null,
   }
 }
 
@@ -126,7 +133,17 @@ const list: Endpoint = {
     return Response.json({
       docs: res.docs.map((r) => {
         const t = r.task as WritingTask | null
-        return { id: r.id, taskId: t?.id ?? null, taskTitle: t?.title ?? '', taskType: t?.taskType ?? null, status: r.status, overall: r.overall, createdAt: r.createdAt }
+        return {
+          id: r.id,
+          taskId: t?.id ?? null,
+          taskTitle: t?.title ?? '',
+          taskType: t?.taskType ?? null,
+          exam: t?.exam ?? null,
+          status: r.status,
+          overall: r.overall,
+          score: r.score ?? null,
+          createdAt: r.createdAt,
+        }
       }),
       totalPages: res.totalPages,
     })

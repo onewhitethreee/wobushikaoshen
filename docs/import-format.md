@@ -139,14 +139,19 @@
 | 字段 | 必填 | 说明 |
 |---|---|---|
 | `module` | 是 | `reading` 或 `listening` |
-| `part` | 是 | 阅读 Passage 1–3，听力 Part 1–4 |
+| `part` | 是 | 雅思：阅读 Passage 1–3，听力 Part 1–4；四 / 六级：阅读 1–4（选词填空、长篇阅读、仔细阅读 ×2），听力 1–3（Section A / B / C） |
+| `exam` | 否 | `ielts`（不填即此）、`cet4`、`cet6` |
+| `paper` | 四 / 六级必填 | 试卷编号 `YYYY-MM-N`，如 `2024-06-1`；栏目页按它分组 |
 | `title` | 是 | 标题 |
 | `sourceType` / `sourceSets` | 是 / 转载必填 | 见上文；`sourceSets` 写完整题集名，多个用逗号分隔，只在后台显示 |
 | `sourceId` | 是 | 原始数据编号，再次导入按它更新 |
 | `sourceTag` | 否 | 前台中性标签：`9月高频` `9月中频` `10月高频` `10月中频` `全年高频` `增补` |
 | `passage` | 阅读必填 | `[{ "label": "A", "sentences": [{ "n": 0, "text": "…" }] }]`，`n` 全文从 0 连续 |
 | `audio` | 听力必填 | 音频路径 |
-| `transcript` | 听力必填 | `[{ "n": 0, "speaker": "Speaker 1", "start": 3.4, "end": 4.6, "text": "…", "announce": true }]`；`announce` 标播报语（显示为弱文字色），`start` / `end` 秒，可缺 |
+| `transcript` | 听力必填 | `[{ "n": 0, "speaker": "Speaker 1", "start": 3.4, "end": 4.6, "text": "…", "announce": true }]`；`announce` 标播报语（显示为弱文字色），`start` / `end` 秒，可缺；四 / 六级可加 `p`（段落序号） |
+| `transcriptTranslations` | 否 | 四 / 六级：每段原文的中文翻译，字符串数组，下标对应 `p` |
+
+四 / 六级阅读的 `passage` 每段可加 `translation`（中文翻译），练习页"显示译文"开关用它。
 
 题目额外可写：
 
@@ -167,13 +172,17 @@
 
 | 字段 | 必填 | 说明 |
 |---|---|---|
-| `taskType` | 是 | `task1` 或 `task2` |
+| `taskType` | 是 | 雅思 `task1` / `task2`；四 / 六级 `cet_writing`（写作）/ `cet_translation`（翻译） |
+| `exam` / `paper` | 四 / 六级必填 | 同练习单元 |
 | `title` | 是 | 列表里显示的标题，如"三国家庭能源消耗对比" |
 | `prompt` | 是 | 题目原文 |
 | `image` | task1 必填 | 图表图片路径 |
-| `minWords` | 否 | 不填时 task1 = 150、task2 = 250 |
+| `minWords` | 否 | 不填时 task1 = 150、task2 = 250；四 / 六级不补默认值 |
+| `maxWords` | 否 | 字数上限（四 / 六级写作） |
 | `suggestedMinutes` | 否 | 不填时 task1 = 20、task2 = 40 |
-| `sampleAnswer` | 否 | 范文 |
+| `sampleAnswer` | 否 | 范文（四 / 六级包里写 `modelAnswer` 也行，导入时存到这里） |
+| `modelAnswerZh` | 否 | 范文中文翻译 |
+| `analysis` | 否 | 解析，支持 `**粗体**`、`## ` 开头的小标题和换行 |
 | `sourceType` | 是 | 见上文 |
 | `category` | 否 | Task 1：`data` `map` `process` `diagram`；Task 2：`opinion` `discussion` `report` `mixed` `comparison` `advantage` |
 | `titleZh` | 否 | 中文标题 |

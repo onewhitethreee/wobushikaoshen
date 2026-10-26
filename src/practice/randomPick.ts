@@ -3,7 +3,7 @@ import type { PracticeRow } from '@/sample'
 // 030 栏目随机抽题（specs/030-random-pick/research.md）。在浏览器里抽：范围 = 当前标签页 + 筛选下的行，
 // 状态"全部"时优先没做过的，去掉本轮（这个浏览器标签页里）已抽过的，再等概率取一行
 
-export const PICK_COLUMNS = ['listening', 'reading', 'writing'] as const
+export const PICK_COLUMNS = ['listening', 'reading', 'writing', 'cet4', 'cet6'] as const
 
 const ALL = '全部'
 
@@ -25,7 +25,7 @@ export const drawRow = (
   return { row: pool[Math.min(pool.length - 1, Math.floor(rand() * pool.length))], allDone, resetRound }
 }
 
-/** 网址里的 pick 只认三个栏目的站内路径（防止被拿来跳到别的网站），否则 null */
+/** 网址里的 pick 只认这几个栏目的站内路径（防止被拿来跳到别的网站），否则 null */
 export const safeScope = (s: string | null | undefined): string | null => {
   if (!s?.startsWith('/')) return null
   try {

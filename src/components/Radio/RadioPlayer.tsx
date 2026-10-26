@@ -16,7 +16,8 @@ const fetchPage = async (params: Record<string, string>): Promise<RadioItem[] | 
   return ((await res.json()) as { items: RadioItem[] }).items
 }
 
-export const RadioPlayer: React.FC<{ start?: string }> = ({ start }) => {
+// exam（033）：四 / 六级页面传 cet4 / cet6，只连播该考试
+export const RadioPlayer: React.FC<{ start?: string; exam?: 'cet4' | 'cet6' }> = ({ start, exam }) => {
   const player = useRef<AudioControls>(null)
   const [items, setItems] = useState<RadioItem[] | null>(null)
   const [failed, setFailed] = useState(false)
@@ -28,18 +29,18 @@ export const RadioPlayer: React.FC<{ start?: string }> = ({ start }) => {
   const autoplay = useRef(false)
 
   useEffect(() => {
-    void fetchPage(start ? { start } : {}).then((list) => {
+    void fetchPage({ ...(exam ? { exam } : {}), ...(start ? { start } : {}) }).then((list) => {
       if (!list?.length) setFailed(true)
       else setItems(list)
     })
-  }, [start])
+  }, [start, exam])
 
   // 快播完这一批时取下一批；取回空表示题集到头
   useEffect(() => {
     if (!items || exhausted.current || items.length - index > 3) return
     const last = items[items.length - 1].id
     let alive = true
-    void fetchPage({ after: last }).then((more) => {
+    void fetchPage({ ...(exam ? { exam } : {}), after: last }).then((more) => {
       if (!alive || !more) return
       if (!more.length) exhausted.current = true
       else setItems((cur) => (cur && cur[cur.length - 1].id === last ? [...cur, ...more] : cur))
@@ -47,7 +48,7 @@ export const RadioPlayer: React.FC<{ start?: string }> = ({ start }) => {
     return () => {
       alive = false
     }
-  }, [items, index])
+  }, [items, index, exam])
 
   const cur = items?.[index]
   const lines = useMemo(() => (cur?.lines ? timedLines(cur.lines) : []), [cur])

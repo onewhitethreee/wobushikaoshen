@@ -1,6 +1,7 @@
 // 套题发布校验（FR-014 / FR-024 / FR-061）和分数换算表校验（FR-072），纯函数。
 // 后台发布钩子和导入接口共用；规则见 specs/001-content-types-nav/data-model.md「发布校验」。
 
+import { isCet } from './cet'
 import { answerLines, countWords, expandOptional, TEXT_TYPES, type QuestionType } from './scoring'
 import { WRITING_CATEGORIES } from './writingCategories'
 
@@ -202,12 +203,24 @@ export type WritingData = {
   image?: unknown
   sourceType?: string | null
   sourceSets?: string | null
+  exam?: string | null
+  paper?: string | null
 }
+
+const IELTS_TASKS = ['task1', 'task2']
+const CET_TASKS = ['cet_writing', 'cet_translation']
 
 // 写作题发布规则（FR-030 / FR-031）；转载须记来源题集（宪章 III、007 FR-040）
 export const validateWritingTask = (d: WritingData): string[] => {
   const errors: string[] = []
-  if (d.taskType !== 'task1' && d.taskType !== 'task2') errors.push('taskType 必须是 task1 或 task2')
+  const t = d.taskType ?? ''
+  if (![...IELTS_TASKS, ...CET_TASKS].includes(t)) errors.push('taskType 必须是 task1、task2、cet_writing 或 cet_translation')
+  // 033：四 / 六级题型只属于四 / 六级，雅思题型只属于雅思
+  if (CET_TASKS.includes(t)) {
+    if (!isCet(d.exam)) errors.push(`${t} 的 exam 必须是 cet4 或 cet6`)
+    if (!d.paper?.trim()) errors.push('四 / 六级必须填写试卷 paper')
+  }
+  if (IELTS_TASKS.includes(t) && d.exam && d.exam !== 'ielts') errors.push(`${t} 只能用于雅思（exam 应为 ielts）`)
   if (!d.title?.trim()) errors.push('缺少标题')
   if (!d.prompt?.trim()) errors.push('缺少题目')
   if (d.taskType === 'task1' && !d.image) errors.push('Task 1 必须上传图表图片')
@@ -244,6 +257,8 @@ export type Sentence = { n?: number | null; text?: string | null }
 export type UnitData = {
   module?: 'listening' | 'reading' | string | null
   part?: number | null
+  exam?: string | null
+  paper?: string | null
   title?: string | null
   sourceType?: string | null
   sourceSets?: string | null
@@ -262,7 +277,11 @@ export const validateUnit = (d: UnitData): string[] => {
   const errors: string[] = []
   const isL = d.module === 'listening'
   if (d.module !== 'listening' && d.module !== 'reading') errors.push('module 必须是 listening 或 reading')
-  if (typeof d.part !== 'number' || d.part < 1 || d.part > (isL ? 4 : 3)) errors.push(`part 必须是 1–${isL ? 4 : 3}`)
+  // 雅思听力 4 个 Part、阅读 3 篇；四 / 六级听力 3 个 Section、阅读 4 个 Part（033）
+  const cet = isCet(d.exam)
+  const maxPart = cet ? (isL ? 3 : 4) : isL ? 4 : 3
+  if (typeof d.part !== 'number' || d.part < 1 || d.part > maxPart) errors.push(`part 必须是 1–${maxPart}`)
+  if (cet && !d.paper?.trim()) errors.push('四 / 六级必须填写试卷 paper')
   if (!d.title?.trim()) errors.push('缺少标题')
   if (d.sourceType === 'repost' && !d.sourceSets?.trim()) errors.push('转载内容必须填写来源题集 sourceSets')
 

@@ -1,0 +1,42 @@
+{
+ "kind": "writing",
+ "publish": false,
+ "data": [
+  {
+   "exam": "cet4",
+   "paper": "2024-06-1",
+   "sourceType": "original",
+   "sourceSets": "fixture 四级原创",
+   "taskType": "cet_writing",
+   "title": "说说校园里的志愿服务",
+   "titleZh": "说说校园里的志愿服务",
+   "prompt": "Suppose your university is encouraging students to volunteer on campus. Write an essay to express your view. You should write at least 120 words but no more than 180 words.",
+   "image": null,
+   "minWords": 120,
+   "maxWords": 180,
+   "suggestedMinutes": 30,
+   "sourceId": "fixture-cet4-2024-06-1-w",
+   "modelAnswer": "Campus volunteering benefits both students and the university.\nIt builds responsibility and teamwork.",
+   "modelAnswerZh": "校园志愿服务对学生和学校都有好处。\n它能培养责任感和团队合作。",
+   "analysis": "## 审题\n**第 1 段** 开门见山表明立场。\n**第 2 段** 给出理由。"
+  },
+  {
+   "exam": "cet4",
+   "paper": "2024-06-1",
+   "sourceType": "original",
+   "sourceSets": "fixture 四级原创",
+   "taskType": "cet_translation",
+   "title": "介绍城市里的口袋公园",
+   "titleZh": null,
+   "prompt": "For this part, you are allowed 30 minutes to translate a passage from Chinese into English.\n\n口袋公园是建在城市空地上的小型公园。它们离居民很近，方便人们散步和休息。",
+   "image": null,
+   "minWords": null,
+   "maxWords": null,
+   "suggestedMinutes": 30,
+   "sourceId": "fixture-cet4-2024-06-1-t",
+   "modelAnswer": "Pocket parks are small parks built on vacant urban land. Close to residents, they make walking and resting convenient.",
+   "modelAnswerZh": null,
+   "analysis": "**衔接** 第二句用 they 承接。"
+  }
+ ]
+}

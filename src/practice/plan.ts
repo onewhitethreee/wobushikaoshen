@@ -32,7 +32,8 @@ export const dailyTarget = (undone: number, days: number, module: Module) => {
 }
 
 const unitOf = (id: string) => id.replace(/-g\d+$/, '')
-const mine = (records: PracticeRecord[], module: Module) => records.filter((r) => moduleOf(r, r.unitId) === (module === 'listening' ? 'l' : 'r'))
+// 033：备考计划只算雅思，四 / 六级记录不计
+const mine = (records: PracticeRecord[], module: Module) => records.filter((r) => !r.exam && moduleOf(r, r.unitId) === (module === 'listening' ? 'l' : 'r'))
 
 /** 这科做过的练习单元（u{id}），题组归到单元 */
 export const doneUnits = (records: PracticeRecord[], module: Module) =>

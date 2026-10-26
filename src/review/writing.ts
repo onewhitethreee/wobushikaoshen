@@ -5,11 +5,13 @@ import type { Payload } from 'payload'
 import { refund } from '@/account/credits'
 import { chat, loadAi } from '@/ai/chat'
 import { countWords } from '@/exam/scoring'
+import { cetSystemPrompt, cetUserMessage, isCetTask, parseCetResult } from '@/review/cet'
 import type { WritingTask } from '@/payload-types'
 
 // 写作批改（015 research R2、R5）：提示词、输出校验、总分、执行与超时处理
 
-export type TaskType = WritingTask['taskType']
+// 雅思两种题型；四 / 六级的提示词与校验在 review/cet.ts（034）
+export type TaskType = Extract<WritingTask['taskType'], 'task1' | 'task2'>
 export type Criterion = { key: string; band: number; reason: string }
 export type ReviewResult = {
   criteria: Criterion[]
@@ -130,26 +132,42 @@ export const runReview = async (payload: Payload, id: number) => {
     const task = review.task as WritingTask
     const ai = await loadAi(payload)
     if (!ai) throw new Error('AI key 未配置')
-    const { content, usage } = await chat(ai, {
-      json: true,
-      timeoutMs: AI_TIMEOUT,
-      maxTokens: 4000,
-      messages: [
-        { role: 'system', content: systemPrompt(task.taskType) },
-        { role: 'user', content: userMessage(task, review.essay) },
-      ],
-    })
-    const r = parseResult(content, task.taskType, sentenceCount(review.essay))
-    const minWords = task.minWords ?? (task.taskType === 'task1' ? 150 : 250)
-    // 只在字数不足时显示；AI 有时会给达标的作文也写一句"字数不影响分数"，丢掉
-    const lengthNote =
-      (review.words ?? 0) < minWords ? r.lengthNote || `字数不足：题目要求至少 ${minWords} 词，这篇 ${review.words} 词，会拉低 ${KEYS[task.taskType][0]} 分数。` : ''
     const json = (v: unknown) => sql`${JSON.stringify(v)}::jsonb`
-    const { rows } = await db(payload).execute(sql`
-      UPDATE writing_reviews SET status = 'done', overall = ${overall(r.criteria.map((c) => c.band))},
-        criteria = ${json(r.criteria)}, paragraphs = ${json(r.paragraphs)}, rewrites = ${json(r.rewrites)},
-        length_note = ${lengthNote}, usage = ${json(usage)}, updated_at = now()
-      WHERE id = ${id} AND status = 'pending' RETURNING id`)
+    const ask = (system: string, user: string) =>
+      chat(ai, {
+        json: true,
+        timeoutMs: AI_TIMEOUT,
+        maxTokens: 4000,
+        messages: [
+          { role: 'system', content: system },
+          { role: 'user', content: user },
+        ],
+      })
+    let rows: Record<string, unknown>[]
+    if (isCetTask(task.taskType)) {
+      // 034 四 / 六级：原始分 + 结果主体；overall、criteria 留空
+      const { content, usage } = await ask(cetSystemPrompt(task.taskType, task.exam === 'cet6' ? 'cet6' : 'cet4'), cetUserMessage(task, review.essay))
+      const r = parseCetResult(content, task.taskType, sentenceCount(review.essay))
+      ;({ rows } = await db(payload).execute(sql`
+        UPDATE writing_reviews SET status = 'done', score = ${r.score}, cet = ${json(r.cet)},
+          paragraphs = ${json(r.paragraphs)}, rewrites = ${json(r.rewrites)},
+          length_note = ${r.lengthNote}, usage = ${json(usage)}, updated_at = now()
+        WHERE id = ${id} AND status = 'pending' RETURNING id`))
+    } else {
+      // 只有 task1 / task2 和四 / 六级能建批改记录（接口先拒其他题型）
+      const taskType = task.taskType as TaskType
+      const { content, usage } = await ask(systemPrompt(taskType), userMessage(task, review.essay))
+      const r = parseResult(content, taskType, sentenceCount(review.essay))
+      const minWords = task.minWords ?? (taskType === 'task1' ? 150 : 250)
+      // 只在字数不足时显示；AI 有时会给达标的作文也写一句"字数不影响分数"，丢掉
+      const lengthNote =
+        (review.words ?? 0) < minWords ? r.lengthNote || `字数不足：题目要求至少 ${minWords} 词，这篇 ${review.words} 词，会拉低 ${KEYS[taskType][0]} 分数。` : ''
+      ;({ rows } = await db(payload).execute(sql`
+        UPDATE writing_reviews SET status = 'done', overall = ${overall(r.criteria.map((c) => c.band))},
+          criteria = ${json(r.criteria)}, paragraphs = ${json(r.paragraphs)}, rewrites = ${json(r.rewrites)},
+          length_note = ${lengthNote}, usage = ${json(usage)}, updated_at = now()
+        WHERE id = ${id} AND status = 'pending' RETURNING id`))
+    }
     if (!rows.length) payload.logger.warn(`写作批改 #${id} 结果晚到，已按超时处理`)
   } catch (e) {
     await failReview(payload, id, (e as Error).message).catch((err) => payload.logger.error(err, `写作批改 #${id} 退回失败`))

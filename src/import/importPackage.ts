@@ -160,6 +160,11 @@ const writeDocs = async (
     .sort((a, b) => Number(String(items[a].part) === '2') - Number(String(items[b].part) === '2')) // part 可能写成数字
   for (const i of order) {
     const item = { ...items[i] }
+    // 033 四 / 六级写作包的范文字段叫 modelAnswer，存进已有的 sampleAnswer
+    if (kind === 'writing' && 'modelAnswer' in item) {
+      item.sampleAnswer ??= item.modelAnswer
+      delete item.modelAnswer
+    }
     if (kind === 'speaking' && Array.isArray(item.followUps)) {
       item.followUps = (item.followUps as { ref: number }[]).map((f) => ids[f.ref])
     }

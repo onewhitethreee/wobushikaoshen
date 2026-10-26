@@ -1078,7 +1078,12 @@ export interface Test {
  */
 export interface WritingTask {
   id: number;
-  taskType: 'task1' | 'task2';
+  taskType: 'task1' | 'task2' | 'cet_writing' | 'cet_translation';
+  exam: 'ielts' | 'cet4' | 'cet6';
+  /**
+   * 如 2024-06-1（年-月-第几套）；四 / 六级必填
+   */
+  paper?: string | null;
   /**
    * Task 1：数据图 / 地图 / 流程图 / 示意图；Task 2：观点 / 讨论 / 报告 / 混搭 / 比较 / 好坏
    */
@@ -1113,8 +1118,14 @@ export interface WritingTask {
   chartChecked?: boolean | null;
   chartSource?: ('vision' | 'manual') | null;
   minWords?: number | null;
+  maxWords?: number | null;
   suggestedMinutes?: number | null;
   sampleAnswer?: string | null;
+  modelAnswerZh?: string | null;
+  /**
+   * 支持 **粗体**、"## " 小标题和换行
+   */
+  analysis?: string | null;
   sourceType: 'original' | 'ai_rewrite' | 'repost' | 'ai_generated';
   /**
    * 导入的原始数据编号，再次导入时按它更新
@@ -1171,12 +1182,29 @@ export interface Unit {
   id: number;
   module: 'listening' | 'reading';
   part: number;
+  exam: 'ielts' | 'cet4' | 'cet6';
+  /**
+   * 如 2024-06-1（年-月-第几套）；四 / 六级必填
+   */
+  paper?: string | null;
   title: string;
   audio?: (number | null) | Media;
   /**
    * [{ n, speaker, start, end, text, announce }]，导入时生成；start / end 为秒，供字幕使用
    */
   transcript?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * ["第 0 段译文", …]，下标对应原文行的 p
+   */
+  transcriptTranslations?:
     | {
         [k: string]: unknown;
       }
@@ -1341,6 +1369,16 @@ export interface WritingReview {
   task: number | WritingTask;
   status: 'pending' | 'done' | 'failed';
   overall?: number | null;
+  score?: number | null;
+  cet?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
   essay: string;
   essayHash?: string | null;
   words?: number | null;
@@ -2371,9 +2409,12 @@ export interface TestsSelect<T extends boolean = true> {
 export interface UnitsSelect<T extends boolean = true> {
   module?: T;
   part?: T;
+  exam?: T;
+  paper?: T;
   title?: T;
   audio?: T;
   transcript?: T;
+  transcriptTranslations?: T;
   passage?: T;
   groups?:
     | T
@@ -2452,6 +2493,8 @@ export interface MockPapersSelect<T extends boolean = true> {
  */
 export interface WritingTasksSelect<T extends boolean = true> {
   taskType?: T;
+  exam?: T;
+  paper?: T;
   category?: T;
   title?: T;
   titleZh?: T;
@@ -2461,8 +2504,11 @@ export interface WritingTasksSelect<T extends boolean = true> {
   chartChecked?: T;
   chartSource?: T;
   minWords?: T;
+  maxWords?: T;
   suggestedMinutes?: T;
   sampleAnswer?: T;
+  modelAnswerZh?: T;
+  analysis?: T;
   sourceType?: T;
   sourceId?: T;
   sourceSets?: T;
@@ -2479,6 +2525,8 @@ export interface WritingReviewsSelect<T extends boolean = true> {
   task?: T;
   status?: T;
   overall?: T;
+  score?: T;
+  cet?: T;
   essay?: T;
   essayHash?: T;
   words?: T;

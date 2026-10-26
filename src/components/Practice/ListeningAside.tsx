@@ -4,6 +4,7 @@ import React from 'react'
 import type { Section } from '@/exam/practice'
 
 import { TranscriptView } from './TranscriptView'
+import { TranslationButton, useTranslation } from './Translation'
 
 const MapImage: React.FC<{ src: string }> = ({ src }) => (
   <a className="block" href={src} rel="noreferrer" target="_blank" title="点开看大图">
@@ -28,6 +29,9 @@ export const ListeningAside: React.FC<{
   onResume?: () => void
 }> = ({ section, submitted, highlight, marks, transcriptHidden, onToggleTranscript, current, onPick, onResume }) => {
   const images = section.groups.flatMap((g) => (g.imageUrl ? [g.imageUrl] : []))
+  // 033 四 / 六级：交卷后原文可切换显示每段译文
+  const [showZh, toggleZh] = useTranslation()
+  const hasZh = Boolean(section.transcriptTranslations?.length) && Array.isArray(section.transcript)
 
   if (!submitted) {
     const notes = section.groups.filter((g) => g.instructions || g.imageUrl)
@@ -76,9 +80,21 @@ export const ListeningAside: React.FC<{
           </div>
         </details>
       )}
+      {hasZh && !transcriptHidden && <TranslationButton on={showZh} onToggle={toggleZh} />}
       {transcriptHidden ? null : section.transcript ? (
         <div className="text-[15px] leading-7 whitespace-pre-line" data-hl="t">
-          {typeof section.transcript === 'string' ? section.transcript : <TranscriptView current={current} highlight={highlight} lines={section.transcript} marks={marks} onPick={onPick} />}
+          {typeof section.transcript === 'string' ? (
+            section.transcript
+          ) : (
+            <TranscriptView
+              current={current}
+              highlight={highlight}
+              lines={section.transcript}
+              marks={marks}
+              onPick={onPick}
+              translations={showZh ? section.transcriptTranslations : undefined}
+            />
+          )}
         </div>
       ) : (
         <p className="text-sm text-muted-foreground">这个 Part 暂无原文。</p>

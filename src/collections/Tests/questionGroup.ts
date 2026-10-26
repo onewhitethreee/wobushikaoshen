@@ -80,7 +80,8 @@ export const questionGroupsField = (name: string): ArrayField => ({
         {
           type: 'row',
           fields: [
-            { name: 'number', label: '题号', type: 'number', required: true, min: 1, max: 40 },
+            // 雅思套题 1–40 由 validateTest 另查；四 / 六级阅读题号到 55（033）
+            { name: 'number', label: '题号', type: 'number', required: true, min: 1, max: 60 },
             {
               name: 'span',
               label: '占几个题号',

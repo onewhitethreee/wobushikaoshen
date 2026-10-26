@@ -20,6 +20,8 @@ type Props = {
   onExplain?: (number: number) => void
   /** 听力两栏：配图放在左栏，题目栏不再显示 */
   hideMedia?: boolean
+  /** 033 四 / 六级听力：隐藏题干，只留选项 */
+  hidePrompt?: boolean
 }
 
 /** 选项状态：作答中只分选中 / 未选；交卷后正确选项标绿，选错的标红 */
@@ -232,7 +234,7 @@ const RadioRow: React.FC<{
   </div>
 )
 
-export const QuestionGroup: React.FC<Props> = ({ group, answers, onAnswer, submitted, items = [], onExplain, hideMedia }) => {
+export const QuestionGroup: React.FC<Props> = ({ group, answers, onAnswer, submitted, items = [], onExplain, hideMedia, hidePrompt }) => {
   const isText = TEXT_TYPES.includes(group.type) && group.options.length === 0
   const isMulti = group.type === 'multi_choice'
   const showTable = !isText && !isMulti && group.type !== 'single_choice' && !['tfng', 'ynng'].includes(group.type)
@@ -312,7 +314,12 @@ export const QuestionGroup: React.FC<Props> = ({ group, answers, onAnswer, submi
               <div className="mb-2 flex gap-3">
                 <span className="flex h-7 min-w-7 shrink-0 items-center justify-center rounded-lg border border-input px-1.5 text-[13px] font-bold tabular-nums">{nums}</span>
                 <div className="min-w-0 flex-1">
-                  {q.prompt && <p className="whitespace-pre-line">{q.prompt}</p>}
+                  {/* hidden 而不是不渲染：文字留在页面里，高亮偏移不变（033 四 / 六级听力隐藏题干） */}
+                  {q.prompt && (
+                    <p className="whitespace-pre-line" hidden={hidePrompt}>
+                      {q.prompt}
+                    </p>
+                  )}
                   {isMulti && <p className="mt-1 inline-flex bg-primary-soft px-2.5 py-0.5 text-[12px] font-semibold text-primary-text">选 {q.span} 项</p>}
                 </div>
               </div>

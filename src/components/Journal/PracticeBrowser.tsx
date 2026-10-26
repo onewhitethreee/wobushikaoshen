@@ -42,7 +42,7 @@ const readRecords = (config: ColumnConfig, store: Store): Records => {
     const s = lastScore(store, r.id)
     if (s) local[r.id] = s
   }
-  const drafts = config.slug === 'writing' ? loadDrafts() : {}
+  const drafts = config.slug === 'writing' || config.slug === 'cet4' || config.slug === 'cet6' ? loadDrafts() : {}
   const written = new Set(config.rows.filter((r) => drafts[r.id]?.text.trim()).map((r) => r.id))
   return { local, mocks: mockRows(store.mocks, config.rows), written }
 }
@@ -362,13 +362,16 @@ export const PracticeBrowser: React.FC<{
           </div>
         ) : (
           <ol className="flex flex-col">
-            {shown.map((r) => (
-              <RowView
-                focused={r.id === initial.focus}
-                key={r.id}
-                ref={r.id === initial.focus ? focusRef : undefined}
-                row={r}
-              />
+            {shown.map((r, i) => (
+              <React.Fragment key={r.id}>
+                {/* 033 四 / 六级：换试卷时出小标题（每页第一行也出） */}
+                {r.group && r.group !== shown[i - 1]?.group && (
+                  <li className="pt-8 pb-1 first:pt-2" data-testid="row-group">
+                    <h3 className="text-[15px] font-medium">{r.group}</h3>
+                  </li>
+                )}
+                <RowView focused={r.id === initial.focus} ref={r.id === initial.focus ? focusRef : undefined} row={r} />
+              </React.Fragment>
             ))}
           </ol>
         )}

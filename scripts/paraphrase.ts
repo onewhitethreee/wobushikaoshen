@@ -1,4 +1,4 @@
-// pnpm paraphrase [--limit N] [--redo 3,5] [--only-failed] [--price-in 元/百万] [--price-out 元/百万]
+// pnpm paraphrase [--exam cet4] [--limit N] [--redo 3,5] [--only-failed] [--price-in 元/百万] [--price-out 元/百万]
 // 用后台「AI 设置」的文字模型，给已发布练习单元的每道题生成题干 ↔ 原文的同义替换（026 research R2–R4）。
 // 默认只处理还没有数据的单元；验证不通过的对丢弃；失败的单元 id 写进 paraphrase.failed.txt
 import 'dotenv/config'
@@ -38,6 +38,9 @@ const onlyFailed = process.argv.includes('--only-failed')
 const limit = Number(arg('--limit')) || undefined
 const priceIn = Number(arg('--price-in')) || 0
 const priceOut = Number(arg('--price-out')) || 0
+// 033：默认只跑雅思，四 / 六级要手动指定（费用另算）
+const exam = arg('--exam') ?? 'ielts'
+if (!['ielts', 'cet4', 'cet6'].includes(exam)) throw new Error('--exam 只能是 ielts、cet4 或 cet6')
 const picked = redo !== undefined ? ids(redo) : onlyFailed ? ids(existsSync(FAILED) ? readFileSync(FAILED, 'utf8') : '') : null
 
 const { docs: all } = await payload.find({
@@ -47,7 +50,7 @@ const { docs: all } = await payload.find({
   pagination: false,
   sort: 'id',
   select: { paraphrases: true },
-  where: { _status: { equals: 'published' }, ...(picked ? { id: { in: picked } } : {}) },
+  where: { _status: { equals: 'published' }, exam: { equals: exam as 'ielts' }, ...(picked ? { id: { in: picked } } : {}) },
 })
 const pending = picked ? all : all.filter((u) => !u.paraphrases)
 const todo = pending.slice(0, limit)

@@ -139,7 +139,8 @@ export const isSyncData = (d: unknown): d is Partial<SyncData> =>
       d.records.every(
         (r) =>
           isObj(r) && str(r.unitId) && num(r.at) && num(r.score) && num(r.total) && Array.isArray(r.items) && r.items.length <= 200 &&
-          (r.module === undefined || r.module === 'l' || r.module === 'r') && (r.answers === undefined || isObj(r.answers)) &&
+          (r.module === undefined || r.module === 'l' || r.module === 'r') &&
+          (r.exam === undefined || r.exam === 'cet4' || r.exam === 'cet6') && (r.answers === undefined || isObj(r.answers)) &&
           sec(r.duration) && sec(r.limit) && isTimes(r.times),
       ))) &&
   every(d.progress, (p) => str(p.version) && isObj(p.answers) && num(p.savedAt) && isMarks(p.marks) && sec(p.elapsed) && isTimes(p.times)) &&

@@ -17,6 +17,8 @@ export default function Page() {
         </div>
         <ProgressPanel module="listening" />
         <ProgressPanel module="reading" />
+        <ProgressPanel exam="cet4" />
+        <ProgressPanel exam="cet6" />
       </div>
     </section>
   )

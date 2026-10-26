@@ -5,6 +5,7 @@ import Link from 'next/link'
 import React, { useEffect, useMemo, useState } from 'react'
 
 import type { LookupItem } from '@/endpoints/lookup'
+import { EXAM_NAME, type Cet } from '@/exam/cet'
 import { listeningType, readingType } from '@/exam/typeNames'
 import { progressOf, type Progress } from '@/practice/progress'
 import { load } from '@/practice/store'
@@ -17,6 +18,7 @@ import { TypeBars } from './TypeBars'
 
 // 一科的进步区块（021 contracts/ui.md）：数字行、每次正确率、整套 Band、各题型正确率。
 // foldable：栏目页用，可收起、没有记录时不显示
+// exam（033）：四 / 六级一条正确率曲线，听力阅读合在一起，没有 Band 和题型条
 const FOLD_KEY = 'ybz:progress-fold:v1'
 const NAME = { listening: '听力', reading: '阅读' }
 
@@ -43,20 +45,24 @@ const Kpi: React.FC<{ label: string; children: React.ReactNode }> = ({ label, ch
   </div>
 )
 
-export const ProgressPanel: React.FC<{ module: 'listening' | 'reading'; foldable?: boolean }> = ({ module, foldable }) => {
+type Props = { foldable?: boolean } & ({ module: 'listening' | 'reading'; exam?: undefined } | { exam: Cet; module?: undefined })
+
+export const ProgressPanel: React.FC<Props> = ({ module = 'reading', exam, foldable }) => {
+  const key = exam ?? module
+  const name = exam ? EXAM_NAME[exam] : NAME[module]
   const [p, setP] = useState<Progress | null>(null)
   const [titles, setTitles] = useState<Record<string, string>>({})
   const [folded, setFolded] = useState(false)
 
   useEffect(() => {
     const names = module === 'listening' ? listeningType : readingType
-    const read = () => setP(progressOf(load().store.records, module, (t) => names[t] ?? t))
+    const read = () => setP(progressOf(load().store.records, module, (t) => names[t] ?? t, exam))
     read()
-    if (foldable) setFolded(Boolean(readFold()[module]))
+    if (foldable) setFolded(Boolean(readFold()[key]))
     window.addEventListener(STORE_EVENT, read)
     void sync() // 已登录时先取回其他设备的记录（同步完会触发 STORE_EVENT）
     return () => window.removeEventListener(STORE_EVENT, read)
-  }, [module, foldable])
+  }, [module, exam, key, foldable])
 
   // 提示里的单元标题：按 20 个一批查，查不到写"已下架"
   const ids = useMemo(() => [...new Set(p?.points.map((x) => x.unitId) ?? [])].filter((id) => !(id in titles)), [p, titles])
@@ -78,29 +84,30 @@ export const ProgressPanel: React.FC<{ module: 'listening' | 'reading'; foldable
   }, [ids])
 
   if (!p) return null
-  if (!p.count && foldable) return null
+  // 四 / 六级没做过就不占位置（雅思考生在 /me/progress 不会看到两块空面板）
+  if (!p.count && (foldable || exam)) return null
 
   const toggle = () => {
     const next = !folded
     setFolded(next)
     try {
-      localStorage.setItem(FOLD_KEY, JSON.stringify({ ...readFold(), [module]: next }))
+      localStorage.setItem(FOLD_KEY, JSON.stringify({ ...readFold(), [key]: next }))
     } catch {
       // 记不住只是下次展开
     }
   }
 
   const title = (
-    <h2 className="text-[20px] font-medium">{foldable ? '我的进步' : NAME[module]}</h2>
+    <h2 className="text-[20px] font-medium">{foldable ? '我的进步' : name}</h2>
   )
 
   if (!p.count)
     return (
-      <section className="flex flex-col gap-3 border-t border-border pt-6" data-testid={`progress-${module}`}>
+      <section className="flex flex-col gap-3 border-t border-border pt-6" data-testid={`progress-${key}`}>
         {title}
         <p className="flex flex-wrap items-center gap-x-3 text-[15px] text-muted-foreground">
-          还没有交过{NAME[module]}卷。
-          <Link className="inline-flex min-h-11 items-center gap-1 font-semibold text-foreground underline-offset-4 hover:underline" href={`/${module}`}>
+          还没有交过{name}卷。
+          <Link className="inline-flex min-h-11 items-center gap-1 font-semibold text-foreground underline-offset-4 hover:underline" href={`/${key}`}>
             去练习 <ArrowUpRight aria-hidden="true" className="size-4" />
           </Link>
         </p>
@@ -114,7 +121,7 @@ export const ProgressPanel: React.FC<{ module: 'listening' | 'reading'; foldable
   const arrow = p.delta === null ? '' : p.delta > 0 ? '↑ +' : p.delta < 0 ? '↓ −' : '→ '
 
   return (
-    <section className={cn('flex flex-col gap-5', !foldable && 'border-t border-border pt-6')} data-testid={`progress-${module}`}>
+    <section className={cn('flex flex-col gap-5', !foldable && 'border-t border-border pt-6')} data-testid={`progress-${key}`}>
       <div className="flex items-center justify-between gap-4">
         {title}
         {foldable && (
@@ -184,7 +191,7 @@ export const ProgressPanel: React.FC<{ module: 'listening' | 'reading'; foldable
             />
           )}
 
-          {p.types.length > 0 && <TypeBars rows={p.types} slug={module} />}
+          {!exam && p.types.length > 0 && <TypeBars rows={p.types} slug={module} />}
         </>
       )}
     </section>

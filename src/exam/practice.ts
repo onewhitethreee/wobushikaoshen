@@ -1,4 +1,5 @@
 // 练习单位与整组判分（纯函数），形状见 specs/003-practice-ui/data-model.md
+import type { Cet } from './cet'
 import { isCorrect, scoreMulti, type QuestionType } from './scoring'
 
 export type UnitId = string
@@ -35,13 +36,20 @@ export type GroupView = {
 }
 
 /** 听力原文一句（练习单元导入的原文按句给，套题仍是整段文字）；start / end 为秒，004 按句控制用 */
-export type TranscriptLine = { n: number; speaker?: string; text: string; announce?: boolean; start?: number; end?: number }
+/** p：四 / 六级原文行所属段落，对应 Section.transcriptTranslations 的下标（033） */
+export type TranscriptLine = { n: number; speaker?: string; text: string; announce?: boolean; start?: number; end?: number; p?: number }
 
 export type Section = {
   label: string
   audioUrl?: string
   transcript?: string | TranscriptLine[]
-  passage?: { title: string; paragraphs: { label?: string; text: string; sentences?: { n: number; text: string }[] }[]; imageUrl?: string }
+  /** 033 四 / 六级：每段原文的中文翻译 */
+  transcriptTranslations?: string[]
+  passage?: {
+    title: string
+    paragraphs: { label?: string; text: string; sentences?: { n: number; text: string }[]; translation?: string }[]
+    imageUrl?: string
+  }
   groups: GroupView[]
 }
 
@@ -55,6 +63,9 @@ export type PracticeUnit = {
   whole: boolean
   sections: Section[]
   bandScale?: { min: number; max: number; band: number }[]
+  /** 033：四 / 六级单元才有 */
+  exam?: Cet
+  paper?: string
 }
 
 /** 键为题号（多选用首个题号，值为选项数组） */

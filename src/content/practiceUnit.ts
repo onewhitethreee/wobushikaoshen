@@ -3,6 +3,7 @@ import configPromise from '@payload-config'
 import { getPayload } from 'payload'
 
 import { listeningDefaults, readingDefaults } from '@/exam/bandScaleDefaults'
+import { cetPartName, EXAM_NAME, IELTS, isCet, paperLabel } from '@/exam/cet'
 import {
   FIXED_OPTIONS,
   groupKey,
@@ -22,7 +23,7 @@ import type { Media, Test, Unit } from '@/payload-types'
 type RawGroup =
   | NonNullable<NonNullable<NonNullable<Test['listening']>['parts']>[number]['groups']>[number]
   | NonNullable<Unit['groups']>[number]
-type Paragraph = { label?: string | null; text: string; sentences?: { n: number; text: string }[] }
+type Paragraph = { label?: string | null; text: string; sentences?: { n: number; text: string }[]; translation?: string }
 
 const url = (m: number | Media | null | undefined) => (m && typeof m === 'object' ? (m.url ?? undefined) : undefined)
 const text = (s: string | null | undefined) => s || undefined
@@ -84,15 +85,22 @@ const getUnit = async (p: Extract<ParsedUnit, { kind: 'unit' }>): Promise<Practi
   const u = res.docs[0] as Unit | undefined
   if (!u) return null
   const isL = u.module === 'listening'
-  const raw = (Array.isArray(u.passage) ? u.passage : []) as { label?: string; sentences?: { n: number; text: string }[] }[]
+  const raw = (Array.isArray(u.passage) ? u.passage : []) as { label?: string; sentences?: { n: number; text: string }[]; translation?: string }[]
   const paragraphs: Paragraph[] = raw.map((x) => ({
     label: x.label || undefined,
     sentences: x.sentences ?? [],
     text: (x.sentences ?? []).map((s) => s.text).join(' '),
+    ...(x.translation ? { translation: x.translation } : {}),
   }))
+  const cet = isCet(u.exam) ? u.exam : undefined
   const items = (u.paraphrases as { items?: Record<string, { q: string; s: string }[]> } | null | undefined)?.items ?? {}
   const groups = (u.groups ?? []).map((g, gi) => {
     const view = toGroup(g, unitGroupKey(u.id, gi + 1), paragraphs, true)
+    // 033 选词填空：包里的词库是两栏交错顺序（A、I、B、J…），按字母排
+    if (cet && view.type === 'completion' && view.options.length) view.options = [...view.options].sort((a, b) => a.key.localeCompare(b.key))
+    // 四 / 六级听力：每组说明都带同一段 Section 说明，第 2 组起去掉重复的那段，只留"Questions 3 and 4 are based on…"
+    const head = (u.groups?.[0]?.instructions ?? '').split('\n')[0]
+    if (cet && isL && gi > 0 && head && view.instructions.startsWith(head + '\n')) view.instructions = view.instructions.slice(head.length + 1)
     // 026 同义替换：按题号带进每道题
     view.questions = view.questions.map((q) => (items[q.number]?.length ? { ...q, paraphrases: items[q.number] } : q))
     return view
@@ -100,16 +108,18 @@ const getUnit = async (p: Extract<ParsedUnit, { kind: 'unit' }>): Promise<Practi
   const only = p.group ? groups[p.group - 1] : undefined
   if (p.group && !only) return null
 
-  const label = `${isL ? 'Part' : 'Passage'} ${u.part}`
+  const label = cet ? cetPartName(u.module, u.part) : `${isL ? 'Part' : 'Passage'} ${u.part}`
   const section: Section = {
     label,
     groups: only ? [only] : groups,
     ...(isL
       ? {
           audioUrl: url(u.audio),
-          transcript: ((Array.isArray(u.transcript) ? u.transcript : []) as TranscriptLine[]).map(({ n, speaker, text, announce, start, end }) => ({ n, speaker, text, announce, start, end })),
+          transcript: ((Array.isArray(u.transcript) ? u.transcript : []) as TranscriptLine[]).map(({ n, speaker, text, announce, start, end, p }) => ({ n, speaker, text, announce, start, end, p })),
+          ...(Array.isArray(u.transcriptTranslations) ? { transcriptTranslations: u.transcriptTranslations as string[] } : {}),
         }
-      : { passage: { title: u.title, paragraphs: paragraphs.map((x) => ({ ...x, label: x.label ?? undefined })) } }),
+      : // 四 / 六级没有标题的文章，包里用首句截断（以…结尾）当标题，正文上方不再重复
+        { passage: { title: cet && u.title.endsWith('…') ? '' : u.title, paragraphs: paragraphs.map((x) => ({ ...x, label: x.label ?? undefined })) } }),
   }
   return {
     id: unitId(p),
@@ -117,9 +127,13 @@ const getUnit = async (p: Extract<ParsedUnit, { kind: 'unit' }>): Promise<Practi
     source: 'unit',
     version: u.updatedAt,
     module: u.module,
-    title: `${u.title} · ${label}${only ? rangeSuffix(only) : ''}`,
+    // 四 / 六级标题带考试和试卷，错题本、收藏、进步曲线里也能看出是哪一套
+    title: cet
+      ? `${EXAM_NAME[cet]} ${paperLabel(u.paper)} · ${cetPartName(u.module, u.part)}${only ? rangeSuffix(only) : ''}`
+      : `${u.title} · ${label}${only ? rangeSuffix(only) : ''}`,
     whole: false,
     sections: [section],
+    ...(cet ? { exam: cet, paper: u.paper ?? undefined } : {}),
   }
 }
 
@@ -200,7 +214,7 @@ export const latestUnitId = async (module: Module): Promise<string | null> => {
   // 没有套题时落到最近发布的练习单元 Part 1 / Passage 1（007）
   const u = await payload.find({
     collection: 'units',
-    where: { _status: { equals: 'published' }, module: { equals: module === 'l' ? 'listening' : 'reading' }, part: { equals: 1 } },
+    where: { _status: { equals: 'published' }, module: { equals: module === 'l' ? 'listening' : 'reading' }, part: { equals: 1 }, ...IELTS },
     depth: 0,
     limit: 1,
     sort: '-updatedAt',

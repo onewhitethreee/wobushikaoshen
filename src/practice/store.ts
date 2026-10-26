@@ -18,6 +18,8 @@ export type Progress = { version: string; answers: Answers; savedAt: number; mar
 export type PracticeRecord = {
   unitId: UnitId
   module?: 'l' | 'r'
+  /** 033：四 / 六级单元交卷时写；缺省 = 雅思 */
+  exam?: 'cet4' | 'cet6'
   at: number
   score: number
   total: number

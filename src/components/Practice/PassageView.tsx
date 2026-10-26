@@ -4,6 +4,8 @@ import { markPhrases } from '@/exam/paraphrase'
 import type { Section } from '@/exam/practice'
 import { cn } from '@/utilities/ui'
 
+import { TranslationButton, TranslationText, useTranslation } from './Translation'
+
 /** "s10-16" / "s7" → [10, 16] / [7, 7]；段落字母返回 null */
 export const sentenceRange = (target?: string): [number, number] | null => {
   const m = /^s(\d+)(?:-(\d+))?$/.exec(target ?? '')
@@ -32,8 +34,12 @@ export const Marked: React.FC<{ text: string; marks?: string[] }> = ({ text, mar
 
 export const PassageView: React.FC<{ passage: NonNullable<Section['passage']>; highlight?: string; marks?: string[] }> = ({ passage, highlight, marks }) => {
   const range = sentenceRange(highlight)
+  // 033 四 / 六级：有译文的文章出开关，交卷前后都能切
+  const hasTranslation = passage.paragraphs.some((p) => p.translation)
+  const [showZh, toggleZh] = useTranslation()
   return (
     <article className="bg-muted px-4 py-6 sm:px-7" data-hl="p">
+      {hasTranslation && <TranslationButton className="mb-2" on={showZh} onToggle={toggleZh} />}
       {passage.title && <h2 className="mb-4 font-bold tracking-tight text-[26px] leading-snug text-balance">{passage.title}</h2>}
       {passage.imageUrl && (
         <a className="mb-4 block" href={passage.imageUrl} rel="noreferrer" target="_blank" title="点开看大图">
@@ -74,6 +80,7 @@ export const PassageView: React.FC<{ passage: NonNullable<Section['passage']>; h
                   )
                 })
               : p.text}
+            {showZh && p.translation && <TranslationText className="mt-1.5" text={p.translation} />}
           </p>
         ))}
       </div>

@@ -1,0 +1,118 @@
+{
+ "kind": "unit",
+ "publish": false,
+ "data": [
+  {
+   "module": "listening",
+   "part": 1,
+   "title": "Section A 新闻报道",
+   "exam": "cet4",
+   "paper": "2024-06-1",
+   "sourceType": "original",
+   "sourceId": "fixture-cet4-2024-06-1-la",
+   "sourceSets": "fixture 四级 2024-06",
+   "audio": "audio/fixture-cet4-2024-06-1-la.mp3",
+   "transcript": [
+    {
+     "n": 0,
+     "speaker": "Speaker",
+     "start": 0,
+     "end": 0.2,
+     "text": "Section A.",
+     "announce": true
+    },
+    {
+     "n": 1,
+     "speaker": "Speaker",
+     "start": 0.2,
+     "end": 0.5,
+     "text": "Six people had to move after a fire on Main Street.",
+     "p": 0
+    },
+    {
+     "n": 2,
+     "speaker": "Speaker",
+     "start": 0.5,
+     "end": 0.8,
+     "text": "Smoke and heat damaged four apartments.",
+     "p": 0
+    },
+    {
+     "n": 3,
+     "speaker": "Speaker",
+     "start": 0.8,
+     "end": 1.0,
+     "text": "Nobody was hurt in the fire.",
+     "p": 1
+    }
+   ],
+   "transcriptTranslations": [
+    "Main Street 发生火灾后，六人不得不搬走。烟雾和高温损坏了四套公寓。",
+    "火灾中无人受伤。"
+   ],
+   "groups": [
+    {
+     "type": "single_choice",
+     "instructions": "Questions 1 and 2 are based on the news report you have just heard.",
+     "options": [],
+     "questions": [
+      {
+       "number": 1,
+       "span": 1,
+       "prompt": "Why did the six residents have to move?",
+       "options": [
+        {
+         "key": "A",
+         "text": "A fire alarm."
+        },
+        {
+         "key": "B",
+         "text": "Smoke and heat damage."
+        },
+        {
+         "key": "C",
+         "text": "Water damage."
+        },
+        {
+         "key": "D",
+         "text": "The building collapsed."
+        }
+       ],
+       "answers": "B",
+       "explanation": "**答案** B\n原文说 smoke and heat damaged four apartments。",
+       "evidence": "2",
+       "answerStatus": "confirmed"
+      },
+      {
+       "number": 2,
+       "span": 1,
+       "prompt": "Was anyone hurt?",
+       "options": [
+        {
+         "key": "A",
+         "text": "Yes, one firefighter."
+        },
+        {
+         "key": "B",
+         "text": "Yes, two residents."
+        },
+        {
+         "key": "C",
+         "text": "No one."
+        },
+        {
+         "key": "D",
+         "text": "It is not known."
+        }
+       ],
+       "answers": "C",
+       "explanation": "**答案** C",
+       "evidence": "3",
+       "answerStatus": "confirmed"
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

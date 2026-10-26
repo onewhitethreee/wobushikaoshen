@@ -209,6 +209,7 @@ test.describe('写作 AI 批改', () => {
   })
 
   test('批改记录：写作页列出历次、详情是当时的作文、同一篇再交不扣、别人看不到', async ({ browser }) => {
+    test.setTimeout(90_000) // 两个账号、整套批改 / 讲解流程，开发模式下接近 30 秒
     const C = mail('c')
     const ctx = await browser.newContext()
     const page = await ctx.newPage()
@@ -285,6 +286,7 @@ test.describe('写作 AI 批改', () => {
   })
 
   test('错题讲解：扣 1、再看不扣、别人同错答命中缓存、答对没有按钮、失败退回、未登录提示', async ({ browser }) => {
+    test.setTimeout(90_000) // 两个账号、整套批改 / 讲解流程，开发模式下接近 30 秒
     const E = mail('e')
     const ctx = await browser.newContext({ viewport: { width: 1440, height: 900 } })
     const page = await ctx.newPage()

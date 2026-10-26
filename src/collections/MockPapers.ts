@@ -18,7 +18,7 @@ const slotField = (s: (typeof SLOTS)[number]): Field => ({
   type: 'relationship',
   relationTo: 'units',
   required: true,
-  filterOptions: { module: { equals: s.module }, part: { equals: s.part } },
+  filterOptions: { module: { equals: s.module }, part: { equals: s.part }, exam: { equals: 'ielts' } },
 })
 
 // 028 模考卷：听力 Part 1–4 + 阅读 Passage 1–3，只引用练习单元（research R1）。

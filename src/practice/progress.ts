@@ -1,6 +1,7 @@
 // 进步曲线（021 research R4、data-model）：从交卷记录算出一科的趋势。纯函数
 import { moduleOf } from '@/account/mistakes'
 import { listeningDefaults, readingDefaults } from '@/exam/bandScaleDefaults'
+import type { Cet } from '@/exam/cet'
 import { bandFor } from '@/exam/practice'
 import type { QuestionType } from '@/exam/scoring'
 import { accuracyByType, emptyStore, type PracticeRecord } from '@/practice/store'
@@ -30,9 +31,12 @@ const ratio = (list: PracticeRecord[]) => {
   return total ? list.reduce((s, r) => s + r.score, 0) / total : null
 }
 
-export const progressOf = (records: PracticeRecord[], module: 'listening' | 'reading', typeName: (t: QuestionType) => string): Progress => {
+/** 不给 exam：雅思这一科（四 / 六级记录不计）；给了 exam：该考试听力阅读合在一起，module 只用来选 Band 换算表，四 / 六级没有整套所以不出 Band（033） */
+export const progressOf = (records: PracticeRecord[], module: 'listening' | 'reading', typeName: (t: QuestionType) => string, exam?: Cet): Progress => {
   const m = module === 'listening' ? 'l' : 'r'
-  const mine = records.filter((r) => r.total > 0 && moduleOf(r, r.unitId) === m).sort((a, b) => a.at - b.at)
+  const mine = records
+    .filter((r) => r.total > 0 && (exam ? r.exam === exam : !r.exam && moduleOf(r, r.unitId) === m))
+    .sort((a, b) => a.at - b.at)
 
   const all = mine.map((r, i) => ({
     at: r.at,

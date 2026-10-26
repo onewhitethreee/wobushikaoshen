@@ -1,6 +1,6 @@
 'use client'
 
-import { Flag } from 'lucide-react'
+import { EyeOff, Flag } from 'lucide-react'
 import Link from 'next/link'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
@@ -25,6 +25,7 @@ import { locateLabel, QuestionGroup } from './QuestionGroup'
 import { ResultBar } from './ResultBar'
 import { ShareDialog } from './ShareDialog'
 import { Timer } from './Timer'
+import { TranslationButton, useHideStem } from './Translation'
 import { currentIndex, nextStart, prevStart, timedLines, type TimedLine } from './sentences'
 import { ShortcutHelp, type ShortcutHelpHandle } from './ShortcutHelp'
 import { SubmitConfirm } from './SubmitConfirm'
@@ -278,6 +279,7 @@ export const PracticeView: React.FC<{
     addRecord(store, {
       unitId: unit.id,
       module: isL ? 'l' : 'r',
+      ...(unit.exam ? { exam: unit.exam } : {}),
       at: Date.now(),
       score: r.score,
       total: r.total,
@@ -486,8 +488,12 @@ export const PracticeView: React.FC<{
   })
   const band = unit.whole && result ? bandFor(result.score, unit.bandScale) : null
 
+  // 033 四 / 六级听力：试卷上不印题干，默认隐藏，可切换
+  const stemToggle = Boolean(unit.exam) && isL
+  const [hideStem, toggleStem] = useHideStem()
   const groups = section.groups.map((g) => (
     <QuestionGroup
+      hidePrompt={stemToggle && hideStem}
       answers={answers}
       group={g}
       items={result?.items.filter((i) => i.groupKey === g.key)}
@@ -561,7 +567,7 @@ export const PracticeView: React.FC<{
           {result && !review && (
             <ResultBar
               band={band}
-              listHref={scope ?? (isL ? '/listening' : '/reading')}
+              listHref={scope ?? (unit.exam ? `/${unit.exam}` : isL ? '/listening' : '/reading')}
               pickAgainHref={scope ? drawHref(scope) : undefined}
               onPick={openExplain}
               onRetry={restart}
@@ -647,7 +653,7 @@ export const PracticeView: React.FC<{
               {unit.source !== 'mock' && <Link
                 className="inline-flex min-h-11 items-center px-2 text-sm text-muted-foreground underline underline-offset-4 hover:text-foreground"
                 data-testid="radio-link"
-                href={`/listening/play?start=${unit.source === 'unit' ? `u${unit.docId}` : `t${unit.docId}-l${radioPart}`}`}
+                href={`${unit.exam ? `/${unit.exam}` : '/listening'}/play?start=${unit.source === 'unit' ? `u${unit.docId}` : `t${unit.docId}-l${radioPart}`}`}
               >
                 磨耳朵
               </Link>}
@@ -725,6 +731,7 @@ export const PracticeView: React.FC<{
             onInput={trackCurrent}
             onPointerDown={trackCurrent}
           >
+            {stemToggle && <TranslationButton icon={EyeOff} label="隐藏题干" on={hideStem} onToggle={toggleStem} testId="stem-toggle" />}
             {groups}
           </div>
         </div>

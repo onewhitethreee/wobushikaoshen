@@ -16,6 +16,8 @@ import * as migration_20261023_132325_footer_contact from './20261023_132325_foo
 import * as migration_20261023_140545_029_content_api from './20261023_140545_029_content_api';
 import * as migration_20261024_133706_032_note_platform from './20261024_133706_032_note_platform';
 import * as migration_20261024_141309_031_answer_report from './20261024_141309_031_answer_report';
+import * as migration_20261026_194600_033_cet from './20261026_194600_033_cet';
+import * as migration_20261026_213129_034_cet_review from './20261026_213129_034_cet_review';
 
 export const migrations = [
   {
@@ -106,6 +108,16 @@ export const migrations = [
   {
     up: migration_20261024_141309_031_answer_report.up,
     down: migration_20261024_141309_031_answer_report.down,
-    name: '20261024_141309_031_answer_report'
+    name: '20261024_141309_031_answer_report',
+  },
+  {
+    up: migration_20261026_194600_033_cet.up,
+    down: migration_20261026_194600_033_cet.down,
+    name: '20261026_194600_033_cet',
+  },
+  {
+    up: migration_20261026_213129_034_cet_review.up,
+    down: migration_20261026_213129_034_cet_review.down,
+    name: '20261026_213129_034_cet_review'
   },
 ];

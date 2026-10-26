@@ -1,6 +1,7 @@
 import type { Endpoint, PayloadRequest } from 'payload'
 
 import { getPracticeUnit } from '../content/practiceUnit'
+import { EXAM_NAME, isCet } from '../exam/cet'
 import { parseUnitId, type Option } from '../exam/practice'
 import type { QuestionType } from '../exam/scoring'
 
@@ -23,7 +24,9 @@ const one = async (req: PayloadRequest, id: string): Promise<LookupItem> => {
       limit: 1,
     })
     const t = res.docs[0]
-    return t ? { gone: false, title: t.titleZh ?? t.title, module: 'writing', href: `/writing/${t.id}` } : { gone: true }
+    // 033：四 / 六级题在收藏、错题列表里标出考试
+    const name = t && isCet(t.exam) ? `${EXAM_NAME[t.exam]} · ` : ''
+    return t ? { gone: false, title: name + (t.titleZh ?? t.title), module: 'writing', href: `/writing/${t.id}` } : { gone: true }
   }
   const p = parseUnitId(id)
   const unit = p && (await getPracticeUnit(id))

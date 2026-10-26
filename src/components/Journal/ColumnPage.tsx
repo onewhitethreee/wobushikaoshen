@@ -26,6 +26,7 @@ const pendingNotice = (config: ColumnConfig, q: ColumnQuery) => {
 // 五个栏目页共用：三栏，标题区放在中栏顶部（006 FR-054）
 export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> = ({ config, query }) => {
   const notice = pendingNotice(config, query)
+  const cet = config.slug === 'cet4' || config.slug === 'cet6'
   const mock = config.sidebar.find((m) => m.kind === 'mock')
   const filters: Record<string, string> = {}
   for (const t of config.tabs) for (const f of t.filters) if (query[f.id]) filters[f.id] = query[f.id]!
@@ -42,6 +43,20 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> 
         <h1 className="text-[clamp(40px,4.4vw,60px)] leading-[1.1] font-medium tracking-[-0.02em]">{config.title}</h1>
         <CostMark cost={config.cost} label={config.costLabel} />
       </div>
+      {cet && (
+        <nav aria-label="四级 / 六级" className="flex gap-6 text-[15px]">
+          {(['cet4', 'cet6'] as const).map((s) => (
+            <Link
+              aria-current={s === config.slug ? 'page' : undefined}
+              className="inline-flex min-h-11 items-center underline-offset-4 hover:underline aria-[current=page]:font-semibold aria-[current=page]:underline"
+              href={`/${s}`}
+              key={s}
+            >
+              {s === 'cet4' ? '四级' : '六级'}
+            </Link>
+          ))}
+        </nav>
+      )}
       <p className="text-[15px] text-muted-foreground">{config.note}</p>
       {query.empty === '1' && (
         <p className="flex animate-reveal items-start gap-3 bg-muted px-5 py-4 text-sm" role="status">
@@ -55,9 +70,9 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> 
           {notice}
         </p>
       )}
-      {config.slug === 'listening' && (
-        <Link className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-semibold underline-offset-4 hover:underline" data-testid="radio-entry" href="/listening/play">
-          磨耳朵：连着听一个题集 <ArrowUpRight aria-hidden="true" className="size-4" />
+      {(config.slug === 'listening' || (cet && config.rows.some((r) => r.facets.subject === '听力'))) && (
+        <Link className="inline-flex min-h-11 items-center gap-1 self-start text-sm font-semibold underline-offset-4 hover:underline" data-testid="radio-entry" href={cet ? `/${config.slug}/play` : '/listening/play'}>
+          {cet ? '磨耳朵：按套连着听' : '磨耳朵：连着听一个题集'} <ArrowUpRight aria-hidden="true" className="size-4" />
         </Link>
       )}
       {config.slug === 'reading' && config.tabs.some((t) => t.filters.some((f) => f.id === 'tag' && f.options.includes(API_TAG))) && (
@@ -66,6 +81,7 @@ export const ColumnPage: React.FC<{ config: ColumnConfig; query: ColumnQuery }> 
         </Link>
       )}
       {(config.slug === 'listening' || config.slug === 'reading') && <ProgressPanel foldable module={config.slug} />}
+      {(config.slug === 'cet4' || config.slug === 'cet6') && <ProgressPanel exam={config.slug} foldable />}
     </div>
   )
 

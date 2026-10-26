@@ -15,13 +15,15 @@ export const defaultNav: NavItem[] = [
   { href: '/writing', label: '写作' },
   { href: '/speaking', label: '口语' },
   { href: '/mock', label: '模考' },
+  // 033：四 / 六级独立栏目，/cet6 也高亮这一项
+  { href: '/cet4', label: '四六级' },
 ]
 
 export const HeaderNav: React.FC<{ items: NavItem[] }> = ({ items }) => {
   const raw = usePathname()
   // 练习页高亮所属栏目：/practice/t1-l2 → 听力，/practice/t1-r → 阅读
   const practice = /^\/practice\/(?:t\d+|latest)-([lr])/.exec(raw)
-  const pathname = practice ? (practice[1] === 'l' ? '/listening' : '/reading') : raw
+  const pathname = practice ? (practice[1] === 'l' ? '/listening' : '/reading') : raw.replace(/^\/cet6/, '/cet4')
 
   return (
     <nav

@@ -21,6 +21,8 @@ export type PracticeRow = {
   count?: number
   minutes?: number
   facets: Record<string, string>
+  /** 033 四 / 六级：所属试卷，连续同组的行前面出一个小标题 */
+  group?: string
   /** 上次记录的文字（筛选"已做 / 未做"与读屏用） */
   record?: string
   /** 有分数时栏目页画成图形（005 US6）；没有就显示 record 文字胶囊 */
@@ -42,7 +44,7 @@ export type SidebarModule =
   | { kind: 'quota' }
   | { kind: 'note'; title: string; body: string; link?: { label: string; href: string } }
 
-export type ColumnSlug = 'listening' | 'reading' | 'writing' | 'speaking' | 'mock'
+export type ColumnSlug = 'listening' | 'reading' | 'writing' | 'speaking' | 'mock' | 'cet4' | 'cet6'
 
 export type ColumnConfig = {
   slug: ColumnSlug
@@ -407,7 +409,19 @@ const mock: ColumnConfig = {
   ],
 }
 
-export const columns: Record<ColumnSlug, ColumnConfig> = { listening, reading, writing, speaking, mock }
+// 033 四 / 六级：没有示例行，没导入时显示"题库正在准备"
+const cet = (slug: 'cet4' | 'cet6', name: string): ColumnConfig => ({
+  slug,
+  title: `${name}真题`,
+  cost: free,
+  note: '历年真题，每题带解析和译文，不登录也能做',
+  tabs: [{ id: 'paper', label: '按试卷', match: { kind: 'unit' }, filters: [status] }],
+  rows: [],
+  // 034：写作、翻译 AI 批改每次 1 额度，其余免费
+  sidebar: [{ kind: 'note', title: '练习免费，批改用额度', body: '真题练习、范文和解析都免费；写作、翻译的 AI 批改每次用 1 额度。' }],
+})
+
+export const columns: Record<ColumnSlug, ColumnConfig> = { listening, reading, writing, speaking, mock, cet4: cet('cet4', '四级'), cet6: cet('cet6', '六级') }
 
 export const home: HomeData = {
   issueLine: '',

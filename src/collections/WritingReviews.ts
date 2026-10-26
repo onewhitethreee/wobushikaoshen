@@ -35,6 +35,9 @@ export const WritingReviews: CollectionConfig = {
       ],
     },
     { name: 'overall', label: '总分', type: 'number' },
+    // 034 四 / 六级：原始分 0–15 和结果主体（档位理由、三方面点评或逐句对照、总体点评）；雅思为空
+    { name: 'score', label: '原始分（四六级）', type: 'number', min: 0, max: 15 },
+    { name: 'cet', label: '四六级结果', type: 'json' },
     { name: 'essay', label: '作文', type: 'textarea', required: true },
     { name: 'essayHash', label: '作文指纹', type: 'text', index: true, admin: { hidden: true } },
     { name: 'words', label: '词数', type: 'number' },
