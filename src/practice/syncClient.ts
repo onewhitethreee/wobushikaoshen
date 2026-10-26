@@ -8,12 +8,18 @@ import { KEY, WRITING_KEY, load, loadDrafts, save, saveDrafts } from './store'
 /** 本机数据被同步改过后派发，已挂载的组件重读本机 */
 export const STORE_EVENT = 'ybz:store'
 
-let member: Promise<boolean> | null = null
-export const isMember = () =>
-  (member ??= fetch('/api/members/me', { credentials: 'include' })
+export type Me = { email?: string; collection?: string; passwordSet?: boolean | null }
+
+// 一次页面加载只问一次；登录、退出都整页跳转，不会读到旧值
+let me: Promise<Me | null> | null = null
+export const getMe = () =>
+  (me ??= fetch('/api/members/me', { credentials: 'include' })
     .then((r) => r.json())
-    .then((d: { user?: { collection?: string } | null }) => d.user?.collection === 'members')
-    .catch(() => false))
+    .then((d: { user?: Me | null }) => (d.user?.collection === 'members' ? d.user : null))
+    .catch(() => null))
+
+let member: Promise<boolean> | null = null
+export const isMember = () => (member ??= getMe().then(Boolean))
 
 const since = <T,>(o: Record<string, T>, at: (v: T) => number, t: number) =>
   Object.fromEntries(Object.entries(o).filter(([, v]) => at(v) >= t))

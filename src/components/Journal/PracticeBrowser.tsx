@@ -468,7 +468,7 @@ const RowView = React.forwardRef<HTMLLIElement, { row: PracticeRow; focused: boo
           >
             <span className="text-[15px] font-semibold">{row.lead}</span>
             {row.leadSub && (
-              <span className="text-[10px] whitespace-nowrap opacity-80">{row.leadSub}</span>
+              <span className="text-[12px] tracking-[-0.02em] whitespace-nowrap opacity-80">{row.leadSub}</span>
             )}
           </div>
           <div className="min-w-0">

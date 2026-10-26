@@ -6,7 +6,7 @@ import React, { useEffect, useRef, useState } from 'react'
 
 import { ChevronDown } from 'lucide-react'
 
-import { clearLocal } from '@/practice/syncClient'
+import { clearLocal, getMe } from '@/practice/syncClient'
 
 // 页头账号入口（009 contracts/ui.md）：未登录显示"登录"，已登录显示脱敏邮箱和菜单
 const mask = (email: string) => {
@@ -21,13 +21,10 @@ export const AccountMenu: React.FC = () => {
   const menu = useRef<HTMLDetailsElement>(null)
 
   useEffect(() => {
-    fetch('/api/members/me', { credentials: 'include' })
-      .then((r) => r.json())
-      .then((d: { user?: { email?: string; collection?: string; passwordSet?: boolean | null } | null }) => {
-        setEmail(d.user?.collection === 'members' && d.user.email ? d.user.email : null)
-        setPasswordSet(Boolean(d.user?.passwordSet))
-      })
-      .catch(() => setEmail(null))
+    getMe().then((u) => {
+      setEmail(u?.email ?? null)
+      setPasswordSet(Boolean(u?.passwordSet))
+    })
   }, [])
 
   // 菜单里点了链接就收起

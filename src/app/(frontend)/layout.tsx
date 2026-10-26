@@ -38,11 +38,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           >
             跳到正文
           </a>
-          <AdminBar
-            adminBarProps={{
-              preview: isEnabled,
-            }}
-          />
+          {/* 只在后台预览时挂：平时每个访客都会多拉一份 JS、多问一次 /api/users/me */}
+          {isEnabled && <AdminBar adminBarProps={{ preview: true }} />}
 
           <Header />
           <main className="flex grow flex-col" id="main">
