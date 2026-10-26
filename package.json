@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "0.8.1",
+  "version": "0.8.2",
   "description": "Website template for Payload",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -53,7 +53,7 @@
     "lucide-react": "0.563.0",
     "next": "16.4.3",
     "next-sitemap": "^4.2.3",
-    "nodemailer": "10.1.0",
+    "nodemailer": "10.1.4",
     "payload": "3.90.2",
     "prism-react-renderer": "^2.3.1",
     "qrcode-generator": "2.0.4",

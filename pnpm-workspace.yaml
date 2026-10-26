@@ -6,7 +6,8 @@ allowBuilds:
 
 # 间接依赖的安全修复（010 security-report S-07）：Payload / 后台代码编辑器带进来的旧版本
 overrides:
-  undici: ^7.29.1
+  undici: ^7.30.1
+  fast-uri: ^3.1.9
   dompurify: ^3.4.16
   sharp: ^0.35.5
   # Dependabot（docs/reports/2026-10-16-dependabot.md）
