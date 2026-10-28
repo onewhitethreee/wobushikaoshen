@@ -18,6 +18,7 @@ import * as migration_20261024_133706_032_note_platform from './20261024_133706_
 import * as migration_20261024_141309_031_answer_report from './20261024_141309_031_answer_report';
 import * as migration_20261026_194600_033_cet from './20261026_194600_033_cet';
 import * as migration_20261026_213129_034_cet_review from './20261026_213129_034_cet_review';
+import * as migration_20261027_145817_035_question_stats from './20261027_145817_035_question_stats';
 
 export const migrations = [
   {
@@ -118,6 +119,11 @@ export const migrations = [
   {
     up: migration_20261026_213129_034_cet_review.up,
     down: migration_20261026_213129_034_cet_review.down,
-    name: '20261026_213129_034_cet_review'
+    name: '20261026_213129_034_cet_review',
+  },
+  {
+    up: migration_20261027_145817_035_question_stats.up,
+    down: migration_20261027_145817_035_question_stats.down,
+    name: '20261027_145817_035_question_stats'
   },
 ];

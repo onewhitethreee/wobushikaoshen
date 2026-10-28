@@ -33,6 +33,8 @@ import { RowLabel as RowLabel_ec255a65fa6fa8d1faeb09cf35284224 } from '@/Header/
 import { RowLabel as RowLabel_1f6ff6ff633e3695d348f4f3c58f1466 } from '@/Footer/RowLabel'
 import { MailTestButton as MailTestButton_65118cd6c4d74b03150318a68fd52280 } from '@/components/Account/MailTestButton'
 import { ContentApiPanel as ContentApiPanel_a3fed20d0ad0e801a84a1ece9a68831c } from '@/components/Admin/ContentApiPanel'
+import { StatsNavLink as StatsNavLink_23f2b561c8798f5166f36a34fce4b829 } from '@/components/Admin/StatsNavLink'
+import { StatsView as StatsView_3c82d3a25b1a24dbb7768abe01a15561 } from '@/components/Admin/StatsView'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 import { S3ClientUploadHandler as S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24 } from '@payloadcms/storage-s3/client'
 
@@ -73,6 +75,8 @@ export const importMap = {
   "@/Footer/RowLabel#RowLabel": RowLabel_1f6ff6ff633e3695d348f4f3c58f1466,
   "@/components/Account/MailTestButton#MailTestButton": MailTestButton_65118cd6c4d74b03150318a68fd52280,
   "@/components/Admin/ContentApiPanel#ContentApiPanel": ContentApiPanel_a3fed20d0ad0e801a84a1ece9a68831c,
+  "@/components/Admin/StatsNavLink#StatsNavLink": StatsNavLink_23f2b561c8798f5166f36a34fce4b829,
+  "@/components/Admin/StatsView#StatsView": StatsView_3c82d3a25b1a24dbb7768abe01a15561,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1,
   "@payloadcms/storage-s3/client#S3ClientUploadHandler": S3ClientUploadHandler_f97aa6c64367fa259c5bc0567239ef24
 }

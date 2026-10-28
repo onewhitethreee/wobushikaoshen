@@ -9,6 +9,7 @@ import { countPending, validateUnit, type UnitData } from '../exam/validate'
 import { examField, paperField } from '../fields/exam'
 import { sourceType } from '../fields/sourceType'
 import { questionGroupsField } from './Tests/questionGroup'
+import { syncOnPublish, unitDocQuestions } from '../stats/keys'
 
 // 前台显示的中性题集标签（007 FR-032）：不出现来源平台名
 export const SOURCE_TAGS = [
@@ -42,6 +43,8 @@ export const Units: CollectionConfig = {
     components: { beforeListTable: ['@/components/ImportButton#ImportButton'] },
   },
   hooks: {
+    // 035：发布时比对答案快照，补答案重判、改答案清零
+    afterChange: [syncOnPublish(unitDocQuestions)],
     beforeChange: [
       ({ data, originalDoc }) => {
         // 批量发布 / 取消发布只带改动的字段（如 { _status }），校验要看合并后的完整文档

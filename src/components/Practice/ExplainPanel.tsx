@@ -5,6 +5,7 @@ import React from 'react'
 
 import { FavoriteButton } from '@/components/Account/FavoriteButton'
 import type { Answers, GroupView, ScoreItem } from '@/exam/practice'
+import { useUnitStats } from '@/practice/statClient'
 import { fmt } from '@/practice/timer'
 import { cn } from '@/utilities/ui'
 
@@ -47,6 +48,8 @@ export const ExplainPanel: React.FC<{
   seconds?: number
 }> = ({ unitId, group, q, answer, items, open, collapsed, onPrev, onNext, onLocate, onToggle, onClose, ref, seconds }) => {
   const r = resultOf(group, q, answer, items)
+  // 035：解析面板只在交卷后出现，这里直接取；不到 20 人、失败、加载中都不显示（FR-014、FR-017、FR-019）
+  const stat = useUnitStats(unitId, true)?.questions[q.number]
   const label = locateLabel(group, q)
   const nums = q.span > 1 ? `${q.number}–${q.number + q.span - 1}` : String(q.number)
   return (
@@ -133,6 +136,12 @@ export const ExplainPanel: React.FC<{
           </div>
         )}
         {!r.ok && <AiExplain answer={answer} key={q.number} number={q.number} unitId={unitId} />}
+        {stat && (
+          <p className="text-[13px] text-muted-foreground tabular-nums" data-testid="question-stat">
+            {stat.span ? `全对率 ${Math.round(stat.rate * 100)}% · 平均 ${stat.avg!.toFixed(1)}/${stat.span}` : `正确率 ${Math.round(stat.rate * 100)}%`} ·{' '}
+            {stat.people} 人做过
+          </p>
+        )}
         {/* 031：判对判错都能举报；模考时 unitId 已是题组所属单元 */}
         <ReportAnswer answer={answer} answers={r.answer} key={`r${q.number}`} number={q.number} unitId={unitId} />
       </div>

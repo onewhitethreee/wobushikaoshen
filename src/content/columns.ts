@@ -1,7 +1,10 @@
 // 栏目页数据：读已发布内容，生成 sample/index.ts 里同样形状的 ColumnConfig。
 // 某个栏目还没有任何已发布内容时，退回示例数据（页面上标着"示例数据"），开发阶段不会是空页。
 import configPromise from '@payload-config'
+import { unstable_cache } from 'next/cache'
 import { getPayload, type Where } from 'payload'
+
+import { doneCounts } from '@/stats/read'
 
 import { getPlatform } from '@/account/credits'
 import { groupStats, type GroupSummary } from '@/exam/groupStats'
@@ -36,6 +39,9 @@ const practice = (id: string): Action => ({
 const distinct = (xs: string[]) => ['全部', ...new Set(xs)]
 
 const SORT = { tests: '-code', units: 'title', 'writing-tasks': '-updatedAt', 'speaking-questions': '-updatedAt' }
+
+// 035 栏目"N 人做过"：缓存 5 分钟（FR-013、SC-006）
+const cachedDone = unstable_cache(async () => doneCounts(await getPayload({ config: configPromise })), ['stats-done'], { revalidate: 300 })
 
 // 不设条数上限：练习单元有几百条（R10 的 ponytail 注释写了改服务端分页的时机）
 const published = async <T>(collection: keyof typeof SORT, module?: 'listening' | 'reading') => {
@@ -418,6 +424,11 @@ export const getColumn = async (slug: ColumnSlug): Promise<ColumnConfig> => {
     real = speakingColumn(await published<SpeakingQuestion>('speaking-questions'))
   if (slug === 'mock') real = await mockColumn()
   const notePlatform = await getPlatform(await getPayload({ config: configPromise }))
+  // 035："N 人做过"，只有首次作答 ≥ 20 的行有；整套套题、模考卷行在统计里没有对应 id，不显示
+  if (real) {
+    const done = await cachedDone()
+    real = { ...real, rows: real.rows.map((r) => (done[r.id] ? { ...r, people: done[r.id] } : r)) }
+  }
   return { ...(real ?? { ...sample[slug], isSample: true }), notePlatform }
 }
 

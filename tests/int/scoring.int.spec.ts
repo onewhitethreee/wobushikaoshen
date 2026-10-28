@@ -79,4 +79,63 @@ describe('判分规则', () => {
     expect(isCorrect('１５', 'fifteen', fill())).toBe(true)
     expect(isCorrect('１６', 'fifteen', fill())).toBe(false)
   })
+
+  // 2026-10-27 放宽：AI 审核答案时发现的、雅思评分都算对的写法
+  it('序数词：18th、eighteenth、18 互通', () => {
+    expect(isCorrect('eighteenth', '18th', fill())).toBe(true)
+    expect(isCorrect('18', '18th', fill())).toBe(true)
+    expect(isCorrect('twenty-first', '21st', fill())).toBe(true)
+    expect(isCorrect('seventeenth', '18th', fill())).toBe(false)
+  })
+
+  it('日期：日月顺序、the / of、序数写法互通', () => {
+    expect(isCorrect('26 September', 'September 26th\nSeptember 26', fill())).toBe(true)
+    expect(isCorrect('January the twelfth', '12 January', fill())).toBe(true)
+    expect(isCorrect('the 12th of January', 'January 12', fill())).toBe(true)
+    expect(isCorrect('24 August 1979', 'August 24th 1979', fill())).toBe(true)
+    expect(isCorrect('27 September', 'September 26', fill())).toBe(false)
+    expect(isCorrect('26 October', 'September 26', fill())).toBe(false)
+  })
+
+  it('长串数字（电话、编号）忽略中间的空格和连字符', () => {
+    expect(isCorrect('89460733', '8946 0733', fill())).toBe(true)
+    expect(isCorrect('077896245', '077-896-245', fill())).toBe(true)
+    expect(isCorrect('0407 625 4633', '04076254633', fill())).toBe(true)
+    expect(isCorrect('89460734', '8946 0733', fill())).toBe(false)
+    expect(isCorrect('018699925', '018 669 925', fill())).toBe(false)
+  })
+
+  it('英美拼写互通', () => {
+    expect(isCorrect('theater', 'Theatre', fill())).toBe(true)
+    expect(isCorrect('organizational', 'organisational', fill())).toBe(true)
+    expect(isCorrect('color', 'colour', fill())).toBe(true)
+    expect(isCorrect('theatres', 'Theatre', fill())).toBe(false)
+  })
+
+  it('连字符和空格互通，但字数照算', () => {
+    expect(isCorrect('cost effective', 'cost effective', fill())).toBe(true)
+    expect(isCorrect('cost-effective', 'cost effective', fill())).toBe(true)
+    expect(isCorrect('cost effective', 'cost-effective', fill())).toBe(true)
+    expect(isCorrect('cost effective', 'cost-effective', fill(1))).toBe(false)
+  })
+
+  it('百分比：% 与 percent / per cent 互通', () => {
+    expect(isCorrect('1.3 percent', '1.3%', fill())).toBe(true)
+    expect(isCorrect('50 per cent', '50%', fill())).toBe(true)
+    expect(isCorrect('1.4%', '1.3%', fill())).toBe(false)
+  })
+
+  it('AND/OR A NUMBER：用英文写的数字同样不计字数', () => {
+    expect(countWords('four weeks', true)).toBe(1)
+    expect(countWords('twenty-one days', true)).toBe(1)
+    expect(countWords('four weeks', false)).toBe(2)
+    expect(isCorrect('four weeks', '4 weeks', fill(1, true))).toBe(true)
+    expect(isCorrect('four long weeks', '4 weeks', fill(1, true))).toBe(false)
+  })
+
+  it('放宽后单复数、拼错仍然判错', () => {
+    expect(isCorrect('colleague', 'colleagues', fill())).toBe(false)
+    expect(isCorrect('satellite', 'satellites', fill())).toBe(false)
+    expect(isCorrect('Grately', 'Grateley', fill())).toBe(false)
+  })
 })

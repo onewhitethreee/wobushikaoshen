@@ -64,13 +64,13 @@ const WORDS: Record<string, string> = {
   doughnut: 'donut',
 }
 
-const spell = (w: string): string => {
+export const spell = (w: string): string => {
   if (WORDS[w]) return WORDS[w]
   for (const s of OUR) if (w.startsWith(s)) return s.replace('our', 'or') + w.slice(s.length)
   for (const s of TRE) if (w.startsWith(s)) return s.slice(0, -2) + 'er' + w.slice(s.length)
   for (const s of LL) if (w.startsWith(s + 'l')) return s + w.slice(s.length + 1)
   if (w.length >= 6) {
-    const z = w.replace(/is(e|es|ed|ing|ation|ations|er|ers)$/, 'iz$1').replace(/ys(e|es|ed|ing)$/, 'yz$1')
+    const z = w.replace(/is(e|es|ed|ing|ation|ations|ational|er|ers)$/, 'iz$1').replace(/ys(e|es|ed|ing)$/, 'yz$1')
     if (z !== w) return z
   }
   return w

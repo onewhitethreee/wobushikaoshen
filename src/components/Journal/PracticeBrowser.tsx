@@ -492,6 +492,8 @@ const RowView = React.forwardRef<HTMLLIElement, { row: PracticeRow; focused: boo
                   {row.minutes} 分钟
                 </span>
               )}
+              {/* 035：首次作答满 20 人才有 */}
+              {row.people !== undefined && <span data-testid="row-people">{row.people} 人做过</span>}
             </p>
           </div>
         </div>

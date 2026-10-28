@@ -91,6 +91,9 @@ export interface Config {
     'explanation-unlocks': ExplanationUnlock;
     'speaking-questions': SpeakingQuestion;
     'dict-entries': DictEntry;
+    'stat-attempts': StatAttempt;
+    'answer-tallies': AnswerTally;
+    'question-keys': QuestionKey;
     redirects: Redirect;
     search: Search;
     'payload-kv': PayloadKv;
@@ -132,6 +135,9 @@ export interface Config {
     'explanation-unlocks': ExplanationUnlocksSelect<false> | ExplanationUnlocksSelect<true>;
     'speaking-questions': SpeakingQuestionsSelect<false> | SpeakingQuestionsSelect<true>;
     'dict-entries': DictEntriesSelect<false> | DictEntriesSelect<true>;
+    'stat-attempts': StatAttemptsSelect<false> | StatAttemptsSelect<true>;
+    'answer-tallies': AnswerTalliesSelect<false> | AnswerTalliesSelect<true>;
+    'question-keys': QuestionKeysSelect<false> | QuestionKeysSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     search: SearchSelect<false> | SearchSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
@@ -1486,6 +1492,59 @@ export interface DictEntry {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stat-attempts".
+ */
+export interface StatAttempt {
+  id: number;
+  attemptKey: string;
+  who: string;
+  unitId: string;
+  unitKey: string;
+  firstKey: string;
+  exam: 'ielts' | 'cet4' | 'cet6';
+  module: 'listening' | 'reading';
+  score: number;
+  total: number;
+  first: boolean;
+  at: string;
+  source?: ('live' | 'backfill') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-tallies".
+ */
+export interface AnswerTally {
+  id: number;
+  unitKey: string;
+  number: number;
+  answer: string;
+  unknown: boolean;
+  qType: string;
+  span: number;
+  credit: number;
+  count: number;
+  firstCount: number;
+  lastAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "question-keys".
+ */
+export interface QuestionKey {
+  id: number;
+  unitKey: string;
+  number: number;
+  answers?: string | null;
+  resetAt?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -1748,6 +1807,18 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'dict-entries';
         value: number | DictEntry;
+      } | null)
+    | ({
+        relationTo: 'stat-attempts';
+        value: number | StatAttempt;
+      } | null)
+    | ({
+        relationTo: 'answer-tallies';
+        value: number | AnswerTally;
+      } | null)
+    | ({
+        relationTo: 'question-keys';
+        value: number | QuestionKey;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -2605,6 +2676,56 @@ export interface DictEntriesSelect<T extends boolean = true> {
   translation?: T;
   exchange?: T;
   lemma?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "stat-attempts_select".
+ */
+export interface StatAttemptsSelect<T extends boolean = true> {
+  attemptKey?: T;
+  who?: T;
+  unitId?: T;
+  unitKey?: T;
+  firstKey?: T;
+  exam?: T;
+  module?: T;
+  score?: T;
+  total?: T;
+  first?: T;
+  at?: T;
+  source?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "answer-tallies_select".
+ */
+export interface AnswerTalliesSelect<T extends boolean = true> {
+  unitKey?: T;
+  number?: T;
+  answer?: T;
+  unknown?: T;
+  qType?: T;
+  span?: T;
+  credit?: T;
+  count?: T;
+  firstCount?: T;
+  lastAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "question-keys_select".
+ */
+export interface QuestionKeysSelect<T extends boolean = true> {
+  unitKey?: T;
+  number?: T;
+  answers?: T;
+  resetAt?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

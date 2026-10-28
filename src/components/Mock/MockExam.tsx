@@ -27,6 +27,7 @@ import {
   type SectionState,
 } from '@/practice/mockAttempt'
 import { addRecord, load, save, saveAttempt } from '@/practice/store'
+import { postStat } from '@/practice/statClient'
 import { schedulePush, sync } from '@/practice/syncClient'
 
 import { ExamAudio } from './ExamAudio'
@@ -97,7 +98,7 @@ export const MockExam: React.FC<{ paper: MockPaperView; view?: number }> = ({ pa
       const now = Date.now()
       const band = bandOf(r.score, r.total, unit.bandScale)
       const { store } = load()
-      addRecord(store, {
+      const record = {
         unitId: unit.id,
         module: mod,
         at: now,
@@ -108,8 +109,10 @@ export const MockExam: React.FC<{ paper: MockPaperView; view?: number }> = ({ pa
         duration: r.elapsed,
         times: r.times,
         limit: Math.round((sec.deadline - sec.startedAt) / 1000),
-      })
+      }
+      addRecord(store, record)
       save(store)
+      postStat(record, paper.units)
       const done: SectionState = { ...sec, answers: r.answers, elapsed: r.elapsed, times: r.times, submittedAt: now, score: r.score, total: r.total, band, auto: r.auto }
       return next({ ...a, [mod]: done }, mod === 'l' ? 'break' : 'done', now)
     },

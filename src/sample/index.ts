@@ -25,6 +25,8 @@ export type PracticeRow = {
   group?: string
   /** 上次记录的文字（筛选"已做 / 未做"与读屏用） */
   record?: string
+  /** 035：首次作答人数，满 20 人才有 */
+  people?: number
   /** 有分数时栏目页画成图形（005 US6）；没有就显示 record 文字胶囊 */
   score?: RowScore
   actions: Action[]
@@ -461,6 +463,5 @@ export const home: HomeData = {
   quotaWays: [
     { title: '发一篇小红书备考笔记', desc: '审核通过后发放额度', kind: 'note' },
     { title: '邀请好友注册', desc: '好友用你的链接注册后发放额度' },
-    { title: '直接购买', desc: '即将开放', disabled: true },
   ],
 }

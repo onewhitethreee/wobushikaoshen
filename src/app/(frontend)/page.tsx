@@ -22,7 +22,7 @@ export const revalidate = 60
 
 export const metadata: Metadata = { title: { absolute: '我不是考神' } }
 
-const quotaTags = ['笔记', '邀请', '未开放']
+const quotaTags = ['笔记', '邀请']
 
 // 每科取两行：听力阅读优先整篇 / 整个 Part，没有就取前两行
 const picks = (rows: PracticeRow[]) => {

@@ -65,7 +65,6 @@ export const Sidebar: React.FC<{ modules: SidebarModule[]; notePlatform?: string
                 <li className="flex items-center gap-2 border-t border-border py-2.5">{noteText('发小红书备考笔记，审核通过后发放', notePlatform)}</li>
               )}
               <li className="flex items-center gap-2 border-t border-border py-2.5">邀请好友注册后发放</li>
-              <li className="flex items-center gap-2 border-t border-border py-2.5">购买：即将开放</li>
             </ul>
           </section>
         )

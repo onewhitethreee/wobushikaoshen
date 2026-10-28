@@ -65,8 +65,7 @@ test.describe('首页', () => {
     await expect(catalog.getByTestId('subject-写作')).toContainText('额度')
     await expect(catalog.getByTestId('subject-口语')).toContainText('额度')
 
-    const soon = page.getByText('即将开放', { exact: true })
-    expect(await soon.evaluate((el) => el.closest('a,button'))).toBeNull()
+    await expect(page.getByText('即将开放')).toHaveCount(0)
     await expect(page.getByText('示例数据')).toHaveCount(0)
 
     await page.getByText('阅读 Passage 1', { exact: true }).click()

@@ -1,6 +1,6 @@
 {
   "name": "site",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "description": "Website template for Payload",
   "license": "AGPL-3.0-only",
   "type": "module",
@@ -19,6 +19,7 @@
     "paraphrase": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/paraphrase.ts",
     "check:secrets": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/check-bundle-secrets.ts",
     "backfill:summary": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/backfill-unit-summary.ts",
+    "stats:backfill": "cross-env NODE_OPTIONS=--no-deprecation tsx scripts/backfill-stats.ts",
     "ii": "cross-env NODE_OPTIONS=--no-deprecation pnpm --ignore-workspace install",
     "lint": "cross-env NODE_OPTIONS=--no-deprecation eslint .",
     "lint:fix": "cross-env NODE_OPTIONS=--no-deprecation eslint . --fix",

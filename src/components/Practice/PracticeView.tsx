@@ -11,6 +11,7 @@ import { bandFor, scoreUnit, type Answers, type PracticeUnit, type ScoreItem } f
 import type { Marks } from '@/practice/marks'
 import { drawHref, safeScope } from '@/practice/randomPick'
 import { addRecord, getProgress, load, save, setProgress } from '@/practice/store'
+import { postStat } from '@/practice/statClient'
 import { anchorOf, limitSeconds, toSaved, topTimes, type Clock, type TimerMode } from '@/practice/timer'
 import { schedulePush, sync } from '@/practice/syncClient'
 import { cn } from '@/utilities/ui'
@@ -23,6 +24,7 @@ import { explainOrder, type ExplainStop } from './explain'
 import { PassageView, sentenceRange } from './PassageView'
 import { locateLabel, QuestionGroup } from './QuestionGroup'
 import { ResultBar } from './ResultBar'
+import { UnitStatLines } from './UnitStatLines'
 import { ShareDialog } from './ShareDialog'
 import { Timer } from './Timer'
 import { TranslationButton, useHideStem } from './Translation'
@@ -276,9 +278,9 @@ export const PracticeView: React.FC<{
     setLastTime(time)
     setSubmittedAt(Date.now())
     const { store } = load()
-    addRecord(store, {
+    const record = {
       unitId: unit.id,
-      module: isL ? 'l' : 'r',
+      module: isL ? ('l' as const) : ('r' as const),
       ...(unit.exam ? { exam: unit.exam } : {}),
       at: Date.now(),
       score: r.score,
@@ -286,8 +288,10 @@ export const PracticeView: React.FC<{
       items: r.items,
       answers,
       ...time,
-    })
+    }
+    addRecord(store, record)
     save(store)
+    postStat(record)
     schedulePush()
     flushSync(() => {
       setSubmitted(true)
@@ -562,6 +566,7 @@ export const PracticeView: React.FC<{
       ref={rootRef}
       style={{ '--audio-h': `${audioH}px`, '--panel-h': `${panelH}px` } as React.CSSProperties}
     >
+      {result && review && <UnitStatLines className="mx-auto max-w-[77.5rem] px-[clamp(1rem,4vw,2.5rem)] pt-5" items={result.items} unit={unit} />}
       {((result && !review) || notice) && (
         <div className="mx-auto flex max-w-[77.5rem] flex-col gap-3 px-[clamp(1rem,4vw,2.5rem)] pt-5">
           {result && !review && (
@@ -583,6 +588,8 @@ export const PracticeView: React.FC<{
               total={result.total}
             />
           )}
+          {/* 035：成绩面板下的平均得分率 · 超过 X%；模考成绩单（review）在上面单独一块，按 section 各一行 */}
+          {result && !review && <UnitStatLines items={result.items} key={submittedAt} unit={unit} />}
           {result && !review && (
             <ShareDialog
               onClose={() => setSharing(false)}

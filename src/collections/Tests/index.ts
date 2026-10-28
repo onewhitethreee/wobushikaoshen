@@ -6,6 +6,7 @@ import { authenticatedOrPublished } from '../../access/authenticatedOrPublished'
 import { validateTest, type TestData } from '../../exam/validate'
 import { sourceType } from '../../fields/sourceType'
 import { questionGroupsField } from './questionGroup'
+import { syncOnPublish, testDocQuestions } from '../../stats/keys'
 
 // 套题：听力 4 Part + 阅读 3 篇，题组嵌在文档里（research R1）
 export const Tests: CollectionConfig = {
@@ -24,6 +25,8 @@ export const Tests: CollectionConfig = {
     components: { beforeListTable: ['@/components/ImportButton#ImportButton'] },
   },
   hooks: {
+    // 035：发布时比对答案快照，补答案重判、改答案清零
+    afterChange: [syncOnPublish(testDocQuestions)],
     // 发布时校验，草稿不校验（FR-014）
     beforeChange: [
       ({ data, originalDoc }) => {
