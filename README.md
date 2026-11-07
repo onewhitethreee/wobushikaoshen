@@ -169,3 +169,7 @@ pnpm dev               # http://localhost:3000，后台 /admin
 - [题库导入格式](docs/import-format.md)
 - [提交 PR 的要求](CONTRIBUTING.md)
 - [报告](docs/reports/)：依赖漏洞修复等
+
+## 友情链接
+
+- [Linux Do](https://linux.do/)
